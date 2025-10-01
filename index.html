@@ -924,6 +924,59 @@
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
+        .compose-bottom-container {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px 20px;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .compose-btn-bottom {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .compose-btn-bottom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .compose-btn-bottom:hover::before {
+            left: 100%;
+        }
+
+        .compose-btn-bottom:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        }
+
         /* Compose Modal Styles */
         .compose-modal {
             max-width: 600px;
@@ -1622,7 +1675,6 @@
                     
                     <!-- TRipchat Links -->
                     <div class="tripchat-links">
-                        <button id="composeBtn" class="compose-btn">✍️ COMPOSE</button>
                         <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
                         <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
                         <a href="https://trustroots.org" target="_blank" class="tripchat-link">🌐 Trustroots</a>
@@ -1654,6 +1706,11 @@
                 
                 <div id="noteContainer">
                     <div class="loading">Loading travel messages from Nostr relays...</div>
+                </div>
+                
+                <!-- Compose Button at Bottom -->
+                <div class="compose-bottom-container">
+                    <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
                 </div>
                 
             </div>
@@ -3144,7 +3201,7 @@
                     loadingDiv.remove();
                 }
 
-                const sortedActivities = [...filteredActivities].sort((a, b) => b.created_at - a.created_at);
+                const sortedActivities = [...filteredActivities].sort((a, b) => a.created_at - b.created_at);
                 noteContainer.innerHTML = '';
 
                 sortedActivities.forEach(note => {
