@@ -1794,15 +1794,15 @@
             }
             
             .map-container {
-                height: 15vh;
-                min-height: 100px;
+                height: 5vh;
+                min-height: 60px;
                 order: 2;
                 border-right: none;
                 border-bottom: 1px solid #e9ecef;
             }
 
             .note-container {
-                height: 85vh;
+                height: 95vh;
                 order: 1;
                 padding: 0;
                 background: #f8f9fa;
@@ -1811,16 +1811,41 @@
             }
 
             .header {
-                padding: 8px 12px;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                padding: 6px 12px;
                 margin-bottom: 0;
                 background: white;
                 border-bottom: 1px solid #e9ecef;
                 flex-shrink: 0;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             h1 {
-                font-size: 1.2rem;
+                font-size: 1rem;
                 margin: 0;
+                line-height: 1.2;
+            }
+
+            .header .subtitle {
+                font-size: 0.7rem;
+                color: #6c757d;
+                margin: 2px 0 4px 0;
+                line-height: 1.2;
+            }
+
+            .header .button-group {
+                display: flex;
+                gap: 6px;
+                margin-top: 4px;
+            }
+
+            .header .btn {
+                padding: 4px 8px;
+                font-size: 0.6rem;
+                border-radius: 4px;
+                min-width: 50px;
             }
 
             #noteContainer {
@@ -1948,20 +1973,30 @@
 
         @media (max-width: 480px) {
             .map-container {
-                height: 12vh;
-                min-height: 80px;
+                height: 4vh;
+                min-height: 50px;
             }
 
             .note-container {
-                height: 88vh;
+                height: 96vh;
             }
 
             h1 {
-                font-size: 1.1rem;
+                font-size: 0.9rem;
             }
 
             .header {
-                padding: 6px 10px;
+                padding: 4px 10px;
+            }
+
+            .header .subtitle {
+                font-size: 0.65rem;
+            }
+
+            .header .btn {
+                padding: 3px 6px;
+                font-size: 0.55rem;
+                min-width: 45px;
             }
 
             .note-item {
@@ -2022,20 +2057,30 @@
 
         @media (max-width: 360px) {
             .map-container {
-                height: 10vh;
-                min-height: 70px;
+                height: 3vh;
+                min-height: 40px;
             }
 
             .note-container {
-                height: 90vh;
+                height: 97vh;
             }
 
             h1 {
-                font-size: 1rem;
+                font-size: 0.85rem;
             }
 
             .header {
-                padding: 5px 8px;
+                padding: 3px 8px;
+            }
+
+            .header .subtitle {
+                font-size: 0.6rem;
+            }
+
+            .header .btn {
+                padding: 2px 5px;
+                font-size: 0.5rem;
+                min-width: 40px;
             }
 
             .note-item {
