@@ -1816,11 +1816,6 @@
                                         <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
                                     </div>
                                 </div>
-                                <div class="compose-section">
-                                    <select id="composeCircle" class="circle-select">
-                                        <option value="">No Circle</option>
-                                    </select>
-                                </div>
                                 <div class="compose-actions">
                                     <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
                                 </div>
@@ -2362,11 +2357,6 @@
                 const getLocationBtn = document.getElementById('getLocationBtn');
 
                 // Initialize the compose form since it's always visible
-                // Populate circle selects
-                const composeCircleSelect = document.getElementById('composeCircle');
-                if (composeCircleSelect) {
-                    this.populateCircleSelect(composeCircleSelect);
-                }
 
                 // Compose button is now hidden since form is always visible
                 // composeBtn.addEventListener('click', () => { ... });
@@ -2379,11 +2369,11 @@
                     this.postNote();
                 });
 
-                // Add Ctrl+Enter functionality to textarea
+                // Add Shift+Enter functionality to textarea
                 const composeContent = document.getElementById('composeContent');
                 if (composeContent) {
                     composeContent.addEventListener('keydown', (e) => {
-                        if (e.ctrlKey && e.key === 'Enter') {
+                        if (e.shiftKey && e.key === 'Enter') {
                             e.preventDefault();
                             this.postNote();
                         }
@@ -3886,7 +3876,6 @@
             clearComposeForm() {
                 document.getElementById('composeContent').value = '';
                 document.getElementById('composeLocation').value = '';
-                document.getElementById('composeCircle').value = '';
             }
 
             // Save keys to localStorage
@@ -4366,7 +4355,6 @@
             async postNote() {
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('composeLocation').value.trim();
-                const circle = document.getElementById('composeCircle').value;
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
                 if (!content) {
@@ -4393,7 +4381,7 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(content, geohash, circle);
+                    const event = await this.createBitchatEvent(content, geohash);
                     await this.publishEvent(event);
                     
                     // Clear the compose form after successful post
@@ -4404,7 +4392,7 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash, circle = '') {
+            async createBitchatEvent(content, geohash) {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -4485,10 +4473,6 @@
                             event.tags.push(['g', geohash]);
                         }
                         
-                        // Add circle tag if selected
-                        if (circle) {
-                            event.tags.push(['circle', circle]);
-                        }
                         
                         // Add NIP-05 verification tag if verified
                         if (nip05Verified) {
@@ -4520,10 +4504,6 @@
                         event.tags.push(['g', geohash]);
                     }
                     
-                    // Add circle tag if selected
-                    if (circle) {
-                        event.tags.push(['circle', circle]);
-                    }
                     
                     // Add NIP-05 verification tag if verified
                     if (nip05Verified) {
