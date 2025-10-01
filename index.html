@@ -1009,6 +1009,66 @@
             padding: 4px 0;
         }
 
+        .filter-options {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(39, 174, 96, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(39, 174, 96, 0.2);
+        }
+
+        .filter-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .filter-toggle-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .filter-toggle-slider {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+
+        .filter-toggle-slider::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
+            transform: translateX(26px);
+        }
+
+        .filter-toggle-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
         .settings-section label {
             display: block;
             color: #2c3e50;
@@ -1462,6 +1522,14 @@
                         <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
                         <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
                     </div>
+                    <div class="filter-options">
+                        <label class="filter-toggle-label">
+                            <input type="checkbox" id="nip05Filter" />
+                            <span class="filter-toggle-slider">
+                                <span class="filter-toggle-text">Only NIP-05 Verified</span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
                 
                 <div id="noteContainer">
@@ -1623,6 +1691,7 @@
                 this.websockets = {};
                 this.subscriptionIds = {};
                 this.geohashFilter = '';
+                this.nip05Filter = false;
                 this.initialLoadComplete = false;
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
@@ -1805,6 +1874,7 @@
             setupFilterHandlers() {
                 const geohashFilter = document.getElementById('geohashFilter');
                 const clearFilter = document.getElementById('clearFilter');
+                const nip05Filter = document.getElementById('nip05Filter');
 
                 geohashFilter.addEventListener('input', (e) => {
                     this.geohashFilter = e.target.value.trim().toLowerCase();
@@ -1819,15 +1889,21 @@
                 });
 
                 clearFilter.addEventListener('click', () => {
-                    console.log('Clear filter clicked');
                     geohashFilter.value = '';
                     this.geohashFilter = '';
+                    nip05Filter.checked = false;
+                    this.nip05Filter = false;
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
-                    console.log('About to call zoomToGlobal, map exists:', !!this.map);
                     this.zoomToGlobal();
-                    
+                });
+
+                nip05Filter.addEventListener('change', (e) => {
+                    this.nip05Filter = e.target.checked;
+                    this.updateHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
                 });
 
 
@@ -2424,9 +2500,18 @@
 
             updateHash() {
                 const url = new URL(window.location);
+                const params = new URLSearchParams();
+                
                 if (this.geohashFilter) {
-                    url.hash = `#${this.geohashFilter}`;
-                    } else {
+                    params.set('geohash', this.geohashFilter);
+                }
+                if (this.nip05Filter) {
+                    params.set('nip05', 'true');
+                }
+                
+                if (params.toString()) {
+                    url.hash = `#${params.toString()}`;
+                } else {
                     url.hash = '';
                 }
                 window.history.replaceState(null, '', url);
@@ -2435,17 +2520,40 @@
             loadFilterFromHash() {
                 const hash = window.location.hash;
                 if (hash && hash.startsWith('#')) {
-                    const geohash = hash.substring(1); // Remove the # symbol
-                    if (geohash) {
-                        this.geohashFilter = geohash.toLowerCase();
-                        const geohashFilterInput = document.getElementById('geohashFilter');
-                        if (geohashFilterInput) {
-                            geohashFilterInput.value = geohash;
+                    const hashContent = hash.substring(1); // Remove the # symbol
+                    
+                    // Try to parse as URL parameters first
+                    try {
+                        const params = new URLSearchParams(hashContent);
+                        const geohash = params.get('geohash');
+                        const nip05 = params.get('nip05');
+                        
+                        if (geohash) {
+                            this.geohashFilter = geohash.toLowerCase();
+                            const geohashFilterInput = document.getElementById('geohashFilter');
+                            if (geohashFilterInput) {
+                                geohashFilterInput.value = geohash;
+                            }
                         }
-                        console.log('Loaded geohash filter from URL:', geohash);
+                        
+                        if (nip05 === 'true') {
+                            this.nip05Filter = true;
+                            const nip05FilterInput = document.getElementById('nip05Filter');
+                            if (nip05FilterInput) {
+                                nip05FilterInput.checked = true;
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback to old format (just geohash)
+                        if (hashContent) {
+                            this.geohashFilter = hashContent.toLowerCase();
+                            const geohashFilterInput = document.getElementById('geohashFilter');
+                            if (geohashFilterInput) {
+                                geohashFilterInput.value = hashContent;
+                            }
+                        }
                     }
                 }
-                
             }
 
             getFilteredActivities() {
@@ -2460,6 +2568,19 @@
                             tag[0] === 'g' && 
                             tag[1] && 
                             tag[1].toLowerCase().includes(this.geohashFilter)
+                        );
+                    });
+                }
+                
+                // Apply NIP-05 verification filter
+                if (this.nip05Filter) {
+                    filtered = filtered.filter(note => {
+                        if (!note.tags) return false;
+                        
+                        return note.tags.some(tag => 
+                            tag[0] === 'nip05' && 
+                            tag[1] && 
+                            tag[1].endsWith('@trustroots.org')
                         );
                     });
                 }
@@ -3766,6 +3887,36 @@
                 }
 
                 try {
+                    // Get npub for NIP-05 verification
+                    const npub = this.deriveNpubFromPrivateKey(this.privateKey);
+                    
+                    // Check for NIP-05 verification
+                    const savedUsername = localStorage.getItem('tripchat_trustroots_username');
+                    let nip05Verified = false;
+                    
+                    if (savedUsername) {
+                        try {
+                            const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
+                            const response = await fetch(verificationUrl);
+                            const data = await response.json();
+                            
+                            if (data.names && data.names[savedUsername]) {
+                                const hexPubkey = data.names[savedUsername];
+                                let expectedNpub;
+                                
+                                if (typeof window.nostrTools !== 'undefined') {
+                                    expectedNpub = window.nostrTools.nip19.npubEncode(hexPubkey);
+                                } else {
+                                    expectedNpub = this.hexToNpub(hexPubkey);
+                                }
+                                
+                                nip05Verified = (expectedNpub === npub);
+                            }
+                        } catch (error) {
+                            console.log('NIP-05 verification failed:', error);
+                        }
+                    }
+                    
                     // Use nostr-tools if available
                     if (typeof window.nostrTools !== 'undefined') {
                         const event = {
@@ -3773,10 +3924,16 @@
                             content: content,
                             tags: [
                                 ['g', geohash], // Geohash tag
-                                ['d', 'bitchat-location'] // Distinguishes from other location events
+                                ['d', 'bitchat-location'], // Distinguishes from other location events
+                                ['p', npub] // Add public key tag
                             ],
                             created_at: Math.floor(Date.now() / 1000)
                         };
+                        
+                        // Add NIP-05 verification tag if verified
+                        if (nip05Verified) {
+                            event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
+                        }
 
                         // Sign the event using nostr-tools
                         const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
@@ -3790,13 +3947,19 @@
                         content: content,
                         tags: [
                             ['g', geohash], // Geohash tag
-                            ['d', 'bitchat-location'] // Distinguishes from other location events
+                            ['d', 'bitchat-location'], // Distinguishes from other location events
+                            ['p', npub] // Add public key tag
                         ],
                         pubkey: this.generateFakePublicKey(this.privateKey),
                         created_at: Math.floor(Date.now() / 1000),
                         id: this.generateFakeEventId(content, geohash),
                         sig: this.generateFakeSignature(this.privateKey, content)
                     };
+                    
+                    // Add NIP-05 verification tag if verified
+                    if (nip05Verified) {
+                        event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
+                    }
 
                     return event;
                 } catch (error) {
