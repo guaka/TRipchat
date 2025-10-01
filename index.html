@@ -977,11 +977,146 @@
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
-        /* Compose Modal Styles */
-        .compose-modal {
-            max-width: 600px;
-            width: 90%;
+        /* Inline Compose Form Styles */
+        .compose-form {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
+
+        .compose-form-header {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compose-form-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .cancel-compose-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+
+        .cancel-compose-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .compose-form-body {
+            padding: 16px;
+        }
+
+        .compose-form .compose-section {
+            margin-bottom: 16px;
+        }
+
+        .compose-form .compose-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .compose-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85rem;
+        }
+
+        .compose-form textarea,
+        .compose-form input,
+        .compose-form select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .compose-form textarea:focus,
+        .compose-form input:focus,
+        .compose-form select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+        }
+
+        .compose-form .location-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .compose-form .location-input-group input {
+            flex: 1;
+        }
+
+        .compose-form .location-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .compose-form .location-btn:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+            transform: translateY(-1px);
+        }
+
+        .compose-form .posting-relays-display {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .compose-form .compose-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .compose-form .post-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .compose-form .post-btn:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
 
         /* Welcome Modal Styles */
         .welcome-modal {
@@ -1710,7 +1845,45 @@
                 
                 <!-- Compose Button at Bottom -->
                 <div class="compose-bottom-container">
-                    <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
+                    <div id="composeButtonContainer">
+                        <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
+                    </div>
+                    <div id="composeFormContainer" style="display: none;">
+                        <div class="compose-form">
+                            <div class="compose-form-header">
+                                <h3>✍️ Compose Note</h3>
+                                <button id="cancelComposeBtn" class="cancel-compose-btn">❌</button>
+                            </div>
+                            <div class="compose-form-body">
+                                <div class="compose-section">
+                                    <label for="composeContent">Message:</label>
+                                    <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
+                                </div>
+                                <div class="compose-section">
+                                    <label for="composeLocation">Location (Geohash) - Optional:</label>
+                                    <div class="location-input-group">
+                                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy (optional - leave empty for global post)" />
+                                        <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
+                                    </div>
+                                </div>
+                                <div class="compose-section">
+                                    <label>Posting to Relays:</label>
+                                    <div id="postingRelaysDisplay" class="posting-relays-display">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <div class="compose-section">
+                                    <label for="composeCircle">Circle (Optional):</label>
+                                    <select id="composeCircle" class="circle-select">
+                                        <option value="">No Circle</option>
+                                    </select>
+                                </div>
+                                <div class="compose-actions">
+                                    <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
             </div>
@@ -1722,44 +1895,6 @@
         🔴 LIVE
     </div>
 
-    <!-- Compose Modal -->
-    <div id="composeModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content compose-modal">
-            <div class="modal-header">
-                <h3 class="modal-title">✍️ Compose Note</h3>
-                <button class="modal-close" onclick="document.getElementById('composeModal').style.display='none'">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="compose-section">
-                    <label for="composeContent">Message:</label>
-                    <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="4"></textarea>
-                </div>
-                <div class="compose-section">
-                    <label for="composeLocation">Location (Geohash) - Optional:</label>
-                    <div class="location-input-group">
-                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy (optional - leave empty for global post)" />
-                        <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
-                    </div>
-                </div>
-                <div class="compose-section">
-                        <label>Posting to Relays:</label>
-                        <div id="postingRelaysDisplay" class="posting-relays-display">
-                            <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-                <div class="compose-section">
-                        <label for="composeCircle">Circle (Optional):</label>
-                        <select id="composeCircle" class="circle-select">
-                            <option value="">No Circle</option>
-                        </select>
-                </div>
-                <div class="compose-actions">
-                    <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
-                    <button id="cancelComposeBtn" class="cancel-btn">❌ CANCEL</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Welcome Modal -->
     <div id="welcomeModal" class="modal-overlay" style="display: none;">
@@ -2257,7 +2392,6 @@
 
             setupComposeHandlers() {
                 const composeBtn = document.getElementById('composeBtn');
-                const composeModal = document.getElementById('composeModal');
                 const cancelComposeBtn = document.getElementById('cancelComposeBtn');
                 const postNoteBtn = document.getElementById('postNoteBtn');
                 const getLocationBtn = document.getElementById('getLocationBtn');
@@ -2281,11 +2415,15 @@
                     // Update posting relays display
                     this.updatePostingRelaysDisplay();
                     
-                    composeModal.style.display = 'flex';
+                    // Show inline compose form
+                    document.getElementById('composeButtonContainer').style.display = 'none';
+                    document.getElementById('composeFormContainer').style.display = 'block';
                 });
 
                 cancelComposeBtn.addEventListener('click', () => {
-                    composeModal.style.display = 'none';
+                    // Hide inline compose form and show button
+                    document.getElementById('composeFormContainer').style.display = 'none';
+                    document.getElementById('composeButtonContainer').style.display = 'block';
                     this.clearComposeForm();
                 });
 
@@ -2298,13 +2436,7 @@
                     this.postNote();
                 });
 
-                // Close modal when clicking outside
-                composeModal.addEventListener('click', (e) => {
-                    if (e.target === composeModal) {
-                        composeModal.style.display = 'none';
-                        this.clearComposeForm();
-                    }
-                });
+                // Note: Modal click handler removed since we're using inline compose form
             }
 
             setupSettingsHandlers() {
@@ -4300,8 +4432,9 @@
                     const event = await this.createBitchatEvent(content, geohash, circle);
                     await this.publishEvent(event);
                     
-                    // Close modal and clear form
-                    document.getElementById('composeModal').style.display = 'none';
+                    // Hide inline compose form and show button
+                    document.getElementById('composeFormContainer').style.display = 'none';
+                    document.getElementById('composeButtonContainer').style.display = 'block';
                     this.clearComposeForm();
                     
                     alert('Note posted successfully!');
