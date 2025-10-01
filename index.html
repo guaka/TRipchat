@@ -3439,16 +3439,25 @@
                 
                 // Apply circle filter (NIP-32 labels)
                 if (this.circleFilter) {
+                    console.log(`Filtering by circle: ${this.circleFilter}`);
+                    const beforeCount = filtered.length;
                     filtered = filtered.filter(note => {
                         if (!note.tags) return false;
                         
-                        return note.tags.some(tag => 
+                        const hasCircleTag = note.tags.some(tag => 
                             tag[0] === 'l' && 
                             tag[1] && 
                             tag[1] === this.circleFilter &&
                             tag[2] === 'trustroots'
                         );
+                        
+                        if (hasCircleTag) {
+                            console.log(`Note matches circle filter:`, note);
+                        }
+                        
+                        return hasCircleTag;
                     });
+                    console.log(`Circle filter: ${beforeCount} -> ${filtered.length} notes`);
                 }
                 
                 return filtered;
