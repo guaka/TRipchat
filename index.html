@@ -39,43 +39,104 @@
                 padding-left: 12px;
             }
             
-            .filter-container:hover {
-                transform: none;
-            }
             
             .compose-form:hover {
                 transform: none;
             }
         }
         
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* Light theme colors */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f4;
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --text-muted: #888;
+            --border-color: #e9ecef;
+            --accent-color: #27ae60;
+            --accent-hover: #229954;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-hover: rgba(0, 0, 0, 0.15);
+            --map-bg: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --accent-hover: #4a9eff;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-hover: rgba(0, 0, 0, 0.4);
+            --map-bg: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+        }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
             overflow: hidden;
             font-weight: 400;
-            letter-spacing: 0;
-            color: #2c3e50;
-            line-height: 1.4;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+            line-height: 1.5;
             font-size: 14px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-feature-settings: 'liga' 1, 'calt' 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
+        /* Dark mode toggle button */
+        .dark-mode-toggle {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .dark-mode-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px var(--shadow-hover);
+        }
+
         .main-container {
             display: flex;
             height: 100vh;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 20px var(--shadow);
+            background: var(--bg-secondary);
+            transition: background-color 0.3s ease;
         }
         
         .map-container {
             flex: 1;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            background: var(--map-bg);
             position: relative;
-            border-right: 1px solid #e9ecef;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            border-right: 1px solid var(--border-color);
+            box-shadow: 4px 0 20px var(--shadow);
             backdrop-filter: blur(10px);
         }
         
@@ -96,31 +157,38 @@
         .container {
             max-width: none;
             margin: 0;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         h1 {
-            color: #27ae60;
-            font-size: 1.6rem;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             margin: 0;
-            letter-spacing: -0.5px;
+            letter-spacing: 0.05em;
             text-transform: none;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-feature-settings: 'liga' 1, 'calt' 1;
+            transition: color 0.3s ease;
         }
         
         .note-item {
-            background: #ffffff;
+            background: var(--bg-secondary);
             border: none;
             border-radius: 0;
             padding: 12px 16px;
             margin-bottom: 0;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             position: relative;
             overflow: visible;
             font-family: 'Inter', sans-serif;
             box-shadow: none;
             backdrop-filter: none;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: flex-start;
             gap: 12px;
@@ -138,8 +206,7 @@
         }
         
         .note-item:hover {
-            background: #f8f9fa;
-            border-left: 3px solid #27ae60;
+            background: var(--bg-tertiary);
         }
         
         
@@ -180,28 +247,58 @@
         
         
         .note-content {
-            line-height: 1.4;
-            color: #2c3e50;
-            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            font-size: 0.85rem;
             word-wrap: break-word;
             white-space: pre-wrap;
             font-weight: 400;
             margin: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             flex: 1;
+            transition: color 0.3s ease;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: 'liga' 1, 'calt' 1;
+            letter-spacing: 0.01em;
+        }
+
+        .hashtag-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .hashtag-link:hover {
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+        }
+
+        .hashtag-link[data-circle] {
+            background-color: rgba(88, 166, 255, 0.1);
+            border: 1px solid var(--accent-color);
+        }
+
+        .hashtag-link[data-circle]:hover {
+            background-color: var(--accent-color);
+            color: white;
         }
 
         #noteContainer {
             flex: 1;
-            height: calc(100vh - 200px); /* Fixed height minus header and filter */
+            min-height: 0;
             overflow-y: auto;
             padding: 0;
-            background: #ffffff;
-            border: 1px solid #e9ecef;
+            background: var(--bg-secondary);
+            border: none;
             border-radius: 0;
             scroll-behavior: smooth;
+            transition: all 0.3s ease;
         }
         
         .loading {
@@ -251,12 +348,12 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            background: var(--accent-hover);
         }
         
         .error {
@@ -269,161 +366,7 @@
             text-align: center;
         }
         
-        .stats {
-            position: fixed;
-            bottom: 24px;
-            left: 24px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            padding: 0;
-            color: #2c3e50;
-            text-align: left;
-            border: 1px solid #e9ecef;
-            z-index: 1000;
-            min-width: 320px;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Inter', sans-serif;
-            backdrop-filter: blur(20px);
-            overflow: hidden;
-            cursor: pointer;
-        }
 
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px 16px 24px;
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            position: relative;
-        }
-
-        .stats-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        }
-
-        .stats-title {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stats-toggle {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            min-width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stats-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .stats-content {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            padding: 24px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        }
-
-        .stats-content.minimized {
-            max-height: 0;
-            opacity: 0;
-            padding: 0 24px;
-        }
-        
-        .stats.minimized {
-            height: 72px;
-            min-height: 72px;
-        }
-        
-        .stats.minimized .stats-header {
-            margin-bottom: 0;
-        }
-        
-        .stats:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
-        }
-
-        .stats:hover .stats-header {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
-        }
-        
-        .stats h3 {
-            margin: 0 0 10px 0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-shadow: none;
-        }
-        
-        .stats p {
-            margin: 8px 0;
-            color: #2c3e50;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        .stats p strong {
-            color: #1a252f;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .stats-section {
-            margin-bottom: 20px;
-            padding: 16px;
-            background: rgba(39, 174, 96, 0.05);
-            border-radius: 12px;
-            border-left: 4px solid #27ae60;
-        }
-
-        .stats-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .stats-section h3 {
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 12px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
 
         .relay-item {
             display: flex;
@@ -461,12 +404,6 @@
             color: #2c3e50;
         }
 
-        .relay-stats {
-            margin-left: auto;
-            font-size: 0.75rem;
-            color: #27ae60;
-            font-weight: bold;
-        }
         
         .map-marker {
             background: linear-gradient(135deg, #8B5CF6, #F59E0B);
@@ -614,17 +551,6 @@
             color: #856404;
         }
 
-        .filter-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-        }
 
         .filter-row {
             display: flex;
@@ -633,106 +559,88 @@
             flex-wrap: nowrap;
         }
 
-        .filter-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%);
-            border-radius: 20px 20px 0 0;
+        .compose-form .filter-row {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .filter-container:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
 
         .filter-input-group {
             display: flex;
             align-items: center;
+            gap: 8px;
             flex: 1;
             min-width: 200px;
             max-width: 400px;
         }
 
-        .filter-input-group input {
+        .geohash-input {
+            width: 120px;
+            max-width: 120px;
+            min-width: 120px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .search-input {
             flex: 1;
             min-width: 180px;
             padding: 10px 14px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            background: #ffffff;
-            color: #2c3e50;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             font-size: 0.85rem;
-            font-family: 'Inter', sans-serif;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
 
-        .filter-input-group input:focus {
+        .geohash-input:focus,
+        .search-input:focus {
             outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
-            background: #ffffff;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+            background: var(--bg-secondary);
         }
 
         .clear-filter-btn {
             padding: 10px 16px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 0;
             flex: 0 0 auto;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             font-size: 0.8rem;
-            font-family: 'Inter', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+            box-shadow: var(--shadow);
             white-space: nowrap;
         }
 
         .clear-filter-btn:hover {
-            background: #c0392b;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-color);
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+            box-shadow: var(--shadow-hover);
         }
 
-        .filter-info {
-            color: #6c757d;
-            font-size: 0.85rem;
-            font-style: italic;
-            font-family: 'Inter', sans-serif;
-        }
 
         .filter-options {
             margin: 12px 0;
         }
 
-        .toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: white;
-            font-size: 0.9rem;
-            cursor: pointer;
-            user-select: none;
-        }
 
-        .toggle-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #8B5CF6;
-            cursor: pointer;
-        }
-
-        .toggle-text {
-            font-weight: 500;
-        }
 
 
         /* Nostr Note Details Modal */
@@ -872,14 +780,15 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 24px;
-            padding: 24px 24px 20px 24px;
-            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 0;
+            padding: 12px 16px 8px 16px;
+            border-bottom: 2px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: var(--bg-secondary);
+            box-shadow: 0 2px 4px var(--shadow);
+            transition: all 0.3s ease;
         }
 
         .header-title-group {
@@ -889,59 +798,33 @@
             gap: 8px;
         }
 
-        .note-type-indicator {
-            display: flex;
-            gap: 8px;
-        }
 
         .tripchat-links {
             display: flex;
             gap: 16px;
         }
 
-        .tripchat-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: #ffffff;
-            color: #27ae60;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
 
-        .tripchat-link:hover {
-            background: #27ae60;
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-            text-decoration: none;
-        }
 
-        .compose-btn, .settings-btn, .relay-manager-btn {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        .settings-btn, .relay-manager-btn {
+            background: var(--accent-color);
             color: white;
             border: none;
             border-radius: 12px;
             padding: 14px 24px;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 4px 15px var(--shadow);
             position: relative;
             overflow: hidden;
         }
 
-        .compose-btn::before, .settings-btn::before, .relay-manager-btn::before {
+        .settings-btn::before, .relay-manager-btn::before {
             content: '';
             position: absolute;
             top: 0;
@@ -952,18 +835,18 @@
             transition: left 0.5s;
         }
 
-        .compose-btn:hover::before, .settings-btn:hover::before, .relay-manager-btn:hover::before {
+        .settings-btn:hover::before, .relay-manager-btn:hover::before {
             left: 100%;
         }
 
-        .compose-btn:hover, .settings-btn:hover, .relay-manager-btn:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+        .settings-btn:hover, .relay-manager-btn:hover {
+            background: var(--accent-hover);
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+            box-shadow: 0 8px 25px var(--shadow-hover);
         }
 
         .compose-btn-bottom {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             color: white;
             border: none;
             padding: 14px 24px;
@@ -1000,37 +883,26 @@
         }
 
         .compose-btn-bottom:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            background: var(--accent-hover);
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
         /* Compact Inline Compose Form Styles */
         .compose-form {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 12px;
+            background: var(--bg-secondary);
+            border-radius: 0;
             padding: 16px;
-            margin-bottom: 20px;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            margin-bottom: 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px var(--shadow);
             position: relative;
             transition: all 0.3s ease;
         }
 
-        .compose-form::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
-            border-radius: 12px 12px 0 0;
-        }
 
         .compose-form:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 30px var(--shadow-hover);
         }
 
         .compose-form-body {
@@ -1059,13 +931,14 @@
         .compose-form input,
         .compose-form select {
             width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
             font-size: 0.85rem;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            background: white;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            transition: all 0.3s ease;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -1081,8 +954,8 @@
         .compose-form input:focus,
         .compose-form select:focus {
             outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
         }
 
         .compose-form .location-input-group {
@@ -1099,7 +972,7 @@
             color: white;
             border: none;
             padding: 6px 8px;
-            border-radius: 4px;
+            border-radius: 0;
             cursor: pointer;
             font-size: 0.7rem;
             font-weight: 600;
@@ -1123,11 +996,11 @@
         }
 
         .compose-form .post-btn {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 0;
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 600;
@@ -1136,7 +1009,7 @@
         }
 
         .compose-form .post-btn:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            background: var(--accent-hover);
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
         }
@@ -1179,7 +1052,8 @@
             font-size: 0.8rem;
             font-weight: 600;
             margin-bottom: 4px;
-            color: #333;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
         }
 
 
@@ -1200,7 +1074,7 @@
         }
 
         .welcome-content h3 {
-            color: #27ae60;
+            color: var(--accent-color);
             font-size: 1.8rem;
             margin-bottom: 15px;
             font-weight: 700;
@@ -1226,13 +1100,13 @@
             gap: 15px;
             text-align: left;
             padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            background: var(--bg-secondary);
             border-radius: 12px;
-            border-left: 4px solid #27ae60;
+            border-left: 4px solid var(--accent-color);
         }
 
         .step-number {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             color: white;
             width: 32px;
             height: 32px;
@@ -1278,7 +1152,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             color: white;
             box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
         }
@@ -1400,8 +1274,8 @@
         }
 
         .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider {
-            background: #27ae60;
-            border-color: #27ae60;
+            background: var(--accent-color);
+            border-color: var(--accent-color);
         }
 
         .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
@@ -1417,35 +1291,6 @@
             position: relative;
         }
 
-        .filter-circles {
-            min-width: 120px;
-            flex: 0 0 auto;
-        }
-
-        .circle-select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            background: #ffffff;
-            color: #2c3e50;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .circle-select:focus {
-            outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
-            background: #ffffff;
-        }
-
-        .circle-select:hover {
-            border-color: #27ae60;
-        }
 
         .settings-section label {
             display: block;
@@ -1497,31 +1342,32 @@
 
         .compose-section label {
             display: block;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-weight: 600;
             margin-bottom: 8px;
-            font-family: 'Inter', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            transition: color 0.3s ease;
         }
 
         .compose-section textarea,
         .compose-section input {
             width: 100%;
             padding: 16px 20px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #2c3e50;
-            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             font-size: 0.9rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--shadow);
             transition: all 0.3s ease;
         }
 
         .compose-section textarea:focus,
         .compose-section input:focus {
             outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.15), 0 8px 20px var(--shadow);
             transform: translateY(-1px);
         }
 
@@ -1570,20 +1416,20 @@
             align-items: center;
             gap: 6px;
             padding: 6px 12px;
-            background: #e8f5e8;
-            border: 1px solid #27ae60;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-color);
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 500;
-            color: #27ae60;
-            font-family: 'Inter', sans-serif;
+            color: var(--accent-color);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
         }
 
         .posting-relay-item .relay-status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #27ae60;
+            background: var(--accent-color);
         }
 
         .posting-relay-item .relay-name {
@@ -1591,7 +1437,7 @@
         }
 
         .posting-relay-item .relay-connected {
-            background: #27ae60;
+            background: var(--accent-color);
         }
 
         .posting-relay-item .relay-disconnected {
@@ -1619,13 +1465,13 @@
         }
 
         .post-btn {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: var(--accent-color);
             color: white;
             box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
         }
 
         .post-btn:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            background: var(--accent-hover);
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
@@ -1653,9 +1499,9 @@
         }
 
         .relay-section h4 {
-            color: #27ae60;
+            color: var(--accent-color);
             margin-bottom: 15px;
-            font-family: 'Courier New', monospace;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
         }
 
         .add-relay-group {
@@ -1676,23 +1522,23 @@
         }
 
         .add-btn {
-            background: #27ae60;
+            background: var(--accent-color);
             color: #ffffff;
             border: none;
             border-radius: 8px;
             padding: 12px 20px;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             font-weight: 600;
             white-space: nowrap;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 2px 8px var(--shadow);
         }
 
         .add-btn:hover {
-            background: #229954;
+            background: var(--accent-hover);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+            box-shadow: 0 4px 15px var(--shadow-hover);
         }
 
         .relay-list {
@@ -1805,8 +1651,8 @@
         }
 
         .post-toggle-label input:checked + .post-toggle-slider {
-            background-color: #27ae60;
-            border-color: #27ae60;
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
         }
 
         .post-toggle-label input:checked + .post-toggle-slider:before {
@@ -1817,25 +1663,6 @@
             color: #ffffff;
         }
 
-        /* Reply button styling */
-        .reply-btn {
-            background: #6c757d;
-            color: #ffffff;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            opacity: 0.7;
-        }
-
-        .reply-btn:hover {
-            background: #5a6268;
-            opacity: 1;
-        }
 
         
         @media (max-width: 768px) {
@@ -1854,7 +1681,7 @@
                 min-height: 60px;
                 order: 2;
                 border-right: none;
-                border-bottom: 1px solid #e9ecef;
+                border-bottom: 1px solid var(--border-color);
             }
             
             .note-container {
@@ -1918,9 +1745,6 @@
                 -webkit-overflow-scrolling: touch;
             }
 
-            .stats {
-                display: none;
-            }
             
             .note-item {
                 padding: 12px;
@@ -1952,14 +1776,6 @@
             }
 
             /* Mobile filter - compact and efficient */
-            .filter-container {
-                padding: 8px 12px;
-                margin: 0;
-                border-radius: 0;
-                background: white;
-                border-bottom: 1px solid #e9ecef;
-                flex-shrink: 0;
-            }
 
             .filter-row {
                 flex-direction: row;
@@ -1974,7 +1790,15 @@
                 max-width: 300px;
             }
 
-            .filter-input-group input {
+            .geohash-input {
+                width: 100px;
+                max-width: 100px;
+                min-width: 100px;
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+
+            .search-input {
                 font-size: 0.85rem;
                 padding: 8px 10px;
             }
@@ -1996,15 +1820,6 @@
                 color: #ffffff;
             }
 
-            .filter-circles {
-                min-width: 100px;
-                flex-shrink: 0;
-            }
-
-            .circle-select {
-                font-size: 0.8rem;
-                padding: 6px 8px;
-            }
 
             .clear-filter-btn {
                 padding: 6px 10px;
@@ -2025,7 +1840,7 @@
             .compose-form textarea {
                 min-height: 50px;
                 font-size: 0.85rem;
-                padding: 8px 10px;
+                padding: 5px 8px;
             }
 
             .compose-form .post-btn {
@@ -2076,9 +1891,6 @@
                 font-size: 0.85rem;
             }
 
-            .filter-container {
-                padding: 6px 10px;
-            }
 
             .filter-row {
                 gap: 8px;
@@ -2089,7 +1901,15 @@
                 max-width: 250px;
             }
 
-            .filter-input-group input {
+            .geohash-input {
+                width: 80px;
+                max-width: 80px;
+                min-width: 80px;
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+
+            .search-input {
                 font-size: 0.8rem;
                 padding: 6px 8px;
             }
@@ -2103,10 +1923,6 @@
                 color: #ffffff;
             }
 
-            .circle-select {
-                font-size: 0.75rem;
-                padding: 5px 6px;
-            }
 
             .clear-filter-btn {
                 padding: 5px 8px;
@@ -2120,7 +1936,7 @@
             .compose-form textarea {
                 min-height: 45px;
                 font-size: 0.8rem;
-                padding: 6px 8px;
+                padding: 4px 6px;
             }
 
             .compose-form .post-btn {
@@ -2174,9 +1990,6 @@
                 font-size: 0.65rem;
             }
 
-            .filter-container {
-                padding: 5px 8px;
-            }
 
             .filter-row {
                 gap: 6px;
@@ -2187,7 +2000,15 @@
                 max-width: 200px;
             }
 
-            .filter-input-group input {
+            .geohash-input {
+                width: 70px;
+                max-width: 70px;
+                min-width: 70px;
+                font-size: 0.75rem;
+                padding: 5px 6px;
+            }
+
+            .search-input {
                 font-size: 0.75rem;
                 padding: 5px 6px;
             }
@@ -2201,10 +2022,6 @@
                 color: #ffffff;
             }
 
-            .circle-select {
-                font-size: 0.7rem;
-                padding: 4px 5px;
-            }
 
             .clear-filter-btn {
                 padding: 4px 6px;
@@ -2218,7 +2035,7 @@
             .compose-form textarea {
                 min-height: 40px;
                 font-size: 0.75rem;
-                padding: 5px 6px;
+                padding: 3px 5px;
             }
 
             .compose-form .post-btn {
@@ -2238,13 +2055,14 @@
                 <div class="header-top-row">
                     <div class="header-title-group">
                         <h1>TR<span style="text-transform: lowercase;">ipchat</span></h1>
-                        <p style="font-size: 0.7rem; color: #888; margin: 4px 0 0 0; font-family: 'Inter', sans-serif; text-transform: lowercase;">nostr travel chat - connect with travelers worldwide</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 4px 0 0 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; text-transform: lowercase;">nostr travel chat - connect with travelers worldwide</p>
                     </div>
                     
                     <!-- TRipchat Links -->
                     <div class="tripchat-links">
                         <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
                         <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
+                        <button id="darkModeToggle" class="dark-mode-toggle" title="Toggle dark mode">🌙</button>
                     </div>
                 </div>
                 
@@ -2262,8 +2080,8 @@
                             <div class="compose-section">
                                 <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                             </div>
-                            <div class="compose-section">
-                                <label for="notePersistence">Note Duration:</label>
+                            <div class="compose-section" style="display: flex; align-items: center; gap: 8px;">
+                                <label for="notePersistence" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Note Duration:</label>
                                 <select id="notePersistence" class="persistence-select">
                                     <option value="1h" selected>1 Hour</option>
                                     <option value="short">24 Hours</option>
@@ -2271,41 +2089,28 @@
                                     <option value="long">30 Days</option>
                                     <option value="permanent">Permanent</option>
                                 </select>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-left: auto;">
+                                    Enter to post<br/>Shift+Enter new line
+                                </div>
                             </div>
-                            <div class="compose-actions">
-                                <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
-                                <button id="testPersistenceBtn" class="post-btn" style="background: #3498db; margin-left: 8px;">🧪 TEST PERSISTENCE</button>
+                            
+                            <!-- Filter Row merged into compose form -->
+                            <div class="filter-row">
+                                <div class="filter-input-group">
+                                    <input type="text" id="geohashFilter" placeholder="geohash" class="geohash-input" />
+                                    <input type="text" id="searchFilter" placeholder="search filter e.g. #hashtags" class="search-input" />
+                                </div>
+                                <div class="filter-options">
+                                    <label class="filter-toggle-label">
+                                        <input type="checkbox" id="nip05Filter" />
+                                        <span class="filter-toggle-slider">
+                                            <span class="filter-toggle-text">✓</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Filter Container at Bottom -->
-                <div class="filter-container">
-                    <div class="filter-row">
-                    <div class="filter-input-group">
-                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash... (also used for posting location)" />
-                        </div>
-                        <div class="filter-options">
-                            <label class="filter-toggle-label">
-                                <input type="checkbox" id="nip05Filter" />
-                                <span class="filter-toggle-slider">
-                                    <span class="filter-toggle-text">✓</span>
-                                </span>
-                            </label>
-                            <label class="filter-toggle-label">
-                                <input type="checkbox" id="persistenceFilter" />
-                                <span class="filter-toggle-slider">
-                                    <span class="filter-toggle-text">P</span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="filter-circles">
-                            <select id="circleFilter" class="circle-select">
-                                <option value="">All Circles</option>
-                            </select>
-                        </div>
-                        <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
                     </div>
                 </div>
                 
@@ -2491,14 +2296,22 @@
                 this.websockets = {};
                 this.subscriptionIds = {};
                 this.totalEventsReceived = 0;
+                this.searchFilter = '';
                 this.geohashFilter = '';
                 this.nip05Filter = false;
-                this.circleFilter = '';
-                this.persistenceFilter = false;
+                console.log(`🔍 Initial filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
                 this.initialLoadComplete = false;
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
                 this.privateKey = null; // User's private key for posting
+                
+                // Request queue system to limit concurrent REQ requests
+                this.requestQueue = [];
+                this.activeRequests = 0;
+                this.maxConcurrentRequests = 1; // Limit to 1 concurrent request per relay
+                this.requestDelay = 2000; // 2 second delay between requests
+                this.updatingHash = false; // Flag to prevent circular hash updates
+                this.userHasScrolled = false; // Track if user has manually scrolled
                 this.init();
             }
 
@@ -2548,8 +2361,8 @@
                     this.setupComposeHandlers();
                     this.setupSettingsHandlers();
                     this.setupRelayManagerHandlers();
+                    this.setupScrollHandlers();
                     this.loadFilterFromHash();
-                    this.startStatsUpdateTimer();
                     await this.connectToRelays();
                     
                     // Load saved keys from localStorage
@@ -2616,25 +2429,12 @@
                 ];
             }
 
-            startStatsUpdateTimer() {
-                // Update stats every 5 seconds to refresh connection times
-                setInterval(() => {
-                    if (this.notes.length > 0) {
-                        this.displayStats(this.notes);
-                    }
-                }, 5000);
-            }
 
             initMap() {
                 this.map = L.map('map').setView([20, 0], 2);
                 
-                // Use CartoDB Positron tiles for a clean, light Trustroots-like appearance
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap contributors, © CARTO',
-                    className: 'custom-map-tiles',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(this.map);
+                // Initialize with light theme, will be updated by setTheme
+                this.updateMapTheme();
                 
                 this.styleMap();
                 
@@ -2665,11 +2465,11 @@
                         transition: all 0.3s ease;
                     }
                     .leaflet-control-zoom a:hover {
-                        background: #27ae60;
+                        background: var(--accent-color);
                         color: #ffffff;
-                        border-color: #27ae60;
+                        border-color: var(--accent-color);
                         transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+                        box-shadow: 0 4px 12px var(--shadow-hover);
                     }
                     .leaflet-control-zoom {
                         border: 1px solid #e9ecef;
@@ -2702,7 +2502,7 @@
                         margin: 16px;
                     }
                     .leaflet-popup-content .note-title {
-                        color: #27ae60;
+                        color: var(--accent-color);
                         font-weight: 700;
                         font-size: 1rem;
                         margin-bottom: 8px;
@@ -2718,7 +2518,7 @@
                         font-style: italic;
                     }
             .leaflet-popup-content .popup-location {
-                        color: #27ae60;
+                        color: var(--accent-color);
                         font-weight: 600;
                         font-size: 0.9rem;
                         margin-top: 8px;
@@ -2738,8 +2538,8 @@
                     }
                     .tripchat-marker:hover {
                         transform: scale(1.05);
-                        fillColor: #229954;
-                        box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+                        fillColor: 'var(--accent-hover)';
+                        box-shadow: 0 2px 8px var(--shadow-hover);
                         animation: none;
                     }
                     @keyframes pulse {
@@ -2747,7 +2547,7 @@
                             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
                         }
                         50% {
-                            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+                            box-shadow: 0 2px 8px var(--shadow-hover);
                         }
                         100% {
                             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -2770,11 +2570,17 @@
             }
 
             setupFilterHandlers() {
+                const searchFilter = document.getElementById('searchFilter');
                 const geohashFilter = document.getElementById('geohashFilter');
                 const clearFilter = document.getElementById('clearFilter');
                 const nip05Filter = document.getElementById('nip05Filter');
-                const circleFilter = document.getElementById('circleFilter');
-                const persistenceFilter = document.getElementById('persistenceFilter');
+
+                searchFilter.addEventListener('input', (e) => {
+                    this.searchFilter = e.target.value.trim().toLowerCase();
+                    this.updateHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                });
 
                 geohashFilter.addEventListener('input', (e) => {
                     this.geohashFilter = e.target.value.trim().toLowerCase();
@@ -2789,16 +2595,12 @@
                 });
 
                 clearFilter.addEventListener('click', () => {
+                    searchFilter.value = '';
+                    this.searchFilter = '';
                     geohashFilter.value = '';
                     this.geohashFilter = '';
                     nip05Filter.checked = false;
                     this.nip05Filter = false;
-                    circleFilter.value = '';
-                    this.circleFilter = '';
-                    if (persistenceFilter) {
-                        persistenceFilter.checked = false;
-                        this.persistenceFilter = false;
-                    }
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
@@ -2806,77 +2608,76 @@
                 });
 
                 nip05Filter.addEventListener('change', (e) => {
+                    console.log(`🔄 NIP-05 filter toggled from ${this.nip05Filter} to ${e.target.checked}`);
                     this.nip05Filter = e.target.checked;
+                    console.log(`🔄 After setting: this.nip05Filter = ${this.nip05Filter}`);
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
                 });
 
-                circleFilter.addEventListener('change', (e) => {
-                    this.circleFilter = e.target.value;
-                    this.updateHash();
-                    this.displayActivities(this.notes);
-                    this.plotActivitiesOnMap(this.notes);
-                });
 
-                if (persistenceFilter) {
-                    persistenceFilter.addEventListener('change', (e) => {
-                        this.persistenceFilter = e.target.checked;
-                        this.updateHash();
-                        this.displayActivities(this.notes);
-                        this.plotActivitiesOnMap(this.notes);
-                    });
-                }
 
-                // Populate circle filters
-                this.populateCircleFilters();
 
                 // Listen for hash changes (when user manually changes URL)
                 window.addEventListener('hashchange', () => {
-                    this.loadFilterFromHash();
-                    this.displayActivities(this.notes);
-                    this.plotActivitiesOnMap(this.notes);
-                    
-                    // If filtering by a specific geohash, show its rectangle
-                    if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
-                        this.highlightGeohashArea(this.geohashFilter);
+                    // Only process hash changes if we're not programmatically updating the hash
+                    if (!this.updatingHash) {
+                        this.loadFilterFromHash();
+                        this.displayActivities(this.notes);
+                        this.plotActivitiesOnMap(this.notes);
+                        
+                        // If filtering by a specific geohash, show its rectangle
+                        if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                            this.highlightGeohashArea(this.geohashFilter);
+                        }
                     }
                 });
             }
 
-            populateCircleFilters() {
-                const filterCircleSelect = document.getElementById('circleFilter');
-                const composeCircleSelect = document.getElementById('composeCircle');
-                
-                if (filterCircleSelect) {
-                    this.populateCircleSelect(filterCircleSelect);
+
+            setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                if (darkModeToggle) {
+                    darkModeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
                 }
-                
-                if (composeCircleSelect) {
-                    this.populateCircleSelect(composeCircleSelect);
-                }
+                this.updateMapTheme();
             }
 
-            populateCircleSelect(selectElement) {
-                const circles = this.getTrustrootsCircles();
+            updateMapTheme() {
+                if (!this.map) return;
                 
-                // Clear existing options except the first one
-                while (selectElement.children.length > 1) {
-                    selectElement.removeChild(selectElement.lastChild);
-                }
-                
-                // Add circle options
-                circles.forEach(circle => {
-                    const option = document.createElement('option');
-                    option.value = circle.slug;
-                    option.textContent = circle.name;
-                    selectElement.appendChild(option);
+                // Remove existing tile layer
+                this.map.eachLayer((layer) => {
+                    if (layer instanceof L.TileLayer) {
+                        this.map.removeLayer(layer);
+                    }
                 });
+                
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                
+                if (isDark) {
+                    // Dark theme map
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© OpenStreetMap contributors, © CARTO',
+                        className: 'custom-map-tiles',
+                        subdomains: 'abcd',
+                        maxZoom: 19
+                    }).addTo(this.map);
+                } else {
+                    // Light theme map
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© OpenStreetMap contributors, © CARTO',
+                        className: 'custom-map-tiles',
+                        subdomains: 'abcd',
+                        maxZoom: 19
+                    }).addTo(this.map);
+                }
             }
 
             setupComposeHandlers() {
                 const composeBtn = document.getElementById('composeBtn');
-                const postNoteBtn = document.getElementById('postNoteBtn');
 
                 // Initialize the compose form since it's always visible
 
@@ -2894,24 +2695,21 @@
                     });
                 }
 
-                postNoteBtn.addEventListener('click', () => {
-                    this.postNote();
-                });
-
-                // Add test button for debugging persistence
-                const testPersistenceBtn = document.getElementById('testPersistenceBtn');
-                if (testPersistenceBtn) {
-                    testPersistenceBtn.addEventListener('click', () => {
-                        const persistenceElement = document.getElementById('notePersistence');
-                        console.log('=== PERSISTENCE DEBUG ===');
-                        console.log('Persistence element:', persistenceElement);
-                        console.log('Persistence element value:', persistenceElement?.value);
-                        console.log('All options:', Array.from(persistenceElement?.options || []).map(opt => ({ value: opt.value, text: opt.text, selected: opt.selected })));
-                        console.log('Selected option:', persistenceElement?.selectedOptions?.[0]);
-                        console.log('========================');
-                        alert(`Current persistence value: ${persistenceElement?.value || 'undefined'}`);
+                // Dark mode toggle
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                if (darkModeToggle) {
+                    // Load saved theme
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    this.setTheme(savedTheme);
+                    
+                    darkModeToggle.addEventListener('click', () => {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        this.setTheme(newTheme);
+                        localStorage.setItem('theme', newTheme);
                     });
                 }
+
 
                 // Add Enter and Shift+Enter functionality to textarea
                 const composeContent = document.getElementById('composeContent');
@@ -2956,7 +2754,7 @@
                     
                     if (savedUsername) {
                         usernameStatus.textContent = `✓ Username saved: ${savedUsername}`;
-                        usernameStatus.style.color = '#27ae60';
+                        usernameStatus.style.color = 'var(--accent-color)';
                     } else {
                         usernameStatus.textContent = 'No username saved yet';
                         usernameStatus.style.color = '#6c757d';
@@ -3191,7 +2989,7 @@
                             
                             if (expectedNpub && expectedNpub === npub) {
                                 verificationStatus.textContent = '✓ NIP-05 verification successful!';
-                                verificationStatus.style.color = '#27ae60';
+                                verificationStatus.style.color = 'var(--accent-color)';
                                 
                                 // Post kind 0 profile event to Nostr after successful verification
                                 verificationStatus.textContent = '✓ NIP-05 verified! Posting profile to Nostr...';
@@ -3199,7 +2997,7 @@
                                     const profilePosted = await this.postProfileToNostr(savedUsername, npub);
                                     if (profilePosted) {
                                         verificationStatus.textContent = '✓ NIP-05 verified & profile posted to Nostr!';
-                                        verificationStatus.style.color = '#27ae60';
+                                        verificationStatus.style.color = 'var(--accent-color)';
                                     } else {
                                         verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
                                         verificationStatus.style.color = '#f39c12';
@@ -3352,56 +3150,101 @@
                 });
             }
 
-            scrollToBottom() {
-                const noteContainer = document.getElementById('noteContainer');
-                if (noteContainer) {
-                    noteContainer.scrollTop = noteContainer.scrollHeight;
-                }
-            }
-
-            setupReplyButtonHandlers() {
-                document.querySelectorAll('.reply-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const noteId = e.target.dataset.noteId;
-                        const pubkey = e.target.dataset.pubkey;
-                        const username = e.target.dataset.username;
+            setupHashtagClickHandlers() {
+                document.querySelectorAll('.hashtag-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const circleSlug = link.dataset.circle;
+                        const hashtag = link.dataset.hashtag;
                         
-                        if (noteId && pubkey && username) {
-                            const note = this.notes.find(a => a.id === noteId);
-                            if (note) {
-                                this.openReplyCompose(note, pubkey, username);
+                        // Check if the hashtag is actually a geohash
+                        if (this.isGeohash(hashtag)) {
+                            // Update geohash filter
+                            this.geohashFilter = hashtag;
+                            const geohashFilterInput = document.getElementById('geohashFilter');
+                            if (geohashFilterInput) {
+                                geohashFilterInput.value = hashtag;
                             }
+                            
+                            // Update display and hash
+                            this.updateHash();
+                            this.displayActivities(this.notes);
+                            this.plotActivitiesOnMap(this.notes);
+                            
+                            // Highlight the geohash area on map
+                            if (this.isGeohash(this.geohashFilter)) {
+                                this.highlightGeohashArea(this.geohashFilter);
+                            }
+                            
+                            console.log(`Added geohash ${hashtag} to geohash filter`);
+                        } else {
+                            // Add hashtag to the search filter, replacing any existing hashtag
+                            const currentFilter = this.searchFilter || '';
+                            const hashtagText = `#${hashtag}`;
+                            let newFilter = currentFilter;
+                            
+                            // Check if there's already a hashtag in the filter
+                            const hashtagRegex = /#\w+/g;
+                            const existingHashtags = currentFilter.match(hashtagRegex);
+                            
+                            if (existingHashtags && existingHashtags.length > 0) {
+                                // Replace the first hashtag with the new one
+                                newFilter = currentFilter.replace(hashtagRegex, hashtagText);
+                            } else if (currentFilter) {
+                                // Add space and hashtag if there's already content but no hashtag
+                                newFilter = `${currentFilter} ${hashtagText}`;
+                            } else {
+                                // Just add the hashtag if filter is empty
+                                newFilter = hashtagText;
+                            }
+                            
+                            // Update the search filter
+                            this.searchFilter = newFilter;
+                            const searchFilterInput = document.getElementById('searchFilter');
+                            if (searchFilterInput) {
+                                searchFilterInput.value = newFilter;
+                            }
+                            
+                            // Update display and hash
+                            this.updateHash();
+                            this.displayActivities(this.notes);
+                            this.plotActivitiesOnMap(this.notes);
+                            
+                            console.log(`Added hashtag #${hashtag} to search filter: "${newFilter}"`);
                         }
                     });
                 });
             }
 
-            openReplyCompose(note, pubkey, username) {
-                // Open the compose modal
-                const composeModal = document.getElementById('composeModal');
-                const composeContent = document.getElementById('composeContent');
-                const composeLocation = document.getElementById('composeLocation');
-                
-                // Set the location to the same geohash as the original note
-                let geohash = '';
-                if (note.tags) {
-                    const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1]);
-                    if (geohashTag) {
-                        geohash = geohashTag[1];
+            setupScrollHandlers() {
+                const noteContainer = document.getElementById('noteContainer');
+                if (noteContainer) {
+                    noteContainer.addEventListener('scroll', () => {
+                        // Check if user is near the bottom (within 100px)
+                        const isNearBottom = noteContainer.scrollTop + noteContainer.clientHeight >= noteContainer.scrollHeight - 100;
+                        
+                        if (isNearBottom) {
+                            // User is at or near bottom, allow auto-scroll
+                            this.userHasScrolled = false;
+                        } else {
+                            // User has scrolled up, disable auto-scroll
+                            this.userHasScrolled = true;
+                        }
+                    });
+                }
+            }
+
+            scrollToBottom() {
+                // Only auto-scroll if user hasn't manually scrolled up
+                if (!this.userHasScrolled) {
+                    const noteContainer = document.getElementById('noteContainer');
+                    if (noteContainer) {
+                        noteContainer.scrollTop = noteContainer.scrollHeight;
                     }
                 }
-                composeLocation.value = geohash;
-                
-                // Start the message with @username
-                composeContent.value = `@${username} `;
-                composeContent.focus();
-                
-                // Update posting relays display
-                this.updatePostingRelaysDisplay();
-                
-                // Open the modal
-                composeModal.style.display = 'flex';
             }
+
+
 
             async fetchUserProfile(pubkey) {
                 if (this.userProfiles[pubkey]) {
@@ -3431,159 +3274,263 @@
                 return this.userProfiles[pubkey];
             }
 
+            // Request queue management methods
+            async queueRequest(relayUrl, requestFunction) {
+                return new Promise((resolve, reject) => {
+                    this.requestQueue.push({
+                        relayUrl,
+                        requestFunction,
+                        resolve,
+                        reject
+                    });
+                    this.processRequestQueue();
+                });
+            }
+
+            async processRequestQueue() {
+                if (this.activeRequests >= this.maxConcurrentRequests || this.requestQueue.length === 0) {
+                    return;
+                }
+
+                const request = this.requestQueue.shift();
+                if (!request) return;
+
+                this.activeRequests++;
+                
+                try {
+                    // Add delay between requests to avoid overwhelming the relay
+                    await new Promise(resolve => setTimeout(resolve, this.requestDelay));
+                    
+                    const result = await request.requestFunction();
+                    request.resolve(result);
+                } catch (error) {
+                    request.reject(error);
+                } finally {
+                    this.activeRequests--;
+                    // Process next request in queue
+                    setTimeout(() => this.processRequestQueue(), 100);
+                }
+            }
+
             requestUserProfile(relayUrl, pubkey) {
-                return new Promise((resolve) => {
-                    const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
-                const filters = {
-                        "kinds": [0], // Metadata events
-                        "authors": [pubkey],
-                        "limit": 1
-                    };
-                    
-                    const subscription = ["REQ", subscriptionId, filters];
-                    
-                    const timeout = setTimeout(() => {
-                        resolve(null);
-                    }, 5000); // 5 second timeout
-                    
-                    const handleMessage = (event) => {
-                        try {
-                            const data = JSON.parse(event.data);
-                            if (Array.isArray(data)) {
-                                const [messageType, subId, eventData] = data;
-                                
-                                if (messageType === 'EVENT' && subId === subscriptionId && eventData.kind === 0) {
-                                    clearTimeout(timeout);
-                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
-                                    
-                                    try {
-                                        const metadata = JSON.parse(eventData.content);
-                                        const profile = {
-                                            name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
-                                            pubkey: pubkey,
-                                            picture: metadata.picture,
-                                            about: metadata.about
-                                        };
-                                        resolve(profile);
-                                    } catch (e) {
-                                        resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
-                                    }
-                                } else if (messageType === 'EOSE' && subId === subscriptionId) {
-                                    clearTimeout(timeout);
-                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
-                                    resolve(null);
-                                }
+                return this.queueRequest(relayUrl, () => {
+                    return new Promise((resolve) => {
+                        const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
+                        const filters = {
+                            "kinds": [0], // Metadata events
+                            "authors": [pubkey],
+                            "limit": 1
+                        };
+                        
+                        const subscription = ["REQ", subscriptionId, filters];
+                        
+                        const timeout = setTimeout(() => {
+                            // Close the subscription
+                            if (this.websockets[relayUrl]) {
+                                this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
                             }
-                        } catch (e) {
-                            // Ignore parsing errors
-                        }
-                    };
-                    
-                    this.websockets[relayUrl].addEventListener('message', handleMessage);
-                    this.websockets[relayUrl].send(JSON.stringify(subscription));
+                            resolve(null);
+                        }, 3000); // 3 second timeout
+                        
+                        const handleMessage = (event) => {
+                            try {
+                                const data = JSON.parse(event.data);
+                                if (Array.isArray(data)) {
+                                    const [messageType, subId, eventData] = data;
+                                    
+                                    if (messageType === 'EVENT' && subId === subscriptionId && eventData.kind === 0) {
+                                        clearTimeout(timeout);
+                                        this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                        
+                                        // Close the subscription
+                                        this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
+                                        
+                                        try {
+                                            const metadata = JSON.parse(eventData.content);
+                                            const profile = {
+                                                name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
+                                                pubkey: pubkey,
+                                                picture: metadata.picture,
+                                                about: metadata.about
+                                            };
+                                            resolve(profile);
+                                        } catch (e) {
+                                            resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
+                                        }
+                                    } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                                        clearTimeout(timeout);
+                                        this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                        
+                                        // Close the subscription
+                                        this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
+                                        
+                                        resolve(null);
+                                    }
+                                }
+                            } catch (e) {
+                                // Ignore parsing errors
+                            }
+                        };
+                        
+                        this.websockets[relayUrl].addEventListener('message', handleMessage);
+                        this.websockets[relayUrl].send(JSON.stringify(subscription));
+                    });
                 });
             }
 
             updateHash() {
+                this.updatingHash = true; // Prevent circular hash updates
+                
                 const url = new URL(window.location);
                 const params = new URLSearchParams();
                 
+                // Always start with a clean slate - only add parameters that are actually active
+                if (this.searchFilter) {
+                    params.set('search', this.searchFilter);
+                }
                 if (this.geohashFilter) {
                     params.set('geohash', this.geohashFilter);
                 }
                 if (this.nip05Filter) {
                     params.set('nip05', 'true');
-                }
-                if (this.circleFilter) {
-                    params.set('circle', this.circleFilter);
-                }
-                if (this.persistenceFilter) {
-                    params.set('persistent', 'true');
+                } else {
+                    // Explicitly remove nip05 parameter when filter is off
+                    params.delete('nip05');
                 }
                 
+                // Always update the hash - either with parameters or empty
                 if (params.toString()) {
                     url.hash = `#${params.toString()}`;
-                    } else {
+                } else {
                     url.hash = '';
                 }
                 window.history.replaceState(null, '', url);
+                
+                this.updatingHash = false; // Reset flag
             }
 
             loadFilterFromHash() {
                 const hash = window.location.hash;
+                console.log(`🔍 loadFilterFromHash called with hash: "${hash}"`);
                 if (hash && hash.startsWith('#')) {
                     const hashContent = hash.substring(1); // Remove the # symbol
+                    console.log(`🔍 Parsing hash content: "${hashContent}"`);
                     
                     // Try to parse as URL parameters first
                     try {
                         const params = new URLSearchParams(hashContent);
+                        const search = params.get('search');
                         const geohash = params.get('geohash');
                         const nip05 = params.get('nip05');
-                        const circle = params.get('circle');
-                        const persistent = params.get('persistent');
                         
-                    if (geohash) {
-                        this.geohashFilter = geohash.toLowerCase();
-                        const geohashFilterInput = document.getElementById('geohashFilter');
-                        if (geohashFilterInput) {
-                            geohashFilterInput.value = geohash;
+                        if (search) {
+                            this.searchFilter = search.toLowerCase();
+                            const searchFilterInput = document.getElementById('searchFilter');
+                            if (searchFilterInput) {
+                                searchFilterInput.value = search;
+                            }
                         }
+                        
+                        if (geohash) {
+                            this.geohashFilter = geohash.toLowerCase();
+                            const geohashFilterInput = document.getElementById('geohashFilter');
+                            if (geohashFilterInput) {
+                                geohashFilterInput.value = geohash;
+                            }
                         }
                         
                         if (nip05 === 'true') {
+                            console.log(`🔍 Loading NIP-05 filter from hash: setting to true`);
                             this.nip05Filter = true;
                             const nip05FilterInput = document.getElementById('nip05Filter');
                             if (nip05FilterInput) {
                                 nip05FilterInput.checked = true;
                             }
-                        }
-                        
-                        if (circle) {
-                            this.circleFilter = circle;
-                            const circleFilterInput = document.getElementById('circleFilter');
-                            if (circleFilterInput) {
-                                circleFilterInput.value = circle;
+                        } else {
+                            console.log(`🔍 Loading NIP-05 filter from hash: setting to false (nip05="${nip05}")`);
+                            this.nip05Filter = false;
+                            const nip05FilterInput = document.getElementById('nip05Filter');
+                            if (nip05FilterInput) {
+                                nip05FilterInput.checked = false;
                             }
                         }
                         
-                        if (persistent === 'true') {
-                            this.persistenceFilter = true;
-                            const persistenceFilterInput = document.getElementById('persistenceFilter');
-                            if (persistenceFilterInput) {
-                                persistenceFilterInput.checked = true;
-                            }
-                        }
+                        
                     } catch (e) {
-                        // Fallback to old format (just geohash)
-                        if (hashContent) {
-                            this.geohashFilter = hashContent.toLowerCase();
-                            const geohashFilterInput = document.getElementById('geohashFilter');
-                            if (geohashFilterInput) {
-                                geohashFilterInput.value = hashContent;
-                            }
-                        }
+                        // Invalid hash format - ignore
+                        console.log('Invalid hash format, ignoring:', hashContent);
+                    }
+                } else {
+                    // No hash parameters - ensure filters are in default state
+                    console.log(`🔍 No hash parameters - setting filters to default state`);
+                    this.nip05Filter = false;
+                    const nip05FilterInput = document.getElementById('nip05Filter');
+                    if (nip05FilterInput) {
+                        nip05FilterInput.checked = false;
                     }
                 }
+                console.log(`🔍 After loadFilterFromHash: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
             }
 
             getFilteredActivities() {
                 let filtered = this.notes;
+                console.log(`🔍 getFilteredActivities called with ${filtered.length} total notes`);
+                console.log(`🔍 Current filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
                 
-                // Apply geohash filter
+                // Apply geohash filter (only when geohash filter is active)
                 if (this.geohashFilter) {
+                    const beforeCount = filtered.length;
+                    const geohashTerm = this.geohashFilter.toLowerCase();
                     filtered = filtered.filter(note => {
-                        if (!note.tags) return false;
+                        // Always show verified notes, even if they don't have a geohash
+                        const isVerified = note.tags && note.tags.some(tag => 
+                            tag[0] === 'nip05' && 
+                            tag[1] && 
+                            tag[1].endsWith('@trustroots.org')
+                        );
                         
-                        return note.tags.some(tag => 
+                        // Check if note has matching geohash
+                        const hasMatchingGeohash = note.tags && note.tags.some(tag => 
                             tag[0] === 'g' && 
                             tag[1] && 
-                            tag[1].toLowerCase().includes(this.geohashFilter)
+                            tag[1].toLowerCase().includes(geohashTerm)
                         );
+                        
+                        // Show note if it has matching geohash OR if it's verified
+                        return hasMatchingGeohash || isVerified;
                     });
+                    console.log(`🔍 After geohash filter: ${beforeCount} -> ${filtered.length} notes (including verified notes without geohash)`);
+                }
+                
+                // Apply search filter (hashtags, content, usernames)
+                if (this.searchFilter) {
+                    const beforeCount = filtered.length;
+                    const searchTerm = this.searchFilter.toLowerCase();
+                    filtered = filtered.filter(note => {
+                        // Search in hashtag tags
+                        const hasHashtagMatch = note.tags && note.tags.some(tag => 
+                            tag[0] === 't' && 
+                            tag[1] && 
+                            tag[1].toLowerCase().includes(searchTerm)
+                        );
+                        
+                        // Search in note content
+                        const hasContentMatch = note.content && 
+                            note.content.toLowerCase().includes(searchTerm);
+                        
+                        // Search in username (if we have profile data)
+                        const profile = this.userProfiles[note.pubkey];
+                        const hasUsernameMatch = profile && profile.name && 
+                            profile.name.toLowerCase().includes(searchTerm);
+                        
+                        return hasHashtagMatch || hasContentMatch || hasUsernameMatch;
+                    });
+                    console.log(`🔍 After search filter: ${beforeCount} -> ${filtered.length} notes`);
                 }
                 
                 // Apply NIP-05 verification filter
                 if (this.nip05Filter) {
+                    const beforeCount = filtered.length;
                     filtered = filtered.filter(note => {
                         if (!note.tags) return false;
                         
@@ -3593,44 +3540,27 @@
                             tag[1].endsWith('@trustroots.org')
                         );
                     });
-                }
-                
-                // Apply circle filter (NIP-32 labels and NIP-12 topics)
-                if (this.circleFilter) {
-                    console.log(`Filtering by circle: ${this.circleFilter}`);
-                    const beforeCount = filtered.length;
-                    filtered = filtered.filter(note => {
+                    console.log(`🔍 After NIP-05 filter (ON): ${beforeCount} -> ${filtered.length} notes`);
+                } else {
+                    console.log(`🔍 NIP-05 filter OFF - showing all notes (verified and unverified)`);
+                    // Let's see what notes we have and their verification status
+                    const verifiedNotes = filtered.filter(note => {
                         if (!note.tags) return false;
-                        
-                        // Match circle labels (NIP-32 format)
-                        const hasCircleTag = note.tags.some(tag => 
-                            tag[0] === 'l' && 
+                        return note.tags.some(tag => 
+                            tag[0] === 'nip05' && 
                             tag[1] && 
-                            tag[1] === this.circleFilter &&
-                            tag[2] === 'trustroots'
+                            tag[1].endsWith('@trustroots.org')
                         );
-                        
-                        // Match topic tags (NIP-12 format)
-                        const hasTopicTag = note.tags.some(tag => 
-                            tag[0] === 't' && 
-                            tag[1] && 
-                            tag[1] === this.circleFilter
-                        );
-                        
-                        if (hasCircleTag || hasTopicTag) {
-                            console.log(`Note matches circle filter:`, note);
-                        }
-                        
-                        return hasCircleTag || hasTopicTag;
                     });
-                    console.log(`Circle filter: ${beforeCount} -> ${filtered.length} notes`);
+                    console.log(`🔍 Found ${verifiedNotes.length} verified notes out of ${filtered.length} total notes`);
+                    if (verifiedNotes.length > 0) {
+                        console.log(`🔍 Sample verified note:`, verifiedNotes[0]);
+                    }
                 }
                 
-                // Apply persistence filter
-                if (this.persistenceFilter) {
-                    filtered = filtered.filter(note => note.kind === 1);
-                }
                 
+                
+                console.log(`🔍 Final filtered result: ${filtered.length} notes`);
                 return filtered;
             }
 
@@ -3691,7 +3621,8 @@
                         // Subscribe to TRipchat-specific event kinds
                         const filters = {
                             "kinds": [1, 0], // Text notes + profiles
-                            "limit": 100
+                            "limit": 50,
+                            "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60) // Last 30 days
                         };
                         
                         const subscription = [
@@ -3715,9 +3646,12 @@
                             if (Array.isArray(data)) {
                                 const [messageType, subId, eventData] = data;
                                 
-                                if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
+                                if (messageType === 'EVENT' && eventData && (subId === subscriptionId || subId.startsWith('tripchat-live-'))) {
                                     this.totalEventsReceived++;
-                                    console.log(`📨 Received event #${this.totalEventsReceived}: ${eventData.id}, kind: ${eventData.kind}, content: "${eventData.content?.substring(0, 30)}..."`);
+                                    const noteAge = Math.floor((Date.now() / 1000) - eventData.created_at);
+                                    const ageHours = Math.floor(noteAge / 3600);
+                                    const ageDays = Math.floor(ageHours / 24);
+                                    console.log(`📨 Received event #${this.totalEventsReceived}: ${eventData.id}, kind: ${eventData.kind}, age: ${ageDays}d ${ageHours % 24}h, content: "${eventData.content?.substring(0, 30)}..."`);
                                     
                                     // Debug: Check for geohash tags in all events
                                     if (eventData.tags) {
@@ -3740,9 +3674,8 @@
                     this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
                     this.updateConnectionStatus();
                     
-                    if (this.notes.length > 0) {
-                        this.displayStats(this.notes);
-                    }
+                    // Start live subscription for new notes
+                    this.startLiveSubscription(relayUrl);
                     
                     // Show load more button after initial load
                     if (!this.initialLoadComplete) {
@@ -3798,6 +3731,27 @@
                 return false;
             }
 
+            startLiveSubscription(relayUrl) {
+                // Subscribe to new notes in real-time
+                const liveSubscriptionId = "tripchat-live-" + Math.random().toString(36).substr(2, 9);
+                const liveFilters = {
+                    "kinds": [1], // Only text notes for live updates
+                    "since": Math.floor(Date.now() / 1000) // Only new notes from now
+                };
+                
+                const liveSubscription = [
+                    "REQ",
+                    liveSubscriptionId,
+                    liveFilters
+                ];
+                
+                console.log(`Starting live subscription to ${relayUrl}:`, liveSubscription);
+                
+                if (this.websockets[relayUrl]) {
+                    this.websockets[relayUrl].send(JSON.stringify(liveSubscription));
+                }
+            }
+
             addNewNote(note) {
                 // Check if note already exists
                 if (this.notes.find(a => a.id === note.id)) {
@@ -3805,15 +3759,27 @@
                     return;
                 }
 
-                this.notes.push(note);
-                this.notes.sort((a, b) => b.created_at - a.created_at);
-                
-                if (this.notes.length > 10000) {
-                    this.notes = this.notes.slice(0, 10000);
+                // Ensure created_at is a number
+                if (typeof note.created_at !== 'number') {
+                    console.warn(`Note ${note.id} has invalid created_at:`, note.created_at);
+                    note.created_at = Math.floor(Date.now() / 1000);
                 }
 
-                // Fetch user profile if we don't have it
-                if (note.pubkey && !this.userProfiles[note.pubkey]) {
+                console.log(`Adding note ${note.id} with created_at:`, new Date(note.created_at * 1000), 'Content:', note.content?.substring(0, 50) + '...');
+                
+                this.notes.push(note);
+                this.notes.sort((a, b) => a.created_at - b.created_at);
+                
+                const oldest = this.notes[0] ? new Date(this.notes[0].created_at * 1000) : null;
+                const mostRecent = this.notes[this.notes.length - 1] ? new Date(this.notes[this.notes.length - 1].created_at * 1000) : null;
+                console.log(`Total notes now: ${this.notes.length}, Most recent: ${mostRecent}, Oldest: ${oldest}`);
+                
+                if (this.notes.length > 200) {
+                    this.notes = this.notes.slice(0, 200);
+                }
+
+                // Fetch user profile if we don't have it (only for recent notes to avoid spam)
+                if (note.pubkey && !this.userProfiles[note.pubkey] && this.notes.length <= 20) {
                     this.fetchUserProfile(note.pubkey);
                 }
 
@@ -3848,8 +3814,9 @@
                 const nonExpiredActivities = this.filterExpiredNotes(filteredActivities);
                 
                 if (nonExpiredActivities.length === 0) {
-                    if (this.geohashFilter) {
-                        noteContainer.innerHTML = `<div class="loading">No notes found for geohash "${this.geohashFilter}". Try a different geohash or clear the filter.</div>`;
+                    if (this.searchFilter || this.geohashFilter) {
+                        const filterText = this.geohashFilter ? `geohash "${this.geohashFilter}"` : `search "${this.searchFilter}"`;
+                        noteContainer.innerHTML = `<div class="loading">No notes found for ${filterText}. Try a different search term or clear the filter.</div>`;
                     } else {
                         noteContainer.innerHTML = '<div class="loading">No TRipchat note found. Check the browser console for debug information.</div>';
                     }
@@ -3862,9 +3829,10 @@
                 }
 
                 const sortedActivities = [...nonExpiredActivities].sort((a, b) => a.created_at - b.created_at);
+                const limitedActivities = sortedActivities.slice(0, 50); // Limit to 50 notes (oldest first)
                 noteContainer.innerHTML = '';
 
-                sortedActivities.forEach(note => {
+                limitedActivities.forEach(note => {
                     console.log('Processing note:', note);
                     const noteDiv = document.createElement('div');
                     
@@ -3918,8 +3886,9 @@
                 // Set up click handlers for datetime elements
                 this.setupDatetimeClickHandlers();
                 
-                // Set up click handlers for reply buttons
-                this.setupReplyButtonHandlers();
+                // Set up click handlers for hashtag links
+                this.setupHashtagClickHandlers();
+                
             }
 
             renderNote(note, timeString, relativeTime) {
@@ -3948,18 +3917,17 @@
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Display content as-is for location channel messages
-                let contentHtml = processedContent;
+                // Process hashtags to make them clickable
+                let contentHtml = this.processHashtags(processedContent);
                 
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.75rem;">${username}</span>
+                        <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
                         <span class="note-time" title="${timeString}" data-note-id="${note.id}">${relativeTime}</span>
                         </div>
                     <div class="note-content">${contentHtml}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
-                            <button class="reply-btn" data-note-id="${note.id}" data-pubkey="${note.pubkey}" data-username="${username}" title="Reply to this note">💬</button>
                             ${geohashTags.map(geohash => `<span class="geohash-tag" data-geohash="${geohash}" style="background: #e9ecef; color: #6c757d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">📍 ${geohash}</span>`).join('')}
                         </div>
                     </div>
@@ -3971,113 +3939,91 @@
                 return '';
             }
 
+            processHashtags(content) {
+                // Create a mapping of hashtags to circle slugs
+                const hashtagToCircleMap = {
+                    'hitchhiking': 'hitchhikers',
+                    'hitchhikers': 'hitchhikers',
+                    'hitchwiki': 'hitchhikers',
+                    'dumpster': 'dumpster-divers',
+                    'dumpsterdiving': 'dumpster-divers',
+                    'family': 'families',
+                    'families': 'families',
+                    'kids': 'families',
+                    'music': 'musicians',
+                    'musicians': 'musicians',
+                    'busking': 'buskers',
+                    'buskers': 'buskers',
+                    'vegan': 'veg',
+                    'vegetarian': 'veg',
+                    'veg': 'veg',
+                    'hacker': 'hackers',
+                    'hackers': 'hackers',
+                    'coding': 'hackers',
+                    'lgbtq': 'lgbtq',
+                    'lgbt': 'lgbtq',
+                    'eco': 'ecoliving',
+                    'ecoliving': 'ecoliving',
+                    'sustainable': 'ecoliving',
+                    'lindy': 'lindyhoppers',
+                    'lindyhop': 'lindyhoppers',
+                    'swing': 'lindyhoppers',
+                    'dance': 'lindyhoppers',
+                    'nomad': 'nomads',
+                    'nomads': 'nomads',
+                    'travel': 'nomads',
+                    'punk': 'punks',
+                    'punks': 'punks',
+                    'cycling': 'cyclists',
+                    'cyclists': 'cyclists',
+                    'bike': 'cyclists',
+                    'foodsharing': 'foodsharing',
+                    'foodsharing': 'foodsharing',
+                    'yoga': 'yoga',
+                    'climbing': 'climbers',
+                    'climbers': 'climbers',
+                    'hiking': 'hikers',
+                    'hikers': 'hikers',
+                    'sailing': 'sailors',
+                    'sailors': 'sailors',
+                    'art': 'artists',
+                    'artists': 'artists',
+                    'creative': 'artists'
+                };
+
+                // Replace hashtags with clickable links
+                return content.replace(/#([a-zA-Z0-9_]+)/g, (match, hashtag) => {
+                    const circleSlug = hashtagToCircleMap[hashtag.toLowerCase()];
+                    if (circleSlug) {
+                        return `<a href="#" class="hashtag-link" data-circle="${circleSlug}" data-hashtag="${hashtag}">#${hashtag}</a>`;
+                    } else {
+                        return `<a href="#" class="hashtag-link" data-hashtag="${hashtag}">#${hashtag}</a>`;
+                    }
+                });
+            }
+
             renderFallbackNote(note, timeString, relativeTime) {
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
+                // Process hashtags in fallback note content
+                const content = this.escapeHtml(note.content || 'No content');
+                const processedContent = this.processHashtags(content);
+                
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.75rem;">${username}</span>
+                        <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
                         <span class="note-time" title="${timeString}">${relativeTime}</span>
                         </div>
-                    <div class="note-content">${this.escapeHtml(note.content || 'No content')}</div>
+                    <div class="note-content">${processedContent}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
-                            <button class="reply-btn" data-note-id="${note.id}" data-pubkey="${note.pubkey}" data-username="${username}" title="Reply to this note">💬</button>
                             <span style="background: #e9ecef; color: #6c757d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Kind ${note.kind || 'Unknown'}</span>
                         </div>
                     </div>
                 `;
             }
 
-            displayStats(notes) {
-                let statsDiv = document.getElementById('statsBox');
-                
-                if (!statsDiv) {
-                    statsDiv = document.createElement('div');
-                    statsDiv.id = 'statsBox';
-                    statsDiv.className = 'stats minimized';
-                    document.body.appendChild(statsDiv);
-                }
-                
-                const filteredActivities = this.getFilteredActivities();
-                
-                // Count notes with geo information
-                let geoActivitiesCount = 0;
-                filteredActivities.forEach(note => {
-                    const geo = this.extractGeoLocation(note);
-                    if (geo) {
-                        geoActivitiesCount++;
-                    }
-                });
-
-
-                // Generate relay status HTML
-                const relayStatusHtml = this.relays.map(relayUrl => {
-                    const status = this.relayStatus[relayUrl];
-                    const relayName = relayUrl.replace('wss://', '');
-                    const statusClass = `relay-${status.status}`;
-                    
-                    let statsText = '';
-                    if (status.notesCount > 0) {
-                        statsText = `${status.notesCount} notes`;
-                    }
-                    
-                    // Calculate connection time more accurately
-                    if (status.connectionTime) {
-                        const connectionAge = Math.floor((new Date() - status.connectionTime) / 1000);
-                        if (connectionAge < 60) {
-                            statsText += statsText ? ` • ${connectionAge}s` : `${connectionAge}s`;
-                        } else if (connectionAge < 3600) {
-                            const minutes = Math.floor(connectionAge / 60);
-                            statsText += statsText ? ` • ${minutes}m` : `${minutes}m`;
-                        } else {
-                            const hours = Math.floor(connectionAge / 3600);
-                            statsText += statsText ? ` • ${hours}h` : `${hours}h`;
-                        }
-                    } else if (status.status === 'connected') {
-                        // If connected but no connectionTime, show as "just connected"
-                        statsText += statsText ? ` • just now` : `just now`;
-                    }
-
-                    return `
-                        <div class="relay-item">
-                            <div class="relay-status-indicator ${statusClass}"></div>
-                            <div class="relay-name">${relayName}</div>
-                            <div class="relay-stats">${statsText}</div>
-                        </div>
-                    `;
-                }).join('');
-                
-                
-                const totalActivities = this.notes.length;
-                const filteredCount = filteredActivities.length;
-                
-                // Calculate persistence stats
-                const persistentCount = this.notes.filter(n => n.kind === 1).length;
-                const expiringCount = this.notes.filter(n => this.isExpiringSoon(n)).length;
-                
-                statsDiv.innerHTML = `
-                    <div class="stats-header" onclick="const stats = this.parentElement; const content = stats.querySelector('.stats-content'); const toggle = stats.querySelector('.stats-toggle'); content.classList.toggle('minimized'); stats.classList.toggle('minimized'); toggle.textContent = content.classList.contains('minimized') ? '+' : '−';">
-                        <h3 class="stats-title">📊 Stats</h3>
-                        <span class="stats-toggle">+</span>
-                    </div>
-                    <div class="stats-content minimized">
-                    <div class="stats-section">
-                            <p><strong>${filteredCount}</strong> ${this.geohashFilter ? 'filtered' : 'total'} notes</p>
-                            <p><strong>${geoActivitiesCount}</strong> notes with geo info</p>
-                            <p><strong>Ephemeral:</strong> ${ephemeralCount}</p>
-                            <p><strong>Persistent:</strong> ${persistentCount}</p>
-                            <p><strong>Expiring Soon:</strong> ${expiringCount}</p>
-                            ${this.geohashFilter ? `<p><em>Filtered from ${totalActivities} total notes</em></p>` : ''}
-                    </div>
-                    <div class="stats-section">
-                        <h3>🌐 Relays</h3>
-                        ${relayStatusHtml}
-                        </div>
-                    </div>
-                `;
-            }
 
             formatTime(date) {
                 return date.toLocaleString('en-CA', {
@@ -4275,9 +4221,10 @@
                 }
                 
                 geoActivities.forEach(({ note, geo }, index) => {
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                     const marker = L.circleMarker([geo.lat, geo.lng], {
                         radius: 8,
-                        fillColor: '#27ae60',
+                        fillColor: isDark ? '#58a6ff' : '#27ae60',
                         color: '#ffffff',
                         weight: 2,
                         opacity: 1,
@@ -4305,7 +4252,7 @@
                     const popupContent = `
                         <div class="map-popup">
                             <div class="note-title">@${username}</div>
-                            <div class="popup-content">${this.escapeHtml(note.content?.substring(0, 100) || 'No content')}${note.content?.length > 100 ? '...' : ''}</div>
+                            <div class="popup-content">${this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
                             <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
                             ${geohashLink}
                         </div>
@@ -4320,6 +4267,7 @@
             }
 
             plotGeohashRectangles(geohashes) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 geohashes.forEach(geohash => {
                     const bounds = this.geohashToBounds(geohash);
                     if (bounds) {
@@ -4327,8 +4275,8 @@
                             [bounds.south, bounds.west],
                             [bounds.north, bounds.east]
                         ], {
-                            color: '#27ae60',
-                            fillColor: '#27ae60',
+                            color: isDark ? '#58a6ff' : '#27ae60',
+                            fillColor: isDark ? '#58a6ff' : '#27ae60',
                             fillOpacity: 0.1,
                             weight: 2,
                             opacity: 0.6,
@@ -4453,10 +4401,10 @@
 
             filterByGeohash(geohash) {
                 // Set the filter
-                this.geohashFilter = geohash.toLowerCase();
-                const geohashFilterInput = document.getElementById('geohashFilter');
-                if (geohashFilterInput) {
-                    geohashFilterInput.value = geohash;
+                this.searchFilter = geohash.toLowerCase();
+                const searchFilterInput = document.getElementById('searchFilter');
+                if (searchFilterInput) {
+                    searchFilterInput.value = geohash;
                 }
                 
                 // Update URL hash
@@ -4981,7 +4929,6 @@
             async postNote() {
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('geohashFilter').value.trim();
-                const circle = document.getElementById('circleFilter').value.trim();
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
                 if (!content) {
@@ -5008,7 +4955,7 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(content, geohash, circle);
+                    const event = await this.createBitchatEvent(content, geohash);
                     await this.publishEvent(event);
                     
                     // Clear the compose form after successful post
@@ -5019,7 +4966,7 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash, circle = '', persistence = 'medium') {
+            async createBitchatEvent(content, geohash, persistence = 'medium') {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -5030,11 +4977,11 @@
                 console.log('Creating Kind 1 event with persistence option:', persistenceOption);
                 
                 // Always create Kind 1 events with expiration
-                return this.createPersistentEvent(content, geohash, circle, persistenceOption);
+                return this.createPersistentEvent(content, geohash, persistenceOption);
             }
 
             // New method for ephemeral events (current behavior)
-            async createEphemeralEvent(content, geohash, circle) {
+            async createEphemeralEvent(content, geohash) {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -5115,12 +5062,6 @@
                             event.tags.push(['g', geohash]);
                         }
                         
-                        // Add circle tags if circle is provided (NIP-32 labels)
-                        if (circle && circle.trim()) {
-                            event.tags.push(['l', circle, 'trustroots']);
-                            event.tags.push(['t', circle]); // Also add topic tag
-                        }
-                        
                         // Add NIP-05 verification tag if verified
                         if (nip05Verified) {
                             event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
@@ -5151,12 +5092,6 @@
                         event.tags.push(['g', geohash]);
                     }
                     
-                    // Add circle tags if circle is provided (NIP-32 labels)
-                    if (circle && circle.trim()) {
-                        event.tags.push(['l', circle, 'trustroots']);
-                        event.tags.push(['t', circle]); // Also add topic tag
-                    }
-                    
                     // Add NIP-05 verification tag if verified
                     if (nip05Verified) {
                         event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
@@ -5170,7 +5105,7 @@
             }
 
             // New method for persistent events
-            async createPersistentEvent(content, geohash, circle, persistence) {
+            async createPersistentEvent(content, geohash, persistence) {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -5264,12 +5199,6 @@
                             event.tags.push(['g', geohash]);
                         }
                         
-                        // Add circle tags if circle is provided (NIP-32 labels)
-                        if (circle && circle.trim()) {
-                            event.tags.push(['l', circle, 'trustroots']);
-                            event.tags.push(['t', circle]); // Also add topic tag
-                        }
-                        
                         // Add expiration if not permanent
                         if (expirationHours[persistence]) {
                             const expiresAt = Math.floor(Date.now() / 1000) + (expirationHours[persistence] * 3600);
@@ -5306,12 +5235,6 @@
                     // Add geohash tag only if geohash is provided
                     if (geohash && geohash.trim()) {
                         event.tags.push(['g', geohash]);
-                    }
-                    
-                    // Add circle tags if circle is provided (NIP-32 labels)
-                    if (circle && circle.trim()) {
-                        event.tags.push(['l', circle, 'trustroots']);
-                        event.tags.push(['t', circle]); // Also add topic tag
                     }
                     
                     // Add expiration if not permanent
@@ -5696,7 +5619,7 @@
                     
                     <div class="modal-section">
                         <div class="modal-section-title">Content</div>
-                        <div class="modal-content-text">${this.escapeHtml(note.content || 'No content')}</div>
+                        <div class="modal-content-text">${this.processHashtags(this.escapeHtml(note.content || 'No content'))}</div>
                     </div>
                     
                     <div class="modal-section">
@@ -5748,6 +5671,9 @@
 
                 modalOverlay.appendChild(modalContent);
                 document.body.appendChild(modalOverlay);
+                
+                // Set up hashtag click handlers for the modal content
+                this.setupHashtagClickHandlers();
             }
 
             displayError(message) {
@@ -5867,5 +5793,4 @@
     </script>
 </body>
 </html>
-</body>
-</html>
+
