@@ -172,11 +172,13 @@
 
         #noteContainer {
             flex: 1;
+            height: calc(100vh - 200px); /* Fixed height minus header and filter */
             overflow-y: auto;
             padding: 0;
             background: #ffffff;
             border: 1px solid #e9ecef;
             border-radius: 0;
+            scroll-behavior: smooth;
         }
         
         .loading {
@@ -355,7 +357,7 @@
             margin: 0 0 10px 0;
             font-size: 1rem;
             font-weight: 500;
-            color: #2c3e50;
+            color: white;
             text-shadow: none;
         }
         
@@ -385,7 +387,7 @@
         }
 
         .stats-section h3 {
-            color: #2c3e50;
+            color: white;
             font-size: 0.9rem;
             font-weight: 600;
             margin: 0 0 12px 0;
@@ -1812,7 +1814,6 @@
                     <div class="tripchat-links">
                         <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
                         <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
-                        <a href="https://trustroots.org" target="_blank" class="tripchat-link">🌐 Trustroots</a>
                     </div>
                 </div>
                 
@@ -2862,6 +2863,13 @@
                 });
             }
 
+            scrollToBottom() {
+                const noteContainer = document.getElementById('noteContainer');
+                if (noteContainer) {
+                    noteContainer.scrollTop = noteContainer.scrollHeight;
+                }
+            }
+
             setupReplyButtonHandlers() {
                 document.querySelectorAll('.reply-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -3364,6 +3372,9 @@
                 
                 // Set up click handlers for geohash tags
                 this.setupGeohashTagClickHandlers();
+                
+                // Scroll to bottom to show latest messages
+                this.scrollToBottom();
                 
                 // Set up click handlers for datetime elements
                 this.setupDatetimeClickHandlers();
