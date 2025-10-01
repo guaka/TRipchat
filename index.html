@@ -2265,15 +2265,16 @@
                             <div class="compose-section">
                                 <label for="notePersistence">Note Duration:</label>
                                 <select id="notePersistence" class="persistence-select">
-                                    <option value="ephemeral">Ephemeral (Kind 20000)</option>
-                                    <option value="short">24 Hours (Kind 1)</option>
-                                    <option value="medium">7 Days (Kind 1)</option>
-                                    <option value="long">30 Days (Kind 1)</option>
-                                    <option value="permanent">Permanent (Kind 1)</option>
+                                    <option value="1h" selected>1 Hour</option>
+                                    <option value="short">24 Hours</option>
+                                    <option value="medium">7 Days</option>
+                                    <option value="long">30 Days</option>
+                                    <option value="permanent">Permanent</option>
                                 </select>
                             </div>
                             <div class="compose-actions">
                                 <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
+                                <button id="testPersistenceBtn" class="post-btn" style="background: #3498db; margin-left: 8px;">🧪 TEST PERSISTENCE</button>
                             </div>
                         </div>
                     </div>
@@ -2507,7 +2508,7 @@
             }
 
             loadPersistencePreference() {
-                return localStorage.getItem('tripchat_note_persistence') || 'ephemeral';
+                return localStorage.getItem('tripchat_note_persistence') || 'medium';
             }
 
             // Add expiration filtering
@@ -2896,6 +2897,21 @@
                 postNoteBtn.addEventListener('click', () => {
                     this.postNote();
                 });
+
+                // Add test button for debugging persistence
+                const testPersistenceBtn = document.getElementById('testPersistenceBtn');
+                if (testPersistenceBtn) {
+                    testPersistenceBtn.addEventListener('click', () => {
+                        const persistenceElement = document.getElementById('notePersistence');
+                        console.log('=== PERSISTENCE DEBUG ===');
+                        console.log('Persistence element:', persistenceElement);
+                        console.log('Persistence element value:', persistenceElement?.value);
+                        console.log('All options:', Array.from(persistenceElement?.options || []).map(opt => ({ value: opt.value, text: opt.text, selected: opt.selected })));
+                        console.log('Selected option:', persistenceElement?.selectedOptions?.[0]);
+                        console.log('========================');
+                        alert(`Current persistence value: ${persistenceElement?.value || 'undefined'}`);
+                    });
+                }
 
                 // Add Enter and Shift+Enter functionality to textarea
                 const composeContent = document.getElementById('composeContent');
@@ -3674,7 +3690,7 @@
                         
                         // Subscribe to TRipchat-specific event kinds
                         const filters = {
-                            "kinds": [20000, 0, 1], // Ephemeral events + profiles + notes for debugging
+                            "kinds": [1, 0], // Text notes + profiles
                             "limit": 100
                         };
                         
@@ -3763,25 +3779,20 @@
             }
 
             isTRipchatNote(event) {
-                // Temporarily accept more event types for debugging
+                // Accept Kind 1 events (text notes)
                 console.log(`Checking event ${event.id}, kind: ${event.kind}`);
                 
-                // Accept Kind 20000 events (ephemeral events for location channels)
-                if (event.kind === 20000) {
-                    console.log(`✅ Kind 20000 event accepted: ${event.id}`);
+                if (event.kind === 1) {
+                    console.log(`✅ Kind 1 event accepted: ${event.id}`);
                     return true;
                 }
                 
-                // Temporarily accept Kind 1 events (notes) for debugging
-                if (event.kind === 1) {
-                    console.log(`🔍 Kind 1 event found for debugging: ${event.id}`);
-                    // Check if it has location-related content
+                // Check if it has location-related content
                 const content = event.content || '';
-                    const hasLocationKeywords = /travel|trip|location|geohash|trustroots|hitchhiking/i.test(content);
-                    if (hasLocationKeywords) {
-                        console.log(`✅ Kind 1 event with location keywords accepted: ${event.id}`);
-                        return true;
-                    }
+                const hasLocationKeywords = /travel|trip|location|geohash|trustroots|hitchhiking/i.test(content);
+                if (hasLocationKeywords) {
+                    console.log(`✅ Kind 1 event with location keywords accepted: ${event.id}`);
+                    return true;
                 }
                 
                 return false;
@@ -3858,9 +3869,8 @@
                     const noteDiv = document.createElement('div');
                     
                     // Add persistence classes
-                    const isEphemeral = note.kind === 20000;
                     const isExpiring = this.isExpiringSoon(note);
-                    noteDiv.className = `note-item ${isEphemeral ? 'ephemeral' : 'persistent'} ${isExpiring ? 'expiring' : ''}`;
+                    noteDiv.className = `note-item persistent ${isExpiring ? 'expiring' : ''}`;
                     noteDiv.setAttribute('data-note-id', note.id);
                     
                     try {
@@ -3877,20 +3887,18 @@
                         }
                         
                         // Add expiration info if applicable
-                        if (!isEphemeral) {
-                            const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
-                            if (expirationTag) {
-                                const expiresAt = parseInt(expirationTag[1]);
-                                const now = Math.floor(Date.now() / 1000);
-                                const timeLeft = expiresAt - now;
-                                
-                                if (timeLeft > 0) {
-                                    const hoursLeft = Math.floor(timeLeft / 3600);
-                                    const expirationDiv = document.createElement('div');
-                                    expirationDiv.className = 'note-expiration';
-                                    expirationDiv.textContent = `Expires in ${hoursLeft}h`;
-                                    noteDiv.appendChild(expirationDiv);
-                                }
+                        const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                        if (expirationTag) {
+                            const expiresAt = parseInt(expirationTag[1]);
+                            const now = Math.floor(Date.now() / 1000);
+                            const timeLeft = expiresAt - now;
+                            
+                            if (timeLeft > 0) {
+                                const hoursLeft = Math.floor(timeLeft / 3600);
+                                const expirationDiv = document.createElement('div');
+                                expirationDiv.className = 'note-expiration';
+                                expirationDiv.textContent = `Expires in ${hoursLeft}h`;
+                                noteDiv.appendChild(expirationDiv);
                             }
                         }
                     } catch (error) {
@@ -3959,7 +3967,7 @@
             }
 
             getNoteType(note) {
-                // All notes are Kind 20000 (ephemeral events for location channels)
+                // All notes are Kind 1 (text notes)
                 return '';
             }
 
@@ -4046,7 +4054,6 @@
                 const filteredCount = filteredActivities.length;
                 
                 // Calculate persistence stats
-                const ephemeralCount = this.notes.filter(n => n.kind === 20000).length;
                 const persistentCount = this.notes.filter(n => n.kind === 1).length;
                 const expiringCount = this.notes.filter(n => this.isExpiringSoon(n)).length;
                 
@@ -5012,25 +5019,18 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash, circle = '', persistence = 'ephemeral') {
+            async createBitchatEvent(content, geohash, circle = '', persistence = 'medium') {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
 
-                const persistenceOption = persistence || document.getElementById('notePersistence').value;
-                console.log('Persistence option:', persistenceOption);
-                console.log('Persistence parameter:', persistence);
-                console.log('notePersistence element value:', document.getElementById('notePersistence')?.value);
+                const persistenceElement = document.getElementById('notePersistence');
+                const persistenceOption = persistence || (persistenceElement ? persistenceElement.value : 'medium');
                 
-                if (persistenceOption === 'ephemeral') {
-                    console.log('Creating ephemeral event (Kind 20000)');
-                    // Use Kind 20000 (current behavior)
-                    return this.createEphemeralEvent(content, geohash, circle);
-                } else {
-                    console.log('Creating persistent event (Kind 1) with option:', persistenceOption);
-                    // Use Kind 1 with expiration
-                    return this.createPersistentEvent(content, geohash, circle, persistenceOption);
-                }
+                console.log('Creating Kind 1 event with persistence option:', persistenceOption);
+                
+                // Always create Kind 1 events with expiration
+                return this.createPersistentEvent(content, geohash, circle, persistenceOption);
             }
 
             // New method for ephemeral events (current behavior)
@@ -5177,6 +5177,7 @@
 
                 try {
                     const expirationHours = {
+                        '1h': 1,
                         'short': 24,
                         'medium': 168, // 7 days
                         'long': 720, // 30 days
