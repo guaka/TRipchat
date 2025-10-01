@@ -4435,6 +4435,12 @@
 
                     // Use nostr-tools if available
                     if (typeof window.nostrTools !== 'undefined') {
+                        // Convert nsec to hex if needed
+                        let privateKeyForSigning = this.privateKey;
+                        if (this.privateKey.startsWith('nsec')) {
+                            privateKeyForSigning = this.nsecToHex(this.privateKey);
+                        }
+                        
                         const event = {
                             kind: 0, // Metadata event
                             content: JSON.stringify(profileContent),
@@ -4446,7 +4452,7 @@
                             created_at: Math.floor(Date.now() / 1000)
                         };
 
-                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        const signedEvent = window.nostrTools.finishEvent(event, privateKeyForSigning);
                         
                         // Post to all enabled relays
                         const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
@@ -4460,6 +4466,13 @@
                     } else {
                         // Fallback method
                         console.log('nostr-tools not available, using fallback profile creation');
+                        
+                        // Convert nsec to hex if needed for fallback methods
+                        let privateKeyForFallback = this.privateKey;
+                        if (this.privateKey.startsWith('nsec')) {
+                            privateKeyForFallback = this.nsecToHex(this.privateKey);
+                        }
+                        
                         const event = {
                             kind: 0,
                             content: JSON.stringify(profileContent),
@@ -4468,10 +4481,10 @@
                                 ['L', 'org.trustroots'],
                                 ['l', username, 'org.trustroots']
                             ],
-                            pubkey: this.generateFakePublicKey(this.privateKey),
+                            pubkey: this.generateFakePublicKey(privateKeyForFallback),
                             created_at: Math.floor(Date.now() / 1000),
                             id: this.generateFakeEventId(JSON.stringify(profileContent), 'profile'),
-                            sig: this.generateFakeSignature(this.privateKey, JSON.stringify(profileContent))
+                            sig: this.generateFakeSignature(privateKeyForFallback, JSON.stringify(profileContent))
                         };
 
                         // Post to all enabled relays
