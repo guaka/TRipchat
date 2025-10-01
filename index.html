@@ -4606,6 +4606,30 @@
                 }
             }
 
+            // Derive hex public key from private key
+            deriveHexPubkeyFromPrivateKey(privateKey) {
+                if (typeof window.nostrTools !== 'undefined') {
+                    try {
+                        // Convert nsec to hex if needed
+                        let hexPrivateKey = privateKey;
+                        if (privateKey.startsWith('nsec')) {
+                            hexPrivateKey = window.nostrTools.nip19.nsecDecode(privateKey);
+                        }
+                        
+                        // Get public key from private key
+                        const publicKey = window.nostrTools.getPublicKey(hexPrivateKey);
+                        return publicKey;
+                    } catch (error) {
+                        console.error('Error deriving hex public key:', error);
+                        // Fallback to simple hash
+                        return this.simpleHash(privateKey).substring(0, 64);
+                    }
+                } else {
+                    // Fallback method
+                    return this.simpleHash(privateKey).substring(0, 64);
+                }
+            }
+
             deriveNpubFromPrivateKey(privateKeyHex) {
                 try {
                     // Check if nostr-tools is available
@@ -5212,9 +5236,12 @@
                     
                     // Use nostr-tools if available
                     if (typeof window.nostrTools !== 'undefined') {
+                        // Get hex public key from private key
+                        const hexPubkey = this.deriveHexPubkeyFromPrivateKey(this.privateKey);
+                        
                         const event = {
                             kind: 1, // Standard text notes
-                            pubkey: this.hexPubkey,
+                            pubkey: hexPubkey,
                             content: content,
                             tags: [
                                 ['p', npub] // Add public key tag
