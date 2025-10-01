@@ -2897,14 +2897,16 @@
                     this.postNote();
                 });
 
-                // Add Shift+Enter functionality to textarea
+                // Add Enter and Shift+Enter functionality to textarea
                 const composeContent = document.getElementById('composeContent');
                 if (composeContent) {
                     composeContent.addEventListener('keydown', (e) => {
-                        if (e.shiftKey && e.key === 'Enter') {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            // Enter sends the note
                             e.preventDefault();
                             this.postNote();
                         }
+                        // Shift+Enter allows multiline content (default behavior)
                     });
                 }
 
