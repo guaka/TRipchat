@@ -993,37 +993,6 @@
             overflow: hidden;
         }
 
-        .compose-form-header {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .compose-form-header h3 {
-            margin: 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .cancel-compose-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.7rem;
-            transition: background 0.2s ease;
-        }
-
-        .cancel-compose-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
 
         .compose-form-body {
             padding: 8px;
@@ -1860,24 +1829,18 @@
                     </div>
                     <div id="composeFormContainer">
                         <div class="compose-form">
-                            <div class="compose-form-header">
-                                <h3>✍️ Compose Note</h3>
-                                <button id="cancelComposeBtn" class="cancel-compose-btn">❌</button>
-                            </div>
                             <div class="compose-form-body">
                                 <div class="compose-section">
                                     <label for="composeContent">Message:</label>
                                     <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                                 </div>
                                 <div class="compose-section">
-                                    <label for="composeLocation">Location (Geohash) - Optional:</label>
                                     <div class="location-input-group">
                                         <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy (optional - leave empty for global post)" />
                                         <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
                                     </div>
                                 </div>
                                 <div class="compose-section">
-                                    <label for="composeCircle">Circle (Optional):</label>
                                     <select id="composeCircle" class="circle-select">
                                         <option value="">No Circle</option>
                                     </select>
@@ -2396,7 +2359,6 @@
 
             setupComposeHandlers() {
                 const composeBtn = document.getElementById('composeBtn');
-                const cancelComposeBtn = document.getElementById('cancelComposeBtn');
                 const postNoteBtn = document.getElementById('postNoteBtn');
                 const getLocationBtn = document.getElementById('getLocationBtn');
 
@@ -2409,11 +2371,6 @@
 
                 // Compose button is now hidden since form is always visible
                 // composeBtn.addEventListener('click', () => { ... });
-
-                cancelComposeBtn.addEventListener('click', () => {
-                    // Clear the compose form
-                    this.clearComposeForm();
-                });
 
                 getLocationBtn.addEventListener('click', () => {
                     this.getCurrentLocation();
