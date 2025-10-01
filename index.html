@@ -2352,6 +2352,9 @@
                         localStorage.setItem('tripchat_nsec', nsecKey);
                         localStorage.setItem('tripchat_npub', npubKey);
                         
+                        // Set class property for immediate use
+                        this.privateKey = nsecKey;
+                        
                         alert(`New keys generated!\n\nPRIVATE KEY: ${nsecKey}\n\nPUBLIC KEY: ${npubKey}\n\nSave them somewhere safe!`);
                     } catch (error) {
                         console.error('Error generating key:', error);
@@ -2377,6 +2380,9 @@
                         // Save to localStorage
                         localStorage.setItem('tripchat_nsec', nsecInput);
                         localStorage.setItem('tripchat_npub', npubKey);
+                        
+                        // Set class property for immediate use
+                        this.privateKey = nsecInput;
                         
                         alert('Private key added successfully! Public key has been derived and saved.');
                     } catch (error) {
@@ -3748,7 +3754,26 @@
                     const npubKey = localStorage.getItem('tripchat_npub');
                     const privateKeyHex = localStorage.getItem('tripchat_private_key');
                     
-                    if (nsecKey && npubKey && privateKeyHex) {
+                    // Check if we have nsec/npub keys (preferred)
+                    if (nsecKey && npubKey) {
+                        // Load keys into settings modal if elements exist
+                        const settingsPrivateKey = document.getElementById('settingsPrivateKey');
+                        const settingsPublicKey = document.getElementById('settingsPublicKey');
+                        
+                        if (settingsPrivateKey) {
+                            settingsPrivateKey.value = nsecKey;
+                        }
+                        if (settingsPublicKey) {
+                            settingsPublicKey.value = npubKey;
+                        }
+                        
+                        // Use nsec key directly for signing
+                        this.privateKey = nsecKey;
+                        console.log('Keys loaded from localStorage (nsec/npub format)');
+                        return true;
+                    }
+                    // Fallback to hex format
+                    else if (nsecKey && npubKey && privateKeyHex) {
                         // Load keys into settings modal if elements exist
                         const settingsPrivateKey = document.getElementById('settingsPrivateKey');
                         const settingsPublicKey = document.getElementById('settingsPublicKey');
@@ -3761,7 +3786,7 @@
                         }
                         
                         this.privateKey = privateKeyHex;
-                        console.log('Keys loaded from localStorage');
+                        console.log('Keys loaded from localStorage (hex format)');
                         return true;
                     }
                 } catch (error) {
@@ -4375,8 +4400,13 @@
             // Create and post kind 0 profile event
             async postProfileToNostr(username, npub) {
                 try {
+                    // Load private key from localStorage if not already loaded
                     if (!this.privateKey) {
-                        throw new Error('No private key available for signing');
+                        const nsecKey = localStorage.getItem('tripchat_nsec');
+                        if (!nsecKey) {
+                            throw new Error('No private key available for signing');
+                        }
+                        this.privateKey = nsecKey;
                     }
 
                     // Create profile content
