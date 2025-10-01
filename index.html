@@ -140,7 +140,6 @@
         .note-item:hover {
             background: #f8f9fa;
             border-left: 3px solid #27ae60;
-            padding-left: 13px;
         }
         
         
@@ -653,8 +652,9 @@
         .filter-input-group {
             display: flex;
             align-items: center;
-            flex: 2;
-            min-width: 300px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
         }
 
         .filter-input-group input {
@@ -1340,6 +1340,9 @@
             border-radius: 10px;
             transition: all 0.2s ease;
             border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .filter-toggle-slider::before {
@@ -1366,8 +1369,11 @@
 
         .filter-toggle-text {
             font-size: 0.8rem;
-            font-weight: 600;
-            color: #6c757d;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+            position: relative;
         }
 
         .filter-circles {
@@ -1797,6 +1803,10 @@
                 height: 100vh;
                 overflow: hidden;
             }
+
+            .clear-filter-btn {
+                display: none;
+            }
             
             .map-container {
                 height: 5vh;
@@ -1912,14 +1922,15 @@
 
             .filter-row {
                 flex-direction: row;
-                gap: 8px;
+                gap: 12px;
                 align-items: center;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
             }
 
             .filter-input-group {
                 flex: 1;
-                min-width: 200px;
+                min-width: 150px;
+                max-width: 300px;
             }
 
             .filter-input-group input {
@@ -1937,6 +1948,11 @@
             .filter-toggle-label {
                 font-size: 0.7rem;
                 gap: 4px;
+            }
+
+            .filter-toggle-text {
+                font-size: 0.7rem;
+                color: #ffffff;
             }
 
             .filter-circles {
@@ -2024,11 +2040,12 @@
             }
 
             .filter-row {
-                gap: 6px;
+                gap: 8px;
             }
 
             .filter-input-group {
-                min-width: 150px;
+                min-width: 120px;
+                max-width: 250px;
             }
 
             .filter-input-group input {
@@ -2038,6 +2055,11 @@
 
             .filter-toggle-label {
                 font-size: 0.65rem;
+            }
+
+            .filter-toggle-text {
+                font-size: 0.65rem;
+                color: #ffffff;
             }
 
             .circle-select {
@@ -2116,11 +2138,12 @@
             }
 
             .filter-row {
-                gap: 4px;
+                gap: 6px;
             }
 
             .filter-input-group {
-                min-width: 120px;
+                min-width: 100px;
+                max-width: 200px;
             }
 
             .filter-input-group input {
@@ -2130,6 +2153,11 @@
 
             .filter-toggle-label {
                 font-size: 0.6rem;
+            }
+
+            .filter-toggle-text {
+                font-size: 0.6rem;
+                color: #ffffff;
             }
 
             .circle-select {
@@ -2210,7 +2238,7 @@
                             <label class="filter-toggle-label">
                                 <input type="checkbox" id="nip05Filter" />
                                 <span class="filter-toggle-slider">
-                                    <span class="filter-toggle-text">Verified</span>
+                                    <span class="filter-toggle-text">✓</span>
                                 </span>
                             </label>
                         </div>
@@ -3409,15 +3437,16 @@
                     });
                 }
                 
-                // Apply circle filter
+                // Apply circle filter (NIP-32 labels)
                 if (this.circleFilter) {
                     filtered = filtered.filter(note => {
                         if (!note.tags) return false;
                         
                         return note.tags.some(tag => 
-                            tag[0] === 'circle' && 
+                            tag[0] === 'l' && 
                             tag[1] && 
-                            tag[1] === this.circleFilter
+                            tag[1] === this.circleFilter &&
+                            tag[2] === 'trustroots'
                         );
                     });
                 }
@@ -4726,6 +4755,7 @@
             async postNote() {
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('geohashFilter').value.trim();
+                const circle = document.getElementById('circleFilter').value.trim();
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
                 if (!content) {
@@ -4752,7 +4782,7 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(content, geohash);
+                    const event = await this.createBitchatEvent(content, geohash, circle);
                     await this.publishEvent(event);
                     
                     // Clear the compose form after successful post
@@ -4763,7 +4793,7 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash) {
+            async createBitchatEvent(content, geohash, circle = '') {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -4844,6 +4874,10 @@
                             event.tags.push(['g', geohash]);
                         }
                         
+                        // Add circle tags if circle is provided (NIP-32 labels)
+                        if (circle && circle.trim()) {
+                            event.tags.push(['l', circle, 'trustroots']);
+                        }
                         
                         // Add NIP-05 verification tag if verified
                         if (nip05Verified) {
@@ -4875,6 +4909,10 @@
                         event.tags.push(['g', geohash]);
                     }
                     
+                    // Add circle tags if circle is provided (NIP-32 labels)
+                    if (circle && circle.trim()) {
+                        event.tags.push(['l', circle, 'trustroots']);
+                    }
                     
                     // Add NIP-05 verification tag if verified
                     if (nip05Verified) {
