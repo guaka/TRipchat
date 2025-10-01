@@ -37,7 +37,8 @@
             font-weight: 400;
             letter-spacing: 0;
             color: #2c3e50;
-            line-height: 1.6;
+            line-height: 1.4;
+            font-size: 14px;
         }
         
         .main-container {
@@ -75,7 +76,7 @@
         
         h1 {
             color: #27ae60;
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -141,7 +142,7 @@
         
         .note-time {
             color: #6c757d;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-family: 'Inter', sans-serif;
             font-weight: 400;
             margin: 0;
@@ -156,9 +157,9 @@
         
         
         .note-content {
-            line-height: 1.5;
+            line-height: 1.4;
             color: #2c3e50;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             word-wrap: break-word;
             white-space: pre-wrap;
             font-weight: 400;
@@ -182,7 +183,7 @@
             text-align: center;
             color: #6c757d;
             font-style: italic;
-            font-size: 1.1rem;
+            font-size: 1rem;
             padding: 40px 20px;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             border-radius: 16px;
@@ -300,7 +301,7 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             padding: 8px 12px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -352,7 +353,7 @@
         
         .stats h3 {
             margin: 0 0 10px 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             color: #27ae60;
             text-shadow: 0 0 5px rgba(255, 136, 0, 0.5);
@@ -368,7 +369,7 @@
         .stats p strong {
             color: #27ae60;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .stats-section {
@@ -385,7 +386,7 @@
 
         .stats-section h3 {
             color: #2c3e50;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             margin: 0 0 12px 0;
             display: flex;
@@ -954,7 +955,7 @@
 
         .welcome-content p {
             color: #6c757d;
-            font-size: 1.1rem;
+            font-size: 1rem;
             line-height: 1.6;
             margin-bottom: 30px;
         }
@@ -987,7 +988,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             flex-shrink: 0;
         }
 
@@ -1000,7 +1001,7 @@
 
         .step-content p {
             color: #6c757d;
-            font-size: 1rem;
+            font-size: 0.9rem;
             margin: 0;
             line-height: 1.5;
         }
@@ -1016,7 +1017,7 @@
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -2041,7 +2042,7 @@
                     .leaflet-popup-content .note-title {
                         color: #27ae60;
                         font-weight: 700;
-                        font-size: 1.1rem;
+                        font-size: 1rem;
                         margin-bottom: 8px;
                     }
                     .leaflet-popup-content .popup-content {
@@ -3213,7 +3214,7 @@
                 
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.85rem;">${username}</span>
+                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.75rem;">${username}</span>
                         <span class="note-time" title="${timeString}" data-note-id="${note.id}">${relativeTime}</span>
                         </div>
                     <div class="note-content">${contentHtml}</div>
@@ -3237,7 +3238,7 @@
                 
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.85rem;">${username}</span>
+                        <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.75rem;">${username}</span>
                         <span class="note-time" title="${timeString}">${relativeTime}</span>
                         </div>
                     <div class="note-content">${this.escapeHtml(note.content || 'No content')}</div>
