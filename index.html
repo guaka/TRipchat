@@ -5018,11 +5018,16 @@
                 }
 
                 const persistenceOption = persistence || document.getElementById('notePersistence').value;
+                console.log('Persistence option:', persistenceOption);
+                console.log('Persistence parameter:', persistence);
+                console.log('notePersistence element value:', document.getElementById('notePersistence')?.value);
                 
                 if (persistenceOption === 'ephemeral') {
+                    console.log('Creating ephemeral event (Kind 20000)');
                     // Use Kind 20000 (current behavior)
                     return this.createEphemeralEvent(content, geohash, circle);
                 } else {
+                    console.log('Creating persistent event (Kind 1) with option:', persistenceOption);
                     // Use Kind 1 with expiration
                     return this.createPersistentEvent(content, geohash, circle, persistenceOption);
                 }
@@ -5251,6 +5256,8 @@
                             created_at: Math.floor(Date.now() / 1000)
                         };
                         
+                        console.log('Creating Kind 1 event:', event);
+                        
                         // Add geohash tag only if geohash is provided
                         if (geohash && geohash.trim()) {
                             event.tags.push(['g', geohash]);
@@ -5292,6 +5299,8 @@
                         id: this.generateFakeEventId(content, geohash || 'global'),
                         sig: this.generateFakeSignature(this.privateKey, content)
                     };
+                    
+                    console.log('Creating Kind 1 event (fallback):', event);
                     
                     // Add geohash tag only if geohash is provided
                     if (geohash && geohash.trim()) {
