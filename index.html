@@ -606,8 +606,8 @@
         .filter-row {
             display: flex;
             align-items: center;
-            gap: 24px;
-            flex-wrap: wrap;
+            gap: 16px;
+            flex-wrap: nowrap;
         }
 
         .filter-container::before {
@@ -629,8 +629,8 @@
         .filter-input-group {
             display: flex;
             align-items: center;
-            flex: 1;
-            min-width: 250px;
+            flex: 2;
+            min-width: 300px;
         }
 
         .filter-input-group input {
@@ -659,7 +659,8 @@
             background: #e74c3c;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            flex: 0 0 auto;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -987,19 +988,37 @@
 
         /* Compact Inline Compose Form Styles */
         .compose-form {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            position: relative;
+            transition: all 0.3s ease;
         }
 
+        .compose-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .compose-form:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
 
         .compose-form-body {
-            padding: 8px;
+            padding: 0;
         }
 
         .compose-form .compose-section {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .compose-form .compose-section:last-child {
@@ -1020,18 +1039,19 @@
         .compose-form input,
         .compose-form select {
             width: 100%;
-            padding: 6px 8px;
+            padding: 10px 14px;
             border: 1px solid #dee2e6;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
             font-family: 'Inter', sans-serif;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: white;
         }
 
         .compose-form textarea {
             resize: vertical;
-            min-height: 40px;
-            max-height: 80px;
+            min-height: 50px;
+            max-height: 120px;
         }
 
         .compose-form textarea:focus,
@@ -1073,9 +1093,9 @@
         .compose-form .compose-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
-            margin-top: 8px;
-            padding-top: 8px;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
             border-top: 1px solid #dee2e6;
         }
 
@@ -1083,12 +1103,13 @@
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
         }
 
         .compose-form .post-btn:hover {
@@ -1269,6 +1290,7 @@
 
         .filter-options {
             white-space: nowrap;
+            flex: 0 0 auto;
         }
 
         .filter-toggle-label {
@@ -1326,7 +1348,8 @@
         }
 
         .filter-circles {
-            min-width: 150px;
+            min-width: 120px;
+            flex: 0 0 auto;
         }
 
         .circle-select {
