@@ -933,16 +933,6 @@
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
-        .compose-bottom-container {
-            position: sticky;
-            bottom: 0;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 16px 20px;
-            border-top: 1px solid #dee2e6;
-            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
         .compose-btn-bottom {
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
@@ -991,6 +981,7 @@
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             border-radius: 12px;
             padding: 16px;
+            margin-bottom: 20px;
             border: 1px solid #e9ecef;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             position: relative;
@@ -1822,20 +1813,18 @@
                     <div class="loading">Loading travel messages from Nostr relays...</div>
                 </div>
                 
-                <!-- Compose Button at Bottom -->
-                <div class="compose-bottom-container">
-                    <div id="composeButtonContainer" style="display: none;">
-                        <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
-                    </div>
-                    <div id="composeFormContainer">
-                        <div class="compose-form">
-                            <div class="compose-form-body">
-                                <div class="compose-section">
-                                    <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
-                                </div>
-                                <div class="compose-actions">
-                                    <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
-                                </div>
+                <!-- Compose Controls -->
+                <div id="composeButtonContainer" style="display: none;">
+                    <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
+                </div>
+                <div id="composeFormContainer">
+                    <div class="compose-form">
+                        <div class="compose-form-body">
+                            <div class="compose-section">
+                                <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
+                            </div>
+                            <div class="compose-actions">
+                                <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
                             </div>
                         </div>
                     </div>
