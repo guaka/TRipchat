@@ -214,10 +214,7 @@
         
         
         .note-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             flex-shrink: 0;
         }
         
@@ -247,7 +244,19 @@
         }
 
         .note-time:hover {
-            color: var(--text-secondary);
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        
+        .note-time::after {
+            content: " 🔍";
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            font-size: 0.4rem;
+        }
+        
+        .note-time:hover::after {
+            opacity: 1;
         }
         
         
@@ -1761,9 +1770,7 @@
             }
             
             .note-header {
-                flex-direction: row;
-                align-items: center;
-                margin-bottom: 6px;
+                margin-bottom: 4px;
             }
 
             .note-content {
@@ -2321,6 +2328,7 @@
                 this.requestDelay = 2000; // 2 second delay between requests
                 this.updatingHash = false; // Flag to prevent circular hash updates
                 this.userHasScrolled = false; // Track if user has manually scrolled
+                this.datetimeClickHandlerSetup = false; // Flag to prevent duplicate click handlers
                 this.init();
             }
 
@@ -2330,7 +2338,7 @@
             }
 
             loadPersistencePreference() {
-                return localStorage.getItem('tripchat_note_persistence') || 'medium';
+                return localStorage.getItem('tripchat_note_persistence') || '1h';
             }
 
             // Add expiration filtering
@@ -2371,6 +2379,7 @@
                     this.setupSettingsHandlers();
                     this.setupRelayManagerHandlers();
                     this.setupScrollHandlers();
+                    this.setupDatetimeClickHandlers(); // Set up click handlers early
                     this.loadFilterFromHash();
                     await this.connectToRelays();
                     
@@ -2694,10 +2703,14 @@
                 // Set default persistence preference
                 const persistenceSelect = document.getElementById('notePersistence');
                 if (persistenceSelect) {
-                    persistenceSelect.value = this.loadPersistencePreference();
+                    const savedPreference = this.loadPersistencePreference();
+                    console.log('Loading persistence preference:', savedPreference);
+                    persistenceSelect.value = savedPreference;
+                    console.log('Set persistence select value to:', persistenceSelect.value);
                     
                     // Save preference when changed
                     persistenceSelect.addEventListener('change', (e) => {
+                        console.log('Persistence changed to:', e.target.value);
                         this.savePersistencePreference(e.target.value);
                     });
                 }
@@ -3144,17 +3157,29 @@
             }
 
             setupDatetimeClickHandlers() {
-                document.querySelectorAll('.note-time').forEach(timeElement => {
-                    timeElement.addEventListener('click', (e) => {
-                        const noteId = e.target.dataset.noteId;
-                        if (noteId) {
-                            const note = this.notes.find(a => a.id === noteId);
-                            if (note) {
-                                this.showNoteDetailsModal(note);
+                // Use event delegation to handle clicks on dynamically added elements
+                // Only set up once to avoid duplicate listeners
+                if (this.datetimeClickHandlerSetup) {
+                    return;
+                }
+                
+                const noteContainer = document.getElementById('noteContainer');
+                if (noteContainer) {
+                    noteContainer.addEventListener('click', (e) => {
+                        // Check if the clicked element or its parent has the note-time class
+                        const timeElement = e.target.closest('.note-time');
+                        if (timeElement) {
+                            const noteId = timeElement.dataset.noteId;
+                            if (noteId) {
+                                const note = this.notes.find(a => a.id === noteId);
+                                if (note) {
+                                    this.showNoteDetailsModal(note);
+                                }
                             }
                         }
                     });
-                });
+                    this.datetimeClickHandlerSetup = true;
+                }
             }
 
             setupHashtagClickHandlers() {
@@ -3264,6 +3289,7 @@
                     if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
+                                console.log('Caching profile for', pubkey, ':', profile);
                                 this.userProfiles[pubkey] = profile;
                                 // Re-render notes to show the new username
                                 this.displayActivities(this.notes);
@@ -3358,8 +3384,10 @@
                                                 name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
                                                 pubkey: pubkey,
                                                 picture: metadata.picture,
-                                                about: metadata.about
+                                                about: metadata.about,
+                                                nip05: metadata.nip05 // Add NIP-05 field
                                             };
+                                            console.log('Fetched profile for', pubkey, ':', profile);
                                             resolve(profile);
                                         } catch (e) {
                                             resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
@@ -3852,9 +3880,6 @@
                     this.scrollToBottom();
                 }, 100);
                 
-                // Set up click handlers for datetime elements
-                this.setupDatetimeClickHandlers();
-                
                 // Set up click handlers for hashtag links
                 this.setupHashtagClickHandlers();
                 
@@ -3884,6 +3909,7 @@
                 
                 // Get username from profile cache with discriminator
                 const profile = this.userProfiles[note.pubkey];
+                console.log('Rendering note for pubkey', note.pubkey, 'with profile:', profile);
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
                 // Process hashtags to make them clickable
@@ -3899,18 +3925,26 @@
                     
                     if (timeLeft > 0) {
                         const hoursLeft = Math.floor(timeLeft / 3600);
-                        expirationText = ` • expires in ${hoursLeft}h`;
+                        const minutesLeft = Math.floor(timeLeft / 60);
+                        
+                        if (hoursLeft >= 1) {
+                            expirationText = ` • expires in ${hoursLeft}h`;
+                        } else if (minutesLeft >= 1) {
+                            expirationText = ` • expires in ${minutesLeft}m`;
+                        } else {
+                            expirationText = ` • expires in <1m`;
+                        }
                     }
                 }
 
                 return `
                     <div class="note-header">
                         <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
-                        <div class="note-time" title="${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; line-height: 1.2;">
-                            <div>${relativeTime}</div>
-                            ${expirationText ? `<div style="font-size: 0.45rem; margin-top: 1px;">${expirationText.replace(' • ', '')}</div>` : ''}
-                        </div>
-                        </div>
+                    </div>
+                    <div class="note-time" title="Click to view raw Nostr data: ${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; line-height: 1.2; margin-bottom: 4px;">
+                        <div>${relativeTime}</div>
+                        ${expirationText ? `<div style="font-size: 0.45rem; margin-top: 1px;">${expirationText.replace(' • ', '')}</div>` : ''}
+                    </div>
                     <div class="note-content">${contentHtml}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
@@ -3999,8 +4033,8 @@
                 return `
                     <div class="note-header">
                         <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
-                        <span class="note-time" title="${timeString}">${relativeTime}</span>
-                        </div>
+                    </div>
+                    <div class="note-time" title="Click to view raw Nostr data: ${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; margin-bottom: 4px;">${relativeTime}</div>
                     <div class="note-content">${processedContent}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
@@ -4183,7 +4217,7 @@
                     const geo = this.extractGeoLocation(note);
                     if (geo) {
                         geoActivities.push({ note, geo });
-                        console.log(`Found geo note: ${geo.location} (${geo.lat}, ${geo.lng}) - Kind ${note.kind}`);
+                        // Found geo note
                         
                         // Extract geohash from tags
                         if (note.tags) {
@@ -4196,8 +4230,7 @@
                     }
                 });
                 
-                console.log(`Found ${geoActivities.length} notes with geo-location data out of ${filteredActivities.length} filtered notes`);
-                console.log(`Found ${uniqueGeohashes.size} unique geohashes:`, Array.from(uniqueGeohashes));
+                // Processed geo-location data
                 
                 // Plot geohash rectangles
                 this.plotGeohashRectangles(Array.from(uniqueGeohashes));
@@ -4249,7 +4282,7 @@
                     this.mapMarkers.push(marker);
                 });
                 
-                console.log(`Plotted ${geoActivities.length} geo-located notes on map`);
+                // Plotted geo-located notes on map
             }
 
             plotGeohashRectangles(geohashes) {
@@ -4284,7 +4317,7 @@
                         rectangle.addTo(this.map);
                         this.geohashRectangles.push(rectangle);
                         
-                        console.log(`Plotted geohash rectangle for ${geohash}:`, bounds);
+                        // Plotted geohash rectangle
                     }
                 });
             }
@@ -4832,31 +4865,46 @@
             }
 
             // Format username with discriminator
+            // Discriminators (#p6, #a1, etc.) are used by some Nostr clients to handle username conflicts
+            // NIP-05 names are prioritized as they are cryptographically verified and more stable
             formatUsernameWithDiscriminator(profile, pubkey) {
                 let username;
                 
-                if (!profile || !profile.name) {
-                    // Show first 10 characters of npub without @
-                    username = pubkey ? this.hexToNpub(pubkey).substring(0, 10) : 'Unknown';
-                } else {
-                // Check if the name already has a discriminator
-                if (profile.name.includes('#')) {
+                console.log('formatUsernameWithDiscriminator called with:', { profile, pubkey });
+                
+                // Priority 1: Use NIP-05 name if available (most trustworthy)
+                if (profile && profile.nip05) {
+                    console.log('Profile has NIP-05:', profile.nip05);
+                    const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
+                    if (isTrustrootsVerified) {
+                        // Show full NIP-05 name for Trustroots verified users
+                        username = `@${profile.nip05} 🟢`; // Green circle for Trustroots verified
+                        console.log('Using Trustroots NIP-05:', username);
+                    } else if (profile.nip05.includes('@')) {
+                        // Show full NIP-05 name for other verified users
+                        username = `@${profile.nip05} 🔵`; // Blue circle for other NIP-05 verified
+                        console.log('Using other NIP-05:', username);
+                    } else {
+                        // Fallback to profile name if NIP-05 exists but is malformed
+                        username = profile.name || 'Unknown';
+                        console.log('Using profile name fallback:', username);
+                    }
+                }
+                // Priority 2: Use profile name with discriminator if no NIP-05
+                else if (profile && profile.name) {
+                    // Check if the name already has a discriminator
+                    if (profile.name.includes('#')) {
                         username = profile.name;
                     } else {
-                // Add discriminator if it doesn't exist
-                const discriminator = this.generateDiscriminator(pubkey);
+                        // Add discriminator if it doesn't exist
+                        const discriminator = this.generateDiscriminator(pubkey);
                         username = `${profile.name}#${discriminator}`;
                     }
                 }
-                
-                // Check for NIP-05 verification with better visual indicator
-                if (profile && profile.nip05) {
-                    const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
-                    if (isTrustrootsVerified) {
-                        username += ' 🟢'; // Green circle for verified
-                    } else if (profile.nip05.includes('@')) {
-                        username += ' 🔵'; // Blue circle for other NIP-05 verified
-                    }
+                // Priority 3: Fallback to npub
+                else {
+                    // Show first 10 characters of npub without @
+                    username = pubkey ? this.hexToNpub(pubkey).substring(0, 10) : 'Unknown';
                 }
                 
                 return username;
@@ -4957,7 +5005,11 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(finalContent, geohash);
+                    // Get current persistence selection
+                    const currentPersistence = document.getElementById('notePersistence')?.value;
+                    console.log('About to create event with persistence:', currentPersistence);
+                    
+                    const event = await this.createBitchatEvent(finalContent, geohash, currentPersistence);
                     await this.publishEvent(event);
                     
                     // Auto-scroll to show the new post
@@ -4973,15 +5025,17 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash, persistence = 'medium') {
+            async createBitchatEvent(content, geohash, persistence = '1h') {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
 
                 const persistenceElement = document.getElementById('notePersistence');
-                const persistenceOption = persistence || (persistenceElement ? persistenceElement.value : 'medium');
+                const persistenceOption = persistence || (persistenceElement ? persistenceElement.value : '1h');
                 
                 console.log('Creating Kind 1 event with persistence option:', persistenceOption);
+                console.log('Selected persistence element value:', persistenceElement ? persistenceElement.value : 'element not found');
+                console.log('Available options:', persistenceElement ? Array.from(persistenceElement.options).map(opt => `${opt.value}: ${opt.text}`) : 'element not found');
                 
                 // Always create Kind 1 events with expiration
                 return this.createPersistentEvent(content, geohash, persistenceOption);
@@ -5117,6 +5171,8 @@
                     throw new Error('No private key available');
                 }
 
+                console.log('createPersistentEvent called with persistence:', persistence);
+
                 try {
                     const expirationHours = {
                         '1h': 1,
@@ -5125,6 +5181,13 @@
                         'long': 720, // 30 days
                         'permanent': null
                     };
+                    
+                    console.log('expirationHours mapping:', expirationHours);
+                    console.log('Looking up persistence in mapping:', persistence, '->', expirationHours[persistence]);
+                    
+                    // Test the mapping
+                    console.log('Test: "short" should map to 24 hours:', expirationHours['short']);
+                    console.log('Test: "1h" should map to 1 hour:', expirationHours['1h']);
                     
                     // Get npub for NIP-05 verification
                     const npub = this.deriveNpubFromPrivateKey(this.privateKey);
@@ -5209,8 +5272,11 @@
                         // Add expiration if not permanent
                         if (expirationHours[persistence]) {
                             const expiresAt = Math.floor(Date.now() / 1000) + (expirationHours[persistence] * 3600);
+                            console.log(`Setting expiration: ${persistence} = ${expirationHours[persistence]} hours, expires_at: ${expiresAt}`);
                             event.tags.push(['expires_at', expiresAt.toString()]);
                             event.tags.push(['expiration', `${expirationHours[persistence]}h`]);
+                        } else {
+                            console.log(`No expiration set for persistence: ${persistence}`);
                         }
                         
                         // Add NIP-05 verification tag if verified
@@ -5247,8 +5313,11 @@
                     // Add expiration if not permanent
                     if (expirationHours[persistence]) {
                         const expiresAt = Math.floor(Date.now() / 1000) + (expirationHours[persistence] * 3600);
+                        console.log(`Setting expiration (fallback): ${persistence} = ${expirationHours[persistence]} hours, expires_at: ${expiresAt}`);
                         event.tags.push(['expires_at', expiresAt.toString()]);
                         event.tags.push(['expiration', `${expirationHours[persistence]}h`]);
+                    } else {
+                        console.log(`No expiration set for persistence (fallback): ${persistence}`);
                     }
                     
                     // Add NIP-05 verification tag if verified
@@ -5674,6 +5743,15 @@
                         </div>
                     </div>
                     ` : ''}
+                    
+                    <div class="modal-section">
+                        <div class="modal-section-title">Raw Nostr Event Data</div>
+                        <div class="modal-field">
+                            <div class="modal-field-value">
+                                <pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 0.8rem; font-family: 'JetBrains Mono', 'Fira Code', monospace;">${JSON.stringify(note, null, 2)}</pre>
+                            </div>
+                        </div>
+                    </div>
                 `;
 
                 modalOverlay.appendChild(modalContent);
