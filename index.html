@@ -1141,6 +1141,47 @@
             box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
         }
 
+        /* Note Persistence Styles */
+        .note-item.ephemeral {
+            border-left: 3px solid #ff6b6b; /* Red for ephemeral */
+        }
+
+        .note-item.persistent {
+            border-left: 3px solid #4ecdc4; /* Teal for persistent */
+        }
+
+        .note-item.expiring {
+            border-left: 3px solid #ffa726; /* Orange for expiring soon */
+        }
+
+        .note-expiration {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        .persistence-select {
+            font-size: 0.8rem;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            min-width: 150px;
+        }
+
+        .compose-section {
+            margin-bottom: 12px;
+        }
+
+        .compose-section label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
 
         /* Welcome Modal Styles */
         .welcome-modal {
@@ -2221,6 +2262,16 @@
                             <div class="compose-section">
                                 <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                             </div>
+                            <div class="compose-section">
+                                <label for="notePersistence">Note Duration:</label>
+                                <select id="notePersistence" class="persistence-select">
+                                    <option value="ephemeral">Ephemeral (Kind 20000)</option>
+                                    <option value="short">24 Hours (Kind 1)</option>
+                                    <option value="medium">7 Days (Kind 1)</option>
+                                    <option value="long">30 Days (Kind 1)</option>
+                                    <option value="permanent">Permanent (Kind 1)</option>
+                                </select>
+                            </div>
                             <div class="compose-actions">
                                 <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
                             </div>
@@ -2239,6 +2290,12 @@
                                 <input type="checkbox" id="nip05Filter" />
                                 <span class="filter-toggle-slider">
                                     <span class="filter-toggle-text">✓</span>
+                                </span>
+                            </label>
+                            <label class="filter-toggle-label">
+                                <input type="checkbox" id="persistenceFilter" />
+                                <span class="filter-toggle-slider">
+                                    <span class="filter-toggle-text">P</span>
                                 </span>
                             </label>
                         </div>
@@ -2417,6 +2474,15 @@
                 ];
                 this.relayEnabled = {}; // Track which relays are enabled for reading
                 this.postingRelays = {}; // Track which relays are enabled for posting
+                
+                // Note persistence options
+                this.NOTE_PERSISTENCE_OPTIONS = {
+                    EPHEMERAL: 'ephemeral',
+                    SHORT_TERM: 'short',
+                    MEDIUM_TERM: 'medium',
+                    LONG_TERM: 'long',
+                    PERMANENT: 'permanent'
+                };
                 this.notes = [];
                 this.map = null;
                 this.mapMarkers = [];
@@ -2427,6 +2493,7 @@
                 this.geohashFilter = '';
                 this.nip05Filter = false;
                 this.circleFilter = '';
+                this.persistenceFilter = false;
                 this.initialLoadComplete = false;
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
@@ -2434,6 +2501,43 @@
                 this.init();
             }
 
+            // Persistence preference methods
+            savePersistencePreference(persistence) {
+                localStorage.setItem('tripchat_note_persistence', persistence);
+            }
+
+            loadPersistencePreference() {
+                return localStorage.getItem('tripchat_note_persistence') || 'ephemeral';
+            }
+
+            // Add expiration filtering
+            filterExpiredNotes(notes) {
+                return notes.filter(note => {
+                    if (note.kind === 20000) return true; // Ephemeral notes handled by relay
+                    
+                    const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                    if (!expirationTag) return true; // No expiration = permanent
+                    
+                    const expiresAt = parseInt(expirationTag[1]);
+                    const now = Math.floor(Date.now() / 1000);
+                    
+                    return now < expiresAt; // Show if not expired
+                });
+            }
+
+            // Add expiration check
+            isExpiringSoon(note, hoursThreshold = 24) {
+                if (note.kind === 20000) return false;
+                
+                const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                if (!expirationTag) return false;
+                
+                const expiresAt = parseInt(expirationTag[1]);
+                const now = Math.floor(Date.now() / 1000);
+                const timeLeft = expiresAt - now;
+                
+                return timeLeft > 0 && timeLeft <= (hoursThreshold * 3600);
+            }
 
             async init() {
                 try {
@@ -2669,6 +2773,7 @@
                 const clearFilter = document.getElementById('clearFilter');
                 const nip05Filter = document.getElementById('nip05Filter');
                 const circleFilter = document.getElementById('circleFilter');
+                const persistenceFilter = document.getElementById('persistenceFilter');
 
                 geohashFilter.addEventListener('input', (e) => {
                     this.geohashFilter = e.target.value.trim().toLowerCase();
@@ -2689,6 +2794,10 @@
                     this.nip05Filter = false;
                     circleFilter.value = '';
                     this.circleFilter = '';
+                    if (persistenceFilter) {
+                        persistenceFilter.checked = false;
+                        this.persistenceFilter = false;
+                    }
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
@@ -2708,6 +2817,15 @@
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
                 });
+
+                if (persistenceFilter) {
+                    persistenceFilter.addEventListener('change', (e) => {
+                        this.persistenceFilter = e.target.checked;
+                        this.updateHash();
+                        this.displayActivities(this.notes);
+                        this.plotActivitiesOnMap(this.notes);
+                    });
+                }
 
                 // Populate circle filters
                 this.populateCircleFilters();
@@ -2764,6 +2882,16 @@
                 // Compose button is now hidden since form is always visible
                 // composeBtn.addEventListener('click', () => { ... });
 
+                // Set default persistence preference
+                const persistenceSelect = document.getElementById('notePersistence');
+                if (persistenceSelect) {
+                    persistenceSelect.value = this.loadPersistencePreference();
+                    
+                    // Save preference when changed
+                    persistenceSelect.addEventListener('change', (e) => {
+                        this.savePersistencePreference(e.target.value);
+                    });
+                }
 
                 postNoteBtn.addEventListener('click', () => {
                     this.postNote();
@@ -3351,6 +3479,9 @@
                 if (this.circleFilter) {
                     params.set('circle', this.circleFilter);
                 }
+                if (this.persistenceFilter) {
+                    params.set('persistent', 'true');
+                }
                 
                 if (params.toString()) {
                     url.hash = `#${params.toString()}`;
@@ -3371,6 +3502,7 @@
                         const geohash = params.get('geohash');
                         const nip05 = params.get('nip05');
                         const circle = params.get('circle');
+                        const persistent = params.get('persistent');
                         
                     if (geohash) {
                         this.geohashFilter = geohash.toLowerCase();
@@ -3393,6 +3525,14 @@
                             const circleFilterInput = document.getElementById('circleFilter');
                             if (circleFilterInput) {
                                 circleFilterInput.value = circle;
+                            }
+                        }
+                        
+                        if (persistent === 'true') {
+                            this.persistenceFilter = true;
+                            const persistenceFilterInput = document.getElementById('persistenceFilter');
+                            if (persistenceFilterInput) {
+                                persistenceFilterInput.checked = true;
                             }
                         }
                     } catch (e) {
@@ -3437,13 +3577,14 @@
                     });
                 }
                 
-                // Apply circle filter (NIP-32 labels)
+                // Apply circle filter (NIP-32 labels and NIP-12 topics)
                 if (this.circleFilter) {
                     console.log(`Filtering by circle: ${this.circleFilter}`);
                     const beforeCount = filtered.length;
                     filtered = filtered.filter(note => {
                         if (!note.tags) return false;
                         
+                        // Match circle labels (NIP-32 format)
                         const hasCircleTag = note.tags.some(tag => 
                             tag[0] === 'l' && 
                             tag[1] && 
@@ -3451,13 +3592,25 @@
                             tag[2] === 'trustroots'
                         );
                         
-                        if (hasCircleTag) {
+                        // Match topic tags (NIP-12 format)
+                        const hasTopicTag = note.tags.some(tag => 
+                            tag[0] === 't' && 
+                            tag[1] && 
+                            tag[1] === this.circleFilter
+                        );
+                        
+                        if (hasCircleTag || hasTopicTag) {
                             console.log(`Note matches circle filter:`, note);
                         }
                         
-                        return hasCircleTag;
+                        return hasCircleTag || hasTopicTag;
                     });
                     console.log(`Circle filter: ${beforeCount} -> ${filtered.length} notes`);
+                }
+                
+                // Apply persistence filter
+                if (this.persistenceFilter) {
+                    filtered = filtered.filter(note => note.kind === 1);
                 }
                 
                 return filtered;
@@ -3679,8 +3832,9 @@
             displayActivities(notes) {
                 const noteContainer = document.getElementById('noteContainer');
                 const filteredActivities = this.getFilteredActivities();
+                const nonExpiredActivities = this.filterExpiredNotes(filteredActivities);
                 
-                if (filteredActivities.length === 0) {
+                if (nonExpiredActivities.length === 0) {
                     if (this.geohashFilter) {
                         noteContainer.innerHTML = `<div class="loading">No notes found for geohash "${this.geohashFilter}". Try a different geohash or clear the filter.</div>`;
                     } else {
@@ -3694,13 +3848,17 @@
                     loadingDiv.remove();
                 }
 
-                const sortedActivities = [...filteredActivities].sort((a, b) => a.created_at - b.created_at);
+                const sortedActivities = [...nonExpiredActivities].sort((a, b) => a.created_at - b.created_at);
                 noteContainer.innerHTML = '';
 
                 sortedActivities.forEach(note => {
                     console.log('Processing note:', note);
                     const noteDiv = document.createElement('div');
-                    noteDiv.className = 'note-item';
+                    
+                    // Add persistence classes
+                    const isEphemeral = note.kind === 20000;
+                    const isExpiring = this.isExpiringSoon(note);
+                    noteDiv.className = `note-item ${isEphemeral ? 'ephemeral' : 'persistent'} ${isExpiring ? 'expiring' : ''}`;
                     noteDiv.setAttribute('data-note-id', note.id);
                     
                     try {
@@ -3714,6 +3872,24 @@
                             noteDiv.innerHTML = renderedHtml;
                         } else {
                             noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
+                        }
+                        
+                        // Add expiration info if applicable
+                        if (!isEphemeral) {
+                            const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                            if (expirationTag) {
+                                const expiresAt = parseInt(expirationTag[1]);
+                                const now = Math.floor(Date.now() / 1000);
+                                const timeLeft = expiresAt - now;
+                                
+                                if (timeLeft > 0) {
+                                    const hoursLeft = Math.floor(timeLeft / 3600);
+                                    const expirationDiv = document.createElement('div');
+                                    expirationDiv.className = 'note-expiration';
+                                    expirationDiv.textContent = `Expires in ${hoursLeft}h`;
+                                    noteDiv.appendChild(expirationDiv);
+                                }
+                            }
                         }
                     } catch (error) {
                         console.error('Error rendering note:', error, note);
@@ -3867,6 +4043,11 @@
                 const totalActivities = this.notes.length;
                 const filteredCount = filteredActivities.length;
                 
+                // Calculate persistence stats
+                const ephemeralCount = this.notes.filter(n => n.kind === 20000).length;
+                const persistentCount = this.notes.filter(n => n.kind === 1).length;
+                const expiringCount = this.notes.filter(n => this.isExpiringSoon(n)).length;
+                
                 statsDiv.innerHTML = `
                     <div class="stats-header" onclick="const stats = this.parentElement; const content = stats.querySelector('.stats-content'); const toggle = stats.querySelector('.stats-toggle'); content.classList.toggle('minimized'); stats.classList.toggle('minimized'); toggle.textContent = content.classList.contains('minimized') ? '+' : '−';">
                         <h3 class="stats-title">📊 Stats</h3>
@@ -3876,6 +4057,9 @@
                     <div class="stats-section">
                             <p><strong>${filteredCount}</strong> ${this.geohashFilter ? 'filtered' : 'total'} notes</p>
                             <p><strong>${geoActivitiesCount}</strong> notes with geo info</p>
+                            <p><strong>Ephemeral:</strong> ${ephemeralCount}</p>
+                            <p><strong>Persistent:</strong> ${persistentCount}</p>
+                            <p><strong>Expiring Soon:</strong> ${expiringCount}</p>
                             ${this.geohashFilter ? `<p><em>Filtered from ${totalActivities} total notes</em></p>` : ''}
                     </div>
                     <div class="stats-section">
@@ -4802,7 +4986,24 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash, circle = '') {
+            async createBitchatEvent(content, geohash, circle = '', persistence = 'ephemeral') {
+                if (!this.privateKey) {
+                    throw new Error('No private key available');
+                }
+
+                const persistenceOption = persistence || document.getElementById('notePersistence').value;
+                
+                if (persistenceOption === 'ephemeral') {
+                    // Use Kind 20000 (current behavior)
+                    return this.createEphemeralEvent(content, geohash, circle);
+                } else {
+                    // Use Kind 1 with expiration
+                    return this.createPersistentEvent(content, geohash, circle, persistenceOption);
+                }
+            }
+
+            // New method for ephemeral events (current behavior)
+            async createEphemeralEvent(content, geohash, circle) {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -4886,6 +5087,7 @@
                         // Add circle tags if circle is provided (NIP-32 labels)
                         if (circle && circle.trim()) {
                             event.tags.push(['l', circle, 'trustroots']);
+                            event.tags.push(['t', circle]); // Also add topic tag
                         }
                         
                         // Add NIP-05 verification tag if verified
@@ -4921,6 +5123,7 @@
                     // Add circle tags if circle is provided (NIP-32 labels)
                     if (circle && circle.trim()) {
                         event.tags.push(['l', circle, 'trustroots']);
+                        event.tags.push(['t', circle]); // Also add topic tag
                     }
                     
                     // Add NIP-05 verification tag if verified
@@ -4930,8 +5133,164 @@
 
                     return event;
                 } catch (error) {
-                    console.error('Error creating event:', error);
-                    throw new Error('Failed to create event: ' + error.message);
+                    console.error('Error creating ephemeral event:', error);
+                    throw new Error('Failed to create ephemeral event: ' + error.message);
+                }
+            }
+
+            // New method for persistent events
+            async createPersistentEvent(content, geohash, circle, persistence) {
+                if (!this.privateKey) {
+                    throw new Error('No private key available');
+                }
+
+                try {
+                    const expirationHours = {
+                        'short': 24,
+                        'medium': 168, // 7 days
+                        'long': 720, // 30 days
+                        'permanent': null
+                    };
+                    
+                    // Get npub for NIP-05 verification
+                    const npub = this.deriveNpubFromPrivateKey(this.privateKey);
+                    
+                    // Check for NIP-05 verification with caching
+                    const savedUsername = localStorage.getItem('tripchat_trustroots_username');
+                    let nip05Verified = false;
+                    
+                    if (savedUsername) {
+                        // Check cache first
+                        const cacheKey = `nip05_${savedUsername}`;
+                        const cached = localStorage.getItem(cacheKey);
+                        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+                        const now = Date.now();
+                        
+                        // Use cache if less than 5 minutes old
+                        if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
+                            nip05Verified = cached === 'true';
+                        } else {
+                            try {
+                                const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
+                                const response = await fetch(verificationUrl, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Cache-Control': 'no-cache'
+                                    }
+                                });
+                                
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    
+                                    if (data.names && data.names[savedUsername]) {
+                                        const hexPubkey = data.names[savedUsername];
+                                        let expectedNpub;
+                                        
+                                        if (typeof window.nostrTools !== 'undefined') {
+                                            expectedNpub = window.nostrTools.nip19.npubEncode(hexPubkey);
+                                        } else {
+                                            expectedNpub = this.hexToNpub(hexPubkey);
+                                        }
+                                        
+                                        nip05Verified = (expectedNpub === npub);
+                                        
+                                        // Cache the result
+                                        localStorage.setItem(cacheKey, nip05Verified.toString());
+                                        localStorage.setItem(`${cacheKey}_time`, now.toString());
+                                    }
+                                }
+                            } catch (error) {
+                                console.log('NIP-05 verification failed:', error);
+                                // Use cached result if available, even if expired
+                                if (cached) {
+                                    nip05Verified = cached === 'true';
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const event = {
+                            kind: 1, // Standard text notes
+                            pubkey: this.hexPubkey,
+                            content: content,
+                            tags: [
+                                ['p', npub] // Add public key tag
+                            ],
+                            created_at: Math.floor(Date.now() / 1000)
+                        };
+                        
+                        // Add geohash tag only if geohash is provided
+                        if (geohash && geohash.trim()) {
+                            event.tags.push(['g', geohash]);
+                        }
+                        
+                        // Add circle tags if circle is provided (NIP-32 labels)
+                        if (circle && circle.trim()) {
+                            event.tags.push(['l', circle, 'trustroots']);
+                            event.tags.push(['t', circle]); // Also add topic tag
+                        }
+                        
+                        // Add expiration if not permanent
+                        if (expirationHours[persistence]) {
+                            const expiresAt = Math.floor(Date.now() / 1000) + (expirationHours[persistence] * 3600);
+                            event.tags.push(['expires_at', expiresAt.toString()]);
+                            event.tags.push(['expiration', `${expirationHours[persistence]}h`]);
+                        }
+                        
+                        // Add NIP-05 verification tag if verified
+                        if (nip05Verified) {
+                            event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
+                        }
+
+                        // Sign the event using nostr-tools
+                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        return signedEvent;
+                    }
+                    
+                    // Fallback method
+                    console.log('nostr-tools not available, using fallback method');
+                    const event = {
+                        kind: 1, // Standard text notes
+                        pubkey: this.generateFakePublicKey(this.privateKey),
+                        content: content,
+                        tags: [
+                            ['p', npub] // Add public key tag
+                        ],
+                        created_at: Math.floor(Date.now() / 1000),
+                        id: this.generateFakeEventId(content, geohash || 'global'),
+                        sig: this.generateFakeSignature(this.privateKey, content)
+                    };
+                    
+                    // Add geohash tag only if geohash is provided
+                    if (geohash && geohash.trim()) {
+                        event.tags.push(['g', geohash]);
+                    }
+                    
+                    // Add circle tags if circle is provided (NIP-32 labels)
+                    if (circle && circle.trim()) {
+                        event.tags.push(['l', circle, 'trustroots']);
+                        event.tags.push(['t', circle]); // Also add topic tag
+                    }
+                    
+                    // Add expiration if not permanent
+                    if (expirationHours[persistence]) {
+                        const expiresAt = Math.floor(Date.now() / 1000) + (expirationHours[persistence] * 3600);
+                        event.tags.push(['expires_at', expiresAt.toString()]);
+                        event.tags.push(['expiration', `${expirationHours[persistence]}h`]);
+                    }
+                    
+                    // Add NIP-05 verification tag if verified
+                    if (nip05Verified) {
+                        event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
+                    }
+
+                    return event;
+                } catch (error) {
+                    console.error('Error creating persistent event:', error);
+                    throw new Error('Failed to create persistent event: ' + error.message);
                 }
             }
 
