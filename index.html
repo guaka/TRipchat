@@ -138,11 +138,14 @@
             border-right: 1px solid var(--border-color);
             box-shadow: 4px 0 20px var(--shadow);
             backdrop-filter: blur(10px);
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
         
         #map {
             width: 100%;
             height: 100%;
+            background: var(--map-bg);
+            transition: background 0.3s ease;
         }
         
         .note-container {
@@ -231,18 +234,20 @@
         }
         
         .note-time {
-            color: #6c757d;
-            font-size: 0.7rem;
-            font-family: 'Inter', sans-serif;
+            color: var(--text-muted);
+            font-size: 0.5rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             font-weight: 400;
             margin: 0;
             margin-left: auto;
             cursor: pointer;
             transition: all 0.2s ease;
+            text-align: right;
+            line-height: 1.2;
         }
 
         .note-time:hover {
-            color: #495057;
+            color: var(--text-secondary);
         }
         
         
@@ -1682,6 +1687,7 @@
                 order: 2;
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
+                background: var(--map-bg);
             }
             
             .note-container {
@@ -1771,7 +1777,7 @@
             }
 
             .note-time {
-                font-size: 0.7rem;
+                font-size: 0.5rem;
                 margin-left: auto;
             }
 
@@ -1858,6 +1864,7 @@
             .map-container {
                 height: 4vh;
                 min-height: 50px;
+                background: var(--map-bg);
             }
 
             .note-container {
@@ -1949,6 +1956,7 @@
             .map-container {
                 height: 3vh;
                 min-height: 40px;
+                background: var(--map-bg);
             }
 
             .note-container {
@@ -1987,7 +1995,7 @@
             }
 
             .note-time {
-                font-size: 0.65rem;
+                font-size: 0.45rem;
             }
 
 
@@ -2299,7 +2307,7 @@
                 this.searchFilter = '';
                 this.geohashFilter = '';
                 this.nip05Filter = false;
-                console.log(`🔍 Initial filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
+                // Filter states initialized
                 this.initialLoadComplete = false;
                 this.completedRelays = new Set(); // Track which relays have completed initial load
                 this.geohashRectangles = [];
@@ -2439,7 +2447,7 @@
                 
                 this.styleMap();
                 
-                console.log('Map initialized');
+                // Map initialized
             }
 
             styleMap() {
@@ -2609,9 +2617,7 @@
                 });
 
                 nip05Filter.addEventListener('change', (e) => {
-                    console.log(`🔄 NIP-05 filter toggled from ${this.nip05Filter} to ${e.target.checked}`);
                     this.nip05Filter = e.target.checked;
-                    console.log(`🔄 After setting: this.nip05Filter = ${this.nip05Filter}`);
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
@@ -3177,7 +3183,7 @@
                                 this.highlightGeohashArea(this.geohashFilter);
                             }
                             
-                            console.log(`Added geohash ${hashtag} to geohash filter`);
+                            // Added geohash to filter
                         } else {
                             // Add hashtag to the search filter, replacing any existing hashtag
                             const currentFilter = this.searchFilter || '';
@@ -3211,7 +3217,7 @@
                             this.displayActivities(this.notes);
                             this.plotActivitiesOnMap(this.notes);
                             
-                            console.log(`Added hashtag #${hashtag} to search filter: "${newFilter}"`);
+                            // Added hashtag to search filter
                         }
                     });
                 });
@@ -3412,10 +3418,8 @@
 
             loadFilterFromHash() {
                 const hash = window.location.hash;
-                console.log(`🔍 loadFilterFromHash called with hash: "${hash}"`);
                 if (hash && hash.startsWith('#')) {
                     const hashContent = hash.substring(1); // Remove the # symbol
-                    console.log(`🔍 Parsing hash content: "${hashContent}"`);
                     
                     // Try to parse as URL parameters first
                     try {
@@ -3441,14 +3445,12 @@
                         }
                         
                         if (nip05 === 'true') {
-                            console.log(`🔍 Loading NIP-05 filter from hash: setting to true`);
                             this.nip05Filter = true;
                             const nip05FilterInput = document.getElementById('nip05Filter');
                             if (nip05FilterInput) {
                                 nip05FilterInput.checked = true;
                             }
                         } else {
-                            console.log(`🔍 Loading NIP-05 filter from hash: setting to false (nip05="${nip05}")`);
                             this.nip05Filter = false;
                             const nip05FilterInput = document.getElementById('nip05Filter');
                             if (nip05FilterInput) {
@@ -3459,66 +3461,26 @@
                         
                     } catch (e) {
                         // Invalid hash format - ignore
-                        console.log('Invalid hash format, ignoring:', hashContent);
                     }
                 } else {
                     // No hash parameters - ensure filters are in default state
-                    console.log(`🔍 No hash parameters - setting filters to default state`);
                     this.nip05Filter = false;
                     const nip05FilterInput = document.getElementById('nip05Filter');
                     if (nip05FilterInput) {
                         nip05FilterInput.checked = false;
                     }
                 }
-                console.log(`🔍 After loadFilterFromHash: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
+                // Filter state loaded from hash
             }
 
             getFilteredActivities() {
                 let filtered = this.notes;
-                console.log(`🔍 getFilteredActivities called with ${filtered.length} total notes`);
-                console.log(`🔍 Current filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
-                
-                // Debug: Count verified notes in the original dataset
-                const totalVerifiedNotes = this.notes.filter(note => {
-                    if (!note.tags) return false;
-                    return note.tags.some(tag => 
-                        tag[0] === 'nip05' && 
-                        tag[1] && 
-                        tag[1].endsWith('@trustroots.org')
-                    );
-                }).length;
-                console.log(`🔍 DEBUG: Total verified notes in dataset: ${totalVerifiedNotes}`);
-                
-                // Debug: Show sample verified notes
-                const sampleVerifiedNotes = this.notes.filter(note => {
-                    if (!note.tags) return false;
-                    return note.tags.some(tag => 
-                        tag[0] === 'nip05' && 
-                        tag[1] && 
-                        tag[1].endsWith('@trustroots.org')
-                    );
-                }).slice(0, 3);
-                if (sampleVerifiedNotes.length > 0) {
-                    console.log(`🔍 DEBUG: Sample verified notes:`, sampleVerifiedNotes.map(n => ({
-                        id: n.id,
-                        content: n.content?.substring(0, 50),
-                        tags: n.tags?.filter(t => t[0] === 'nip05' || t[0] === 'g'),
-                        created_at: new Date(n.created_at * 1000)
-                    })));
-                }
                 
                 // Apply geohash filter (only when geohash filter is active)
                 if (this.geohashFilter) {
                     const beforeCount = filtered.length;
                     const geohashTerm = this.geohashFilter.toLowerCase();
                     filtered = filtered.filter(note => {
-                        // Always show verified notes, even if they don't have a geohash
-                        const isVerified = note.tags && note.tags.some(tag => 
-                            tag[0] === 'nip05' && 
-                            tag[1] && 
-                            tag[1].endsWith('@trustroots.org')
-                        );
-                        
                         // Check if note has matching geohash
                         const hasMatchingGeohash = note.tags && note.tags.some(tag => 
                             tag[0] === 'g' && 
@@ -3526,10 +3488,10 @@
                             tag[1].toLowerCase().includes(geohashTerm)
                         );
                         
-                        // Show note if it has matching geohash OR if it's verified
-                        return hasMatchingGeohash || isVerified;
+                        // Show note if it has matching geohash
+                        return hasMatchingGeohash;
                     });
-                    console.log(`🔍 After geohash filter: ${beforeCount} -> ${filtered.length} notes (including verified notes without geohash)`);
+                    // Geohash filter applied
                 }
                 
                 // Apply search filter (hashtags, content, usernames)
@@ -3537,23 +3499,6 @@
                     const beforeCount = filtered.length;
                     const searchTerm = this.searchFilter.toLowerCase();
                     filtered = filtered.filter(note => {
-                        // Check if note is verified
-                        const isVerified = note.tags && note.tags.some(tag => 
-                            tag[0] === 'nip05' && 
-                            tag[1] && 
-                            tag[1].endsWith('@trustroots.org')
-                        );
-                        
-                        // When V toggle is OFF: show ALL verified notes + unverified notes that match search
-                        // When V toggle is ON: show only verified notes that match search
-                        if (!this.nip05Filter) {
-                            // V toggle is OFF: always show verified notes, filter unverified notes by search
-                            if (isVerified) {
-                                return true; // Always show verified notes when V toggle is OFF
-                            }
-                        }
-                        
-                        // Apply search filter to non-verified notes (when V toggle OFF) or all notes (when V toggle ON)
                         // Search in hashtag tags
                         const hasHashtagMatch = note.tags && note.tags.some(tag => 
                             tag[0] === 't' && 
@@ -3570,9 +3515,16 @@
                         const hasUsernameMatch = profile && profile.name && 
                             profile.name.toLowerCase().includes(searchTerm);
                         
-                        return hasHashtagMatch || hasContentMatch || hasUsernameMatch;
+                        // Search in geohash tags
+                        const hasGeohashMatch = note.tags && note.tags.some(tag => 
+                            tag[0] === 'g' && 
+                            tag[1] && 
+                            tag[1].toLowerCase().includes(searchTerm)
+                        );
+                        
+                        return hasHashtagMatch || hasContentMatch || hasUsernameMatch || hasGeohashMatch;
                     });
-                    console.log(`🔍 After search filter: ${beforeCount} -> ${filtered.length} notes (verified notes always shown when V toggle is OFF)`);
+                    // Search filter applied
                 }
                 
                 // Apply NIP-05 verification filter
@@ -3587,27 +3539,8 @@
                             tag[1].endsWith('@trustroots.org')
                         );
                     });
-                    console.log(`🔍 After NIP-05 filter (ON): ${beforeCount} -> ${filtered.length} notes`);
-                } else {
-                    console.log(`🔍 NIP-05 filter OFF - showing all notes (verified and unverified)`);
-                    // Let's see what notes we have and their verification status
-                    const verifiedNotes = filtered.filter(note => {
-                        if (!note.tags) return false;
-                        return note.tags.some(tag => 
-                            tag[0] === 'nip05' && 
-                            tag[1] && 
-                            tag[1].endsWith('@trustroots.org')
-                        );
-                    });
-                    console.log(`🔍 Found ${verifiedNotes.length} verified notes out of ${filtered.length} total notes`);
-                    if (verifiedNotes.length > 0) {
-                        console.log(`🔍 Sample verified note:`, verifiedNotes[0]);
-                    }
+                    // NIP-05 filter applied
                 }
-                
-                
-                
-                console.log(`🔍 Final filtered result: ${filtered.length} notes`);
                 return filtered;
             }
 
@@ -3619,7 +3552,7 @@
                 const noteContainer = document.getElementById('noteContainer');
                 noteContainer.innerHTML = '<div class="loading">Connecting to TRipchat Nostr relays...</div>';
 
-                console.log('Starting connection to relays:', this.relays);
+                // Starting connection to relays
 
                 for (const relayUrl of this.relays) {
                     this.connectToRelay(relayUrl);
@@ -3651,7 +3584,6 @@
             }
 
             connectToRelay(relayUrl) {
-                console.log(`Connecting to ${relayUrl}...`);
                 this.updateRelayStatus(relayUrl, 'connecting');
 
                 try {
@@ -3662,7 +3594,6 @@
                     this.subscriptionIds[relayUrl] = subscriptionId;
 
                     ws.onopen = () => {
-                        console.log(`Connected to ${relayUrl}`);
                         this.updateRelayStatus(relayUrl, 'connected');
                         
                         // Subscribe to TRipchat-specific event kinds
@@ -3678,7 +3609,6 @@
                             filters
                         ];
                         
-                        console.log(`Sending subscription to ${relayUrl}:`, subscription);
                         ws.send(JSON.stringify(subscription));
                         
                         // Update connection status
@@ -3688,7 +3618,7 @@
                     ws.onmessage = (event) => {
                         try {
                             const data = JSON.parse(event.data);
-                            console.log(`Received from ${relayUrl}:`, data);
+                            // Received data from relay
                             
                             if (Array.isArray(data)) {
                                 const [messageType, subId, eventData] = data;
@@ -3698,17 +3628,9 @@
                                     const noteAge = Math.floor((Date.now() / 1000) - eventData.created_at);
                                     const ageHours = Math.floor(noteAge / 3600);
                                     const ageDays = Math.floor(ageHours / 24);
-                                    console.log(`📨 Received event #${this.totalEventsReceived}: ${eventData.id}, kind: ${eventData.kind}, age: ${ageDays}d ${ageHours % 24}h, content: "${eventData.content?.substring(0, 30)}..."`);
+                                    // Received event
                                     
-                                    // Debug: Check for geohash tags in all events
-                                    if (eventData.tags) {
-                                        const geohashTags = eventData.tags.filter(tag => tag[0] === 'g' && tag[1]);
-                                        if (geohashTags.length > 0) {
-                                            console.log(`Found geohash tags in event ${eventData.id}:`, geohashTags);
-                                            console.log(`Event content:`, eventData.content);
-                                            console.log(`Event kind:`, eventData.kind);
-                                        }
-                                    }
+                                    // Check for geohash tags in events
                                     
                                     // Check if this is TRipchat note
                                     if (this.isTRipchatNote(eventData)) {
@@ -3717,7 +3639,6 @@
                                         this.updateConnectionStatus();
                                     }
                 } else if (messageType === 'EOSE' && subId === subscriptionId) {
-                    console.log(`📋 End of stored events from ${relayUrl}`);
                     this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
                     this.updateConnectionStatus();
                     
@@ -3733,7 +3654,7 @@
                         this.initialLoadComplete = true;
                     }
                 } else if (messageType === 'NOTICE') {
-                                    console.log(`Notice from ${relayUrl}:`, eventData);
+                                    // Notice from relay
                                 }
                             }
                         } catch (e) {
@@ -3748,11 +3669,9 @@
                     };
 
                     ws.onclose = () => {
-                        console.log(`Connection to ${relayUrl} closed`);
                         this.updateRelayStatus(relayUrl, 'disconnected');
                         
                         setTimeout(() => {
-                            console.log(`Attempting to reconnect to ${relayUrl}...`);
                             this.connectToRelay(relayUrl);
                         }, 5000);
                     };
@@ -3764,10 +3683,7 @@
 
             isTRipchatNote(event) {
                 // Accept Kind 1 events (text notes)
-                console.log(`Checking event ${event.id}, kind: ${event.kind}`);
-                
                 if (event.kind === 1) {
-                    console.log(`✅ Kind 1 event accepted: ${event.id}`);
                     return true;
                 }
                 
@@ -3775,7 +3691,6 @@
                 const content = event.content || '';
                 const hasLocationKeywords = /travel|trip|location|geohash|trustroots|hitchhiking/i.test(content);
                 if (hasLocationKeywords) {
-                    console.log(`✅ Kind 1 event with location keywords accepted: ${event.id}`);
                     return true;
                 }
                 
@@ -3796,7 +3711,7 @@
                     liveFilters
                 ];
                 
-                console.log(`Starting live subscription to ${relayUrl}:`, liveSubscription);
+                // Starting live subscription
                 
                 if (this.websockets[relayUrl]) {
                     this.websockets[relayUrl].send(JSON.stringify(liveSubscription));
@@ -3806,10 +3721,9 @@
             checkAllRelaysCompleted() {
                 // Check if all enabled relays have completed their initial load
                 const enabledRelays = this.relays.filter(relay => this.relayEnabled[relay] !== false);
-                console.log(`🔍 Completed relays: ${this.completedRelays.size}/${enabledRelays.length}`);
+                // Check relay completion status
                 
                 if (this.completedRelays.size >= enabledRelays.length) {
-                    console.log(`🔍 All relays completed initial load. Auto-scrolling to bottom...`);
                     // Auto-scroll to bottom after all notes have loaded
                     setTimeout(() => {
                         this.scrollToBottom();
@@ -3818,14 +3732,14 @@
                         if (composeContent) {
                             composeContent.focus();
                         }
-                    }, 1000); // Give a bit more time for all notes to render
+                    }, 200); // Shorter delay since displayActivities already has a 100ms delay
                 }
             }
 
             addNewNote(note) {
                 // Check if note already exists
                 if (this.notes.find(a => a.id === note.id)) {
-                    console.log(`Note ${note.id} already exists, skipping`);
+                    // Note already exists, skipping
                     return;
                 }
 
@@ -3835,14 +3749,12 @@
                     note.created_at = Math.floor(Date.now() / 1000);
                 }
 
-                console.log(`Adding note ${note.id} with created_at:`, new Date(note.created_at * 1000), 'Content:', note.content?.substring(0, 50) + '...');
+                // Adding note
                 
                 this.notes.push(note);
                 this.notes.sort((a, b) => a.created_at - b.created_at);
                 
-                const oldest = this.notes[0] ? new Date(this.notes[0].created_at * 1000) : null;
-                const mostRecent = this.notes[this.notes.length - 1] ? new Date(this.notes[this.notes.length - 1].created_at * 1000) : null;
-                console.log(`Total notes now: ${this.notes.length}, Most recent: ${mostRecent}, Oldest: ${oldest}`);
+                // Note added to collection
                 
                 if (this.notes.length > 200) {
                     this.notes = this.notes.slice(0, 200);
@@ -3903,7 +3815,6 @@
                 noteContainer.innerHTML = '';
 
                 limitedActivities.forEach(note => {
-                    console.log('Processing note:', note);
                     const noteDiv = document.createElement('div');
                     
                     // Add persistence classes
@@ -3924,21 +3835,7 @@
                             noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
                         }
                         
-                        // Add expiration info if applicable
-                        const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
-                        if (expirationTag) {
-                            const expiresAt = parseInt(expirationTag[1]);
-                            const now = Math.floor(Date.now() / 1000);
-                            const timeLeft = expiresAt - now;
-                            
-                            if (timeLeft > 0) {
-                                const hoursLeft = Math.floor(timeLeft / 3600);
-                                const expirationDiv = document.createElement('div');
-                                expirationDiv.className = 'note-expiration';
-                                expirationDiv.textContent = `Expires in ${hoursLeft}h`;
-                                noteDiv.appendChild(expirationDiv);
-                            }
-                        }
+                        // Expiration info is now combined with timestamp in renderNote
                     } catch (error) {
                         console.error('Error rendering note:', error, note);
                         noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
@@ -3950,8 +3847,10 @@
                 // Set up click handlers for geohash tags
                 this.setupGeohashTagClickHandlers();
                 
-                // Scroll to bottom to show latest messages
-                this.scrollToBottom();
+                // Scroll to bottom to show latest messages (with delay to ensure DOM is rendered)
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 100);
                 
                 // Set up click handlers for datetime elements
                 this.setupDatetimeClickHandlers();
@@ -3990,10 +3889,27 @@
                 // Process hashtags to make them clickable
                 let contentHtml = this.processHashtags(processedContent);
                 
+                // Get expiration info for combined timestamp
+                let expirationText = '';
+                const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                if (expirationTag) {
+                    const expiresAt = parseInt(expirationTag[1]);
+                    const now = Math.floor(Date.now() / 1000);
+                    const timeLeft = expiresAt - now;
+                    
+                    if (timeLeft > 0) {
+                        const hoursLeft = Math.floor(timeLeft / 3600);
+                        expirationText = ` • expires in ${hoursLeft}h`;
+                    }
+                }
+
                 return `
                     <div class="note-header">
                         <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
-                        <span class="note-time" title="${timeString}" data-note-id="${note.id}">${relativeTime}</span>
+                        <div class="note-time" title="${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; line-height: 1.2;">
+                            <div>${relativeTime}</div>
+                            ${expirationText ? `<div style="font-size: 0.45rem; margin-top: 1px;">${expirationText.replace(' • ', '')}</div>` : ''}
+                        </div>
                         </div>
                     <div class="note-content">${contentHtml}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
