@@ -2301,6 +2301,7 @@
                 this.nip05Filter = false;
                 console.log(`🔍 Initial filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
                 this.initialLoadComplete = false;
+                this.completedRelays = new Set(); // Track which relays have completed initial load
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
                 this.privateKey = null; // User's private key for posting
@@ -3477,6 +3478,35 @@
                 console.log(`🔍 getFilteredActivities called with ${filtered.length} total notes`);
                 console.log(`🔍 Current filter states: nip05Filter=${this.nip05Filter}, searchFilter="${this.searchFilter}", geohashFilter="${this.geohashFilter}"`);
                 
+                // Debug: Count verified notes in the original dataset
+                const totalVerifiedNotes = this.notes.filter(note => {
+                    if (!note.tags) return false;
+                    return note.tags.some(tag => 
+                        tag[0] === 'nip05' && 
+                        tag[1] && 
+                        tag[1].endsWith('@trustroots.org')
+                    );
+                }).length;
+                console.log(`🔍 DEBUG: Total verified notes in dataset: ${totalVerifiedNotes}`);
+                
+                // Debug: Show sample verified notes
+                const sampleVerifiedNotes = this.notes.filter(note => {
+                    if (!note.tags) return false;
+                    return note.tags.some(tag => 
+                        tag[0] === 'nip05' && 
+                        tag[1] && 
+                        tag[1].endsWith('@trustroots.org')
+                    );
+                }).slice(0, 3);
+                if (sampleVerifiedNotes.length > 0) {
+                    console.log(`🔍 DEBUG: Sample verified notes:`, sampleVerifiedNotes.map(n => ({
+                        id: n.id,
+                        content: n.content?.substring(0, 50),
+                        tags: n.tags?.filter(t => t[0] === 'nip05' || t[0] === 'g'),
+                        created_at: new Date(n.created_at * 1000)
+                    })));
+                }
+                
                 // Apply geohash filter (only when geohash filter is active)
                 if (this.geohashFilter) {
                     const beforeCount = filtered.length;
@@ -3507,6 +3537,23 @@
                     const beforeCount = filtered.length;
                     const searchTerm = this.searchFilter.toLowerCase();
                     filtered = filtered.filter(note => {
+                        // Check if note is verified
+                        const isVerified = note.tags && note.tags.some(tag => 
+                            tag[0] === 'nip05' && 
+                            tag[1] && 
+                            tag[1].endsWith('@trustroots.org')
+                        );
+                        
+                        // When V toggle is OFF: show ALL verified notes + unverified notes that match search
+                        // When V toggle is ON: show only verified notes that match search
+                        if (!this.nip05Filter) {
+                            // V toggle is OFF: always show verified notes, filter unverified notes by search
+                            if (isVerified) {
+                                return true; // Always show verified notes when V toggle is OFF
+                            }
+                        }
+                        
+                        // Apply search filter to non-verified notes (when V toggle OFF) or all notes (when V toggle ON)
                         // Search in hashtag tags
                         const hasHashtagMatch = note.tags && note.tags.some(tag => 
                             tag[0] === 't' && 
@@ -3525,7 +3572,7 @@
                         
                         return hasHashtagMatch || hasContentMatch || hasUsernameMatch;
                     });
-                    console.log(`🔍 After search filter: ${beforeCount} -> ${filtered.length} notes`);
+                    console.log(`🔍 After search filter: ${beforeCount} -> ${filtered.length} notes (verified notes always shown when V toggle is OFF)`);
                 }
                 
                 // Apply NIP-05 verification filter
@@ -3677,6 +3724,10 @@
                     // Start live subscription for new notes
                     this.startLiveSubscription(relayUrl);
                     
+                    // Track completed relays for initial load
+                    this.completedRelays.add(relayUrl);
+                    this.checkAllRelaysCompleted();
+                    
                     // Show load more button after initial load
                     if (!this.initialLoadComplete) {
                         this.initialLoadComplete = true;
@@ -3749,6 +3800,25 @@
                 
                 if (this.websockets[relayUrl]) {
                     this.websockets[relayUrl].send(JSON.stringify(liveSubscription));
+                }
+            }
+
+            checkAllRelaysCompleted() {
+                // Check if all enabled relays have completed their initial load
+                const enabledRelays = this.relays.filter(relay => this.relayEnabled[relay] !== false);
+                console.log(`🔍 Completed relays: ${this.completedRelays.size}/${enabledRelays.length}`);
+                
+                if (this.completedRelays.size >= enabledRelays.length) {
+                    console.log(`🔍 All relays completed initial load. Auto-scrolling to bottom...`);
+                    // Auto-scroll to bottom after all notes have loaded
+                    setTimeout(() => {
+                        this.scrollToBottom();
+                        // Focus on compose content after loading
+                        const composeContent = document.getElementById('composeContent');
+                        if (composeContent) {
+                            composeContent.focus();
+                        }
+                    }, 1000); // Give a bit more time for all notes to render
                 }
             }
 
@@ -4936,6 +5006,22 @@
                     return;
                 }
 
+                // Extract hashtags from searchFilter and add them to content
+                let finalContent = content;
+                if (this.searchFilter) {
+                    const hashtagRegex = /#\w+/g;
+                    const hashtags = this.searchFilter.match(hashtagRegex);
+                    if (hashtags && hashtags.length > 0) {
+                        // Add hashtags to content if they're not already there
+                        const existingHashtags = content.match(hashtagRegex) || [];
+                        const newHashtags = hashtags.filter(tag => !existingHashtags.includes(tag));
+                        if (newHashtags.length > 0) {
+                            finalContent = content + ' ' + newHashtags.join(' ');
+                            console.log(`Added hashtags from search filter: ${newHashtags.join(' ')}`);
+                        }
+                    }
+                }
+
                 // Geohash is optional - allow global posting
                 // if (!geohash) {
                 //     alert('Please enter a location (geohash).');
@@ -4955,8 +5041,13 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(content, geohash);
+                    const event = await this.createBitchatEvent(finalContent, geohash);
                     await this.publishEvent(event);
+                    
+                    // Auto-scroll to show the new post
+                    setTimeout(() => {
+                        this.scrollToBottom();
+                    }, 500);
                     
                     // Clear the compose form after successful post
                     this.clearComposeForm();
