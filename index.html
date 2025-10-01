@@ -1675,12 +1675,12 @@
             <div class="modal-body">
                 <div class="compose-section">
                     <label for="composeContent">Message:</label>
-                    <textarea id="composeContent" placeholder="What's happening in your location?" rows="4"></textarea>
+                    <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="4"></textarea>
                 </div>
                 <div class="compose-section">
-                    <label for="composeLocation">Location (Geohash):</label>
+                    <label for="composeLocation">Location (Geohash) - Optional:</label>
                     <div class="location-input-group">
-                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy" />
+                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy (optional - leave empty for global post)" />
                         <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
                     </div>
                 </div>
@@ -4221,10 +4221,11 @@
                     return;
                 }
 
-                if (!geohash) {
-                    alert('Please enter a location (geohash).');
-                    return;
-                }
+                // Geohash is optional - allow global posting
+                // if (!geohash) {
+                //     alert('Please enter a location (geohash).');
+                //     return;
+                // }
 
                 if (!privateKeyInput) {
                     alert('Please generate or enter a private key in Settings first.');
@@ -4323,12 +4324,16 @@
                             kind: 20000, // Ephemeral event for location channels
                             content: content,
                             tags: [
-                                ['g', geohash], // Geohash tag
                                 ['d', 'bitchat-location'], // Distinguishes from other location events
                                 ['p', npub] // Add public key tag
                             ],
                             created_at: Math.floor(Date.now() / 1000)
                         };
+                        
+                        // Add geohash tag only if geohash is provided
+                        if (geohash && geohash.trim()) {
+                            event.tags.push(['g', geohash]);
+                        }
                         
                         // Add circle tag if selected
                         if (circle) {
@@ -4351,15 +4356,19 @@
                         kind: 20000, // Ephemeral event for location channels
                         content: content,
                         tags: [
-                            ['g', geohash], // Geohash tag
                             ['d', 'bitchat-location'], // Distinguishes from other location events
                             ['p', npub] // Add public key tag
                         ],
                         pubkey: this.generateFakePublicKey(this.privateKey),
                         created_at: Math.floor(Date.now() / 1000),
-                        id: this.generateFakeEventId(content, geohash),
+                        id: this.generateFakeEventId(content, geohash || 'global'),
                         sig: this.generateFakeSignature(this.privateKey, content)
                     };
+                    
+                    // Add geohash tag only if geohash is provided
+                    if (geohash && geohash.trim()) {
+                        event.tags.push(['g', geohash]);
+                    }
                     
                     // Add circle tag if selected
                     if (circle) {
