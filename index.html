@@ -1100,13 +1100,6 @@
             transform: translateY(-1px);
         }
 
-        .compose-form .posting-relays-display {
-            background: #f8f9fa;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
 
         .compose-form .compose-actions {
             display: flex;
@@ -1884,12 +1877,6 @@
                                     </div>
                                 </div>
                                 <div class="compose-section">
-                                    <label>Posting to Relays:</label>
-                                    <div id="postingRelaysDisplay" class="posting-relays-display">
-                                        <!-- Will be populated by JavaScript -->
-                                    </div>
-                                </div>
-                                <div class="compose-section">
                                     <label for="composeCircle">Circle (Optional):</label>
                                     <select id="composeCircle" class="circle-select">
                                         <option value="">No Circle</option>
@@ -2414,8 +2401,11 @@
                 const getLocationBtn = document.getElementById('getLocationBtn');
 
                 // Initialize the compose form since it's always visible
-                this.updatePostingRelaysDisplay();
-                this.populateCircleSelect();
+                // Populate circle selects
+                const composeCircleSelect = document.getElementById('composeCircle');
+                if (composeCircleSelect) {
+                    this.populateCircleSelect(composeCircleSelect);
+                }
 
                 // Compose button is now hidden since form is always visible
                 // composeBtn.addEventListener('click', () => { ... });
@@ -4442,8 +4432,6 @@
                     
                     // Clear the compose form after successful post
                     this.clearComposeForm();
-                    
-                    alert('Note posted successfully!');
                 } catch (error) {
                     console.error('Error posting note:', error);
                     alert('Error posting note: ' + error.message);
