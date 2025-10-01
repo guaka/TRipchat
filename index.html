@@ -261,6 +261,7 @@
             font-family: 'Inter', sans-serif;
             backdrop-filter: blur(20px);
             overflow: hidden;
+            cursor: pointer;
         }
 
         .stats-header {
@@ -299,7 +300,6 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             padding: 8px 12px;
-            cursor: pointer;
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
@@ -384,7 +384,7 @@
         }
 
         .stats-section h3 {
-            color: #27ae60;
+            color: #2c3e50;
             font-size: 1rem;
             font-weight: 600;
             margin: 0 0 12px 0;
@@ -584,14 +584,21 @@
 
         .filter-container {
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
             border: 1px solid #e9ecef;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
         }
 
         .filter-container::before {
@@ -602,7 +609,7 @@
             right: 0;
             height: 3px;
             background: linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%);
-            border-radius: 16px 16px 0 0;
+            border-radius: 20px 20px 0 0;
         }
 
         .filter-container:hover {
@@ -613,86 +620,52 @@
         .filter-input-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-
-        .filter-input-group label {
-            color: #2c3e50;
-            font-weight: 600;
-            font-size: 0.9rem;
-            min-width: 80px;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-icon {
-            font-size: 1rem;
-            color: #27ae60;
+            flex: 1;
+            min-width: 250px;
         }
 
         .filter-input-group input {
             flex: 1;
-            min-width: 200px;
-            padding: 14px 18px;
+            min-width: 180px;
+            padding: 10px 14px;
             border: 1px solid #e9ecef;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 8px;
+            background: #ffffff;
             color: #2c3e50;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-family: 'Inter', sans-serif;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
         }
 
         .filter-input-group input:focus {
             outline: none;
             border-color: #27ae60;
-            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
-            background: linear-gradient(135deg, #ffffff 0%, #f0f8f0 100%);
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            background: #ffffff;
         }
 
         .clear-filter-btn {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            padding: 10px 16px;
+            background: #e74c3c;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
             font-family: 'Inter', sans-serif;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .clear-filter-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .clear-filter-btn:hover::before {
-            left: 100%;
+            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+            white-space: nowrap;
         }
 
         .clear-filter-btn:hover {
-            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            background: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
         }
 
         .filter-info {
@@ -956,6 +929,122 @@
             width: 90%;
         }
 
+        /* Welcome Modal Styles */
+        .welcome-modal {
+            max-width: 700px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .welcome-content {
+            padding: 20px 0;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .welcome-content h3 {
+            color: #27ae60;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .welcome-content p {
+            color: #6c757d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .welcome-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            text-align: left;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .step-content p {
+            color: #6c757d;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+
         /* Settings Modal Styles */
         .settings-modal {
             max-width: 700px;
@@ -1010,11 +1099,7 @@
         }
 
         .filter-options {
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(39, 174, 96, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(39, 174, 96, 0.2);
+            white-space: nowrap;
         }
 
         .filter-toggle-label {
@@ -1022,9 +1107,11 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
-            color: #2c3e50;
-            font-weight: 500;
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .filter-toggle-label input[type="checkbox"] {
@@ -1033,11 +1120,11 @@
 
         .filter-toggle-slider {
             position: relative;
-            width: 50px;
-            height: 24px;
+            width: 40px;
+            height: 20px;
             background: #e9ecef;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            border-radius: 10px;
+            transition: all 0.2s ease;
             border: 1px solid #dee2e6;
         }
 
@@ -1046,12 +1133,12 @@
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             background: #ffffff;
             border-radius: 50%;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider {
@@ -1060,13 +1147,42 @@
         }
 
         .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
-            transform: translateX(26px);
+            transform: translateX(20px);
         }
 
         .filter-toggle-text {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            color: #6c757d;
+        }
+
+        .filter-circles {
+            min-width: 150px;
+        }
+
+        .circle-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #ffffff;
             color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .circle-select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            background: #ffffff;
+        }
+
+        .circle-select:hover {
+            border-color: #27ae60;
         }
 
         .settings-section label {
@@ -1514,21 +1630,24 @@
                 
                 <!-- Geohash Filter -->
                 <div class="filter-container">
-                    <div class="filter-input-group">
-                        <label for="geohashFilter">
-                            <span class="filter-icon">🔍</span>
-                            Filter
-                        </label>
-                        <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
+                    <div class="filter-row">
+                        <div class="filter-input-group">
+                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
+                        </div>
+                        <div class="filter-options">
+                            <label class="filter-toggle-label">
+                                <input type="checkbox" id="nip05Filter" />
+                                <span class="filter-toggle-slider">
+                                    <span class="filter-toggle-text">Verified</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="filter-circles">
+                            <select id="circleFilter" class="circle-select">
+                                <option value="">All Circles</option>
+                            </select>
+                        </div>
                         <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
-                    </div>
-                    <div class="filter-options">
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="nip05Filter" />
-                            <span class="filter-toggle-slider">
-                                <span class="filter-toggle-text">Only NIP-05 Verified</span>
-                            </span>
-                        </label>
                     </div>
                 </div>
                 
@@ -1565,14 +1684,70 @@
                     </div>
                 </div>
                 <div class="compose-section">
-                    <label>Posting to Relays:</label>
-                    <div id="postingRelaysDisplay" class="posting-relays-display">
-                        <!-- Will be populated by JavaScript -->
+                        <label>Posting to Relays:</label>
+                        <div id="postingRelaysDisplay" class="posting-relays-display">
+                            <!-- Will be populated by JavaScript -->
                     </div>
+                </div>
+                <div class="compose-section">
+                        <label for="composeCircle">Circle (Optional):</label>
+                        <select id="composeCircle" class="circle-select">
+                            <option value="">No Circle</option>
+                        </select>
                 </div>
                 <div class="compose-actions">
                     <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
                     <button id="cancelComposeBtn" class="cancel-btn">❌ CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content welcome-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌟 Welcome to TRipchat!</h3>
+                <button class="modal-close" onclick="document.getElementById('welcomeModal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="welcome-content">
+                    <div class="welcome-icon">🗺️</div>
+                    <h3>Your Travel Chat on Nostr</h3>
+                    <p>TRipchat lets you discover and share location-based messages with fellow travelers using the Nostr protocol.</p>
+                    
+                    <div class="welcome-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>🔑 Set up your keys</h4>
+                                <p>Click the "🔑 KEYS" button to generate or add your Nostr keys</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>✍️ Start chatting</h4>
+                                <p>Click "COMPOSE" to share your first travel message</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>🔍 Explore the map</h4>
+                                <p>Browse messages from travelers around the world</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="welcome-actions">
+                        <button class="btn btn-primary" onclick="document.getElementById('welcomeModal').style.display='none'; document.getElementById('settingsModal').style.display='flex';">
+                            🔑 Set up Keys
+                        </button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('welcomeModal').style.display='none';">
+                            Let's Explore!
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1690,14 +1865,17 @@
                 this.relayStatus = {};
                 this.websockets = {};
                 this.subscriptionIds = {};
+                this.totalEventsReceived = 0;
                 this.geohashFilter = '';
                 this.nip05Filter = false;
+                this.circleFilter = '';
                 this.initialLoadComplete = false;
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
                 this.privateKey = null; // User's private key for posting
                 this.init();
             }
+
 
             async init() {
                 try {
@@ -1716,6 +1894,63 @@
                 } catch (error) {
                     this.displayError('Failed to connect to relays: ' + error.message);
                 }
+            }
+
+            // Get Trustroots circles data (fetched from actual Trustroots database)
+            // Data source: MongoDB query: db.tribes.find({}, { name: 1, slug: 1, description: 1, category: 1, _id: 0 }).sort({ name: 1 })
+            // Collection: trust-roots.tribes
+            // Last updated: 2024-12-19
+            getTrustrootsCircles() {
+                return [
+                    { slug: 'hitchhikers', name: 'Hitchhikers', description: 'Trustroots was started by hitchhikers for hitchhikers. Many people found out about Trustroots through Hitchwiki. Meet new friends while you are heading in the same direction.' },
+                    { slug: 'dumpster-divers', name: 'Dumpster Divers', description: 'Love turning trash into treasure? This circle is for you! A circle for those finding value hidden in our waste bins.' },
+                    { slug: 'families', name: 'Families', description: 'It\'s great to share hospitality with kids. If you\'re a small or bigger family, please join this circle.' },
+                    { slug: 'musicians', name: 'Musicians', description: 'Love jamming with other musicians? This circle can be good way to find them.' },
+                    { slug: 'buskers', name: 'Buskers', description: 'Whether its music, art, theatre or any other kind of performance, find other buskers and street performers in this circle.' },
+                    { slug: 'veg', name: 'Veg', description: 'For health, for the animals or for the earth. Join this tribe if you\'re vegan or vegetarian.' },
+                    { slug: 'hackers', name: 'Hackers', description: 'Not afraid of :(){ :|:& };: - join fellow hackers at this circle for ubergeeks.' },
+                    { slug: 'lgbtq', name: 'LGBTQ', description: 'A circle for lesbian, gay, bi, trans, queer people and their allies.' },
+                    { slug: 'ecoliving', name: 'Eco Living', description: 'Are you interested in living with less impact on our planet? Maybe you are already doing so and want to share and connect.' },
+                    { slug: 'lindyhoppers', name: 'Lindy Hoppers', description: 'The Lindy hop swing dance community. Hey daddy-o! Dance on over and join your fellow lovers of Lindy Hop and Swing!' },
+                    { slug: 'nomads', name: 'Nomads', description: 'Whether you find yourself in a place for a day, week, month or year, this is the circle for the vagabonds and wanderers who find home wherever their head may lie.' },
+                    { slug: 'punks', name: 'Punks', description: 'This circle is so punk, we don´t even have a definition. Are you punk? Join us!' },
+                    { slug: 'cyclists', name: 'Cyclists', description: 'Legs of steel or maybe just some grand tour ambitions? Cyclists connect with this circle, before, during and after you hit the road.' },
+                    { slug: 'foodsharing', name: 'Food Sharing', description: 'Foodsharing.de activists and members.' },
+                    { slug: 'yoga', name: 'Yoga', description: 'For practitioners of yoga: meet your fellows in this circle for yogis and yoginis.' },
+                    { slug: 'climbers', name: 'Climbers', description: 'Climbers & mountain lovers: come meet fellow climbers and share your favorite spots to climb in this circle for climbers.' },
+                    { slug: 'hikers', name: 'Hikers', description: 'For outdoorsy people who love hiking in nature. Would you like to find hosts who can recomend the best local hikes?' },
+                    { slug: 'sailors', name: 'Sailors', description: 'For sailors and seafarers. Landlubbers beware! These waters are for sailors and seafarers...' },
+                    { slug: 'artists', name: 'Artists', description: 'Creators & Creatives: love to talk about your latest project? Want a host or guest who can connect with you creatively?' },
+                    { slug: 'rainbow-gathering', name: 'Rainbow Gathering', description: 'Join this circle if you feel part of the Rainbow Family. It\'s great to camp in nature with hippies. Food circle, now!' },
+                    { slug: 'slackline', name: 'Slackline', description: 'Joining this circle is as easy as falling off a 4cm piece of rope...' },
+                    { slug: 'spirituals', name: 'Spirituals', description: 'Ever spend time wondering if there is something more to life? This circle is for you no matter what you believe.' },
+                    { slug: 'dancers', name: 'Dancers', description: 'Dancing for fun, dancing as a release, dancing as a connection with others... whatever gets your booty shaking is fine with us.' },
+                    { slug: 'acroyoga', name: 'Acro Yoga', description: 'Practitioners of acroyoga: like your yoga with a partner or two? Or maybe even upside down?' },
+                    { slug: 'jugglers', name: 'Jugglers', description: 'Juggling community: bring your juggling balls, bowling pins, swords and torches! If you are a juggler or have an interest in juggling this is the community for you.' },
+                    { slug: 'vanlife', name: 'Van Life', description: 'For folks hitting the nomadic road in their vans, camper vans, motorhomes, buses or what have you!' },
+                    { slug: 'trustroots-volunteers', name: 'Trustroots Volunteers', description: 'Join this circle if you want to help grow Trustroots — or if you are already helping.' },
+                    { slug: 'winemakers', name: 'Winemakers', description: 'The soil, the sun, the grape, the casting, it all influences the taste when creating wine.' },
+                    { slug: 'squatters', name: 'Squatters', description: 'The land belongs to those who work it, and a house to those who live in it. N\'est-ce pas?' },
+                    { slug: 'surfers', name: 'Surfers', description: 'Vitamin SEA is all we need. Do you feel at home in the water with a board: this is the place for you.' },
+                    { slug: 'skateboarders', name: 'Skateboarders', description: 'The streets are your playground. Whether you prefer a skateboard, a longboard or cruiser, join this rolling community.' },
+                    { slug: 'pilgrims', name: 'Pilgrims', description: 'For those on spiritual journeys and pilgrimages.' },
+                    { slug: 'photographers', name: 'Photographers', description: 'Worth more than a thousand words in a Circle description.' },
+                    { slug: 'naturists', name: 'Naturists', description: 'Feel better in your birthday suit? A circle for those practising, advocating and defending personal and social nudity.' },
+                    { slug: 'motorcyclists', name: 'Motorcyclists', description: 'For motorcycle enthusiasts and riders.' },
+                    { slug: 'feminists', name: 'Feminists', description: 'A feminist is anyone who recognizes the equality and full humanity of women and men.' },
+                    { slug: 'circus', name: 'Circus', description: 'Are you rolling through life on one wheel regularly? Do you love swinging on a trapeze? Is walking on a thin rope as normal to you as walking on flat surfaces?' },
+                    { slug: 'cooking', name: 'Cooking', description: 'From bon vivant to utter gluttony, as long as you make it yourself or together it\'s all good!' },
+                    { slug: 'burners', name: 'Burners', description: 'Burning man community.' },
+                    { slug: 'beer-brewers', name: 'Beer Brewers', description: 'No need to be a monk these days, just an enthusiast for this craft. Find you fellow brewers here to exchange recipes.' },
+                    { slug: 'anarchists', name: 'Anarchists', description: 'In an anarchist society people wouldn\'t feel as though there was power because everyone would have equal footing.' },
+                    { slug: 'gardeners-farmers', name: 'Gardeners & Farmers', description: 'Regardless of whether you have a small urban balcony garden or enough land to live completely off-grid, this is the place for you!' },
+                    { slug: 'scuba-divers', name: 'Scuba Divers', description: 'If you love spending more time underwater than above land exploring amazing worlds, then this circle may be good for you.' },
+                    { slug: 'ravers', name: 'Ravers', description: 'Love dancing your ass off to beats in underground and secret locations? Come join and find out where the party is at around the world.' },
+                    { slug: 'zero-wasters', name: 'Zero Wasters', description: 'Interested in reducing the waste going to landfill and incineration? Connect here with people acting individually and collectively towards a waste free world.' },
+                    { slug: 'activists', name: 'Activists', description: 'Power to the people! No oceans, no life! Make love not war! Join this circle to find your fellow activists.' },
+                    { slug: 'runners', name: 'Runners', description: 'Anywhere you travel, your running shoes come with? The more miles the better? You even travel for big competitions?' },
+                    { slug: 'filmmakers', name: 'Filmmakers', description: 'Aaaand action! Holding a camera, being in front of it, working on the tech side of things, traveling to find the best settings.' }
+                ];
             }
 
             startStatsUpdateTimer() {
@@ -1875,6 +2110,7 @@
                 const geohashFilter = document.getElementById('geohashFilter');
                 const clearFilter = document.getElementById('clearFilter');
                 const nip05Filter = document.getElementById('nip05Filter');
+                const circleFilter = document.getElementById('circleFilter');
 
                 geohashFilter.addEventListener('input', (e) => {
                     this.geohashFilter = e.target.value.trim().toLowerCase();
@@ -1893,6 +2129,8 @@
                     this.geohashFilter = '';
                     nip05Filter.checked = false;
                     this.nip05Filter = false;
+                    circleFilter.value = '';
+                    this.circleFilter = '';
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
@@ -1906,7 +2144,15 @@
                     this.plotActivitiesOnMap(this.notes);
                 });
 
+                circleFilter.addEventListener('change', (e) => {
+                    this.circleFilter = e.target.value;
+                    this.updateHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                });
 
+                // Populate circle filters
+                this.populateCircleFilters();
 
                 // Listen for hash changes (when user manually changes URL)
                 window.addEventListener('hashchange', () => {
@@ -1918,6 +2164,36 @@
                     if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
                         this.highlightGeohashArea(this.geohashFilter);
                     }
+                });
+            }
+
+            populateCircleFilters() {
+                const filterCircleSelect = document.getElementById('circleFilter');
+                const composeCircleSelect = document.getElementById('composeCircle');
+                
+                if (filterCircleSelect) {
+                    this.populateCircleSelect(filterCircleSelect);
+                }
+                
+                if (composeCircleSelect) {
+                    this.populateCircleSelect(composeCircleSelect);
+                }
+            }
+
+            populateCircleSelect(selectElement) {
+                const circles = this.getTrustrootsCircles();
+                
+                // Clear existing options except the first one
+                while (selectElement.children.length > 1) {
+                    selectElement.removeChild(selectElement.lastChild);
+                }
+                
+                // Add circle options
+                circles.forEach(circle => {
+                    const option = document.createElement('option');
+                    option.value = circle.slug;
+                    option.textContent = circle.name;
+                    selectElement.appendChild(option);
                 });
             }
 
@@ -2230,6 +2506,23 @@
                             if (expectedNpub && expectedNpub === npub) {
                                 verificationStatus.textContent = '✓ NIP-05 verification successful!';
                                 verificationStatus.style.color = '#27ae60';
+                                
+                                // Post kind 0 profile event to Nostr after successful verification
+                                verificationStatus.textContent = '✓ NIP-05 verified! Posting profile to Nostr...';
+                                try {
+                                    const profilePosted = await this.postProfileToNostr(savedUsername, npub);
+                                    if (profilePosted) {
+                                        verificationStatus.textContent = '✓ NIP-05 verified & profile posted to Nostr!';
+                                        verificationStatus.style.color = '#27ae60';
+                                    } else {
+                                        verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
+                                        verificationStatus.style.color = '#f39c12';
+                                    }
+                                } catch (error) {
+                                    console.error('Error posting profile:', error);
+                                    verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
+                                    verificationStatus.style.color = '#f39c12';
+                                }
                             } else {
                                 verificationStatus.textContent = `✗ NIP-05 verification failed. Expected: ${expectedNpub}, Got: ${npub}`;
                                 verificationStatus.style.color = '#dc3545';
@@ -2508,10 +2801,13 @@
                 if (this.nip05Filter) {
                     params.set('nip05', 'true');
                 }
+                if (this.circleFilter) {
+                    params.set('circle', this.circleFilter);
+                }
                 
                 if (params.toString()) {
                     url.hash = `#${params.toString()}`;
-                } else {
+                    } else {
                     url.hash = '';
                 }
                 window.history.replaceState(null, '', url);
@@ -2527,13 +2823,14 @@
                         const params = new URLSearchParams(hashContent);
                         const geohash = params.get('geohash');
                         const nip05 = params.get('nip05');
+                        const circle = params.get('circle');
                         
-                        if (geohash) {
-                            this.geohashFilter = geohash.toLowerCase();
-                            const geohashFilterInput = document.getElementById('geohashFilter');
-                            if (geohashFilterInput) {
-                                geohashFilterInput.value = geohash;
-                            }
+                    if (geohash) {
+                        this.geohashFilter = geohash.toLowerCase();
+                        const geohashFilterInput = document.getElementById('geohashFilter');
+                        if (geohashFilterInput) {
+                            geohashFilterInput.value = geohash;
+                        }
                         }
                         
                         if (nip05 === 'true') {
@@ -2541,6 +2838,14 @@
                             const nip05FilterInput = document.getElementById('nip05Filter');
                             if (nip05FilterInput) {
                                 nip05FilterInput.checked = true;
+                            }
+                        }
+                        
+                        if (circle) {
+                            this.circleFilter = circle;
+                            const circleFilterInput = document.getElementById('circleFilter');
+                            if (circleFilterInput) {
+                                circleFilterInput.value = circle;
                             }
                         }
                     } catch (e) {
@@ -2585,6 +2890,19 @@
                     });
                 }
                 
+                // Apply circle filter
+                if (this.circleFilter) {
+                    filtered = filtered.filter(note => {
+                        if (!note.tags) return false;
+                        
+                        return note.tags.some(tag => 
+                            tag[0] === 'circle' && 
+                            tag[1] && 
+                            tag[1] === this.circleFilter
+                        );
+                    });
+                }
+                
                 return filtered;
             }
 
@@ -2596,8 +2914,34 @@
                 const noteContainer = document.getElementById('noteContainer');
                 noteContainer.innerHTML = '<div class="loading">Connecting to TRipchat Nostr relays...</div>';
 
+                console.log('Starting connection to relays:', this.relays);
+                
                 for (const relayUrl of this.relays) {
                     this.connectToRelay(relayUrl);
+                }
+                
+                // Set a timeout to show connection status
+                setTimeout(() => {
+                    this.updateConnectionStatus();
+                }, 5000);
+            }
+
+            updateConnectionStatus() {
+                const noteContainer = document.getElementById('noteContainer');
+                const connectedRelays = Object.values(this.relayStatus).filter(status => status.status === 'connected').length;
+                const totalRelays = this.relays.length;
+                
+                if (connectedRelays === 0) {
+                    noteContainer.innerHTML = '<div class="loading">❌ Failed to connect to any relays. Check console for errors.</div>';
+                } else if (connectedRelays < totalRelays) {
+                    noteContainer.innerHTML = `<div class="loading">⚠️ Connected to ${connectedRelays}/${totalRelays} relays. Events received: ${this.totalEventsReceived}, Notes: ${this.notes.length}</div>`;
+                } else {
+                    noteContainer.innerHTML = `<div class="loading">✅ Connected to all relays. Events received: ${this.totalEventsReceived}, Notes: ${this.notes.length}</div>`;
+                }
+                
+                // If we have notes, display them
+                if (this.notes.length > 0) {
+                    this.displayActivities(this.notes);
                 }
             }
 
@@ -2618,8 +2962,8 @@
                         
                         // Subscribe to TRipchat-specific event kinds
                         const filters = {
-                            "kinds": [20000], // Only ephemeral events (location channels)
-                            "limit": 10000
+                            "kinds": [20000, 0, 1], // Ephemeral events + profiles + notes for debugging
+                            "limit": 100
                         };
                         
                         const subscription = [
@@ -2630,6 +2974,9 @@
                         
                         console.log(`Sending subscription to ${relayUrl}:`, subscription);
                         ws.send(JSON.stringify(subscription));
+                        
+                        // Update connection status
+                        this.updateConnectionStatus();
                     };
 
                     ws.onmessage = (event) => {
@@ -2641,8 +2988,8 @@
                                 const [messageType, subId, eventData] = data;
                                 
                                 if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
-                                    // Log all events for debugging
-                                    console.log(`📨 Received event: ${eventData.id}, kind: ${eventData.kind}, content: "${eventData.content?.substring(0, 30)}..."`);
+                                    this.totalEventsReceived++;
+                                    console.log(`📨 Received event #${this.totalEventsReceived}: ${eventData.id}, kind: ${eventData.kind}, content: "${eventData.content?.substring(0, 30)}..."`);
                                     
                                     // Debug: Check for geohash tags in all events
                                     if (eventData.tags) {
@@ -2658,9 +3005,12 @@
                                     if (this.isTRipchatNote(eventData)) {
                                         this.addNewNote(eventData);
                                         this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
+                                        this.updateConnectionStatus();
                                     }
                 } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                    console.log(`📋 End of stored events from ${relayUrl}`);
                     this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
+                    this.updateConnectionStatus();
                     
                     if (this.notes.length > 0) {
                         this.displayStats(this.notes);
@@ -2682,6 +3032,7 @@
                     ws.onerror = (error) => {
                         console.error(`Error connecting to ${relayUrl}:`, error);
                         this.updateRelayStatus(relayUrl, 'disconnected');
+                        this.updateConnectionStatus();
                     };
 
                     ws.onclose = () => {
@@ -2700,37 +3051,28 @@
             }
 
             isTRipchatNote(event) {
-                // Only accept Kind 20000 events (ephemeral events for location channels)
-                if (event.kind !== 20000) {
-                    return false;
+                // Temporarily accept more event types for debugging
+                console.log(`Checking event ${event.id}, kind: ${event.kind}`);
+                
+                // Accept Kind 20000 events (ephemeral events for location channels)
+                if (event.kind === 20000) {
+                    console.log(`✅ Kind 20000 event accepted: ${event.id}`);
+                    return true;
                 }
                 
-                const content = event.content || '';
-                const tags = event.tags || [];
-                
-                // Check for geohash tags (common in TRipchat location channels)
-                const hasGeohashTag = tags.some(tag => tag[0] === 'g' && tag[1]);
-                
-                // Debug logging for geohash events
-                if (hasGeohashTag) {
-                    console.log(`Geohash event detected: ${event.id}, content: "${content.substring(0, 50)}...", geohash: ${tags.find(tag => tag[0] === 'g')?.[1]}`);
-                    console.log(`Geohash tags:`, tags.filter(tag => tag[0] === 'g'));
-                    
-                    // Special logging for "ey" geohash
-                    const eyGeohash = tags.some(tag => tag[0] === 'g' && tag[1] === 'ey');
-                    if (eyGeohash) {
-                        console.log(`🎯 EY GEOHASH MESSAGE FOUND!`, {
-                            id: event.id,
-                            content: content,
-                            kind: event.kind,
-                            tags: tags,
-                            created_at: new Date(event.created_at * 1000).toISOString()
-                        });
+                // Temporarily accept Kind 1 events (notes) for debugging
+                if (event.kind === 1) {
+                    console.log(`🔍 Kind 1 event found for debugging: ${event.id}`);
+                    // Check if it has location-related content
+                    const content = event.content || '';
+                    const hasLocationKeywords = /travel|trip|location|geohash|trustroots|hitchhiking/i.test(content);
+                    if (hasLocationKeywords) {
+                        console.log(`✅ Kind 1 event with location keywords accepted: ${event.id}`);
+                        return true;
                     }
                 }
                 
-                // Accept all Kind 20000 events (they are TRipchat location channel messages)
-                return true;
+                return false;
             }
 
             addNewNote(note) {
@@ -2867,7 +3209,7 @@
                     <div class="note-header">
                         <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.85rem;">${username}</span>
                         <span class="note-time" title="${timeString}" data-note-id="${note.id}">${relativeTime}</span>
-                    </div>
+                        </div>
                     <div class="note-content">${contentHtml}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
@@ -2891,7 +3233,7 @@
                     <div class="note-header">
                         <span class="note-username" style="color: #27ae60; font-weight: 600; font-size: 0.85rem;">${username}</span>
                         <span class="note-time" title="${timeString}">${relativeTime}</span>
-                    </div>
+                        </div>
                     <div class="note-content">${this.escapeHtml(note.content || 'No content')}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <div style="display: flex; gap: 8px;">
@@ -2966,9 +3308,9 @@
                 const filteredCount = filteredActivities.length;
                 
                 statsDiv.innerHTML = `
-                    <div class="stats-header">
+                    <div class="stats-header" onclick="const stats = this.parentElement; const content = stats.querySelector('.stats-content'); const toggle = stats.querySelector('.stats-toggle'); content.classList.toggle('minimized'); stats.classList.toggle('minimized'); toggle.textContent = content.classList.contains('minimized') ? '+' : '−';">
                         <h3 class="stats-title">📊 Stats</h3>
-                        <button class="stats-toggle" onclick="const stats = this.parentElement.parentElement; const content = stats.querySelector('.stats-content'); content.classList.toggle('minimized'); stats.classList.toggle('minimized'); this.textContent = content.classList.contains('minimized') ? '+' : '−';">+</button>
+                        <span class="stats-toggle">+</span>
                     </div>
                     <div class="stats-content minimized">
                     <div class="stats-section">
@@ -3384,6 +3726,7 @@
             clearComposeForm() {
                 document.getElementById('composeContent').value = '';
                 document.getElementById('composeLocation').value = '';
+                document.getElementById('composeCircle').value = '';
             }
 
             // Save keys to localStorage
@@ -3768,21 +4111,23 @@
                     // Show first 10 characters of npub without @
                     username = pubkey ? this.hexToNpub(pubkey).substring(0, 10) : 'Unknown';
                 } else {
-                    // Check if the name already has a discriminator
-                    if (profile.name.includes('#')) {
+                // Check if the name already has a discriminator
+                if (profile.name.includes('#')) {
                         username = profile.name;
                     } else {
-                        // Add discriminator if it doesn't exist
-                        const discriminator = this.generateDiscriminator(pubkey);
+                // Add discriminator if it doesn't exist
+                const discriminator = this.generateDiscriminator(pubkey);
                         username = `${profile.name}#${discriminator}`;
                     }
                 }
                 
-                // Check for NIP-05 verification
+                // Check for NIP-05 verification with better visual indicator
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     if (isTrustrootsVerified) {
-                        username += ' ✓';
+                        username += ' 🟢'; // Green circle for verified
+                    } else if (profile.nip05.includes('@')) {
+                        username += ' 🔵'; // Blue circle for other NIP-05 verified
                     }
                 }
                 
@@ -3842,6 +4187,7 @@
             async postNote() {
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('composeLocation').value.trim();
+                const circle = document.getElementById('composeCircle').value;
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
                 if (!content) {
@@ -3867,7 +4213,7 @@
                         this.privateKey = privateKeyInput;
                     }
                     
-                    const event = await this.createBitchatEvent(content, geohash);
+                    const event = await this.createBitchatEvent(content, geohash, circle);
                     await this.publishEvent(event);
                     
                     // Close modal and clear form
@@ -3881,7 +4227,7 @@
                 }
             }
 
-            async createBitchatEvent(content, geohash) {
+            async createBitchatEvent(content, geohash, circle = '') {
                 if (!this.privateKey) {
                     throw new Error('No private key available');
                 }
@@ -3890,30 +4236,58 @@
                     // Get npub for NIP-05 verification
                     const npub = this.deriveNpubFromPrivateKey(this.privateKey);
                     
-                    // Check for NIP-05 verification
+                    // Check for NIP-05 verification with caching
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
                     let nip05Verified = false;
                     
                     if (savedUsername) {
-                        try {
-                            const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
-                            const response = await fetch(verificationUrl);
-                            const data = await response.json();
-                            
-                            if (data.names && data.names[savedUsername]) {
-                                const hexPubkey = data.names[savedUsername];
-                                let expectedNpub;
+                        // Check cache first
+                        const cacheKey = `nip05_${savedUsername}`;
+                        const cached = localStorage.getItem(cacheKey);
+                        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+                        const now = Date.now();
+                        
+                        // Use cache if less than 5 minutes old
+                        if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
+                            nip05Verified = cached === 'true';
+                        } else {
+                            try {
+                                const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
+                                const response = await fetch(verificationUrl, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Cache-Control': 'no-cache'
+                                    }
+                                });
                                 
-                                if (typeof window.nostrTools !== 'undefined') {
-                                    expectedNpub = window.nostrTools.nip19.npubEncode(hexPubkey);
-                                } else {
-                                    expectedNpub = this.hexToNpub(hexPubkey);
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    
+                                    if (data.names && data.names[savedUsername]) {
+                                        const hexPubkey = data.names[savedUsername];
+                                        let expectedNpub;
+                                        
+                                        if (typeof window.nostrTools !== 'undefined') {
+                                            expectedNpub = window.nostrTools.nip19.npubEncode(hexPubkey);
+                                        } else {
+                                            expectedNpub = this.hexToNpub(hexPubkey);
+                                        }
+                                        
+                                        nip05Verified = (expectedNpub === npub);
+                                        
+                                        // Cache the result
+                                        localStorage.setItem(cacheKey, nip05Verified.toString());
+                                        localStorage.setItem(`${cacheKey}_time`, now.toString());
+                                    }
                                 }
-                                
-                                nip05Verified = (expectedNpub === npub);
+                            } catch (error) {
+                                console.log('NIP-05 verification failed:', error);
+                                // Use cached result if available, even if expired
+                                if (cached) {
+                                    nip05Verified = cached === 'true';
+                                }
                             }
-                        } catch (error) {
-                            console.log('NIP-05 verification failed:', error);
                         }
                     }
                     
@@ -3929,6 +4303,11 @@
                             ],
                             created_at: Math.floor(Date.now() / 1000)
                         };
+                        
+                        // Add circle tag if selected
+                        if (circle) {
+                            event.tags.push(['circle', circle]);
+                        }
                         
                         // Add NIP-05 verification tag if verified
                         if (nip05Verified) {
@@ -3956,6 +4335,11 @@
                         sig: this.generateFakeSignature(this.privateKey, content)
                     };
                     
+                    // Add circle tag if selected
+                    if (circle) {
+                        event.tags.push(['circle', circle]);
+                    }
+                    
                     // Add NIP-05 verification tag if verified
                     if (nip05Verified) {
                         event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
@@ -3976,7 +4360,7 @@
 
             // Generate a fake event ID
             generateFakeEventId(content, geohash) {
-                const input = content + geohash + Date.now();
+                const input = content + (geohash || 'profile') + Date.now();
                 const hash = this.simpleHash(input);
                 return hash.substring(0, 64);
             }
@@ -3986,6 +4370,125 @@
                 const input = privateKeyHex + content + Date.now();
                 const hash = this.simpleHash(input);
                 return hash.substring(0, 128); // Longer for signature
+            }
+
+            // Create and post kind 0 profile event
+            async postProfileToNostr(username, npub) {
+                try {
+                    if (!this.privateKey) {
+                        throw new Error('No private key available for signing');
+                    }
+
+                    // Create profile content
+                    const profileContent = {
+                        name: username,
+                        about: `Traveler on Trustroots - ${username}`,
+                        website: `https://trustroots.org/people/${username}`,
+                        nip05: `${username}@trustroots.org`,
+                        lud16: `${username}@trustroots.org`,
+                        // Trustroots-specific fields
+                        trustroots_username: username,
+                        trustroots_profile: `https://trustroots.org/people/${username}`,
+                        travel_preferences: "Hospitality exchange, hitchhiking, sustainable travel",
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const event = {
+                            kind: 0, // Metadata event
+                            content: JSON.stringify(profileContent),
+                            tags: [
+                                ['nip05', `${username}@trustroots.org`],
+                                ['L', 'org.trustroots'],
+                                ['l', username, 'org.trustroots']
+                            ],
+                            created_at: Math.floor(Date.now() / 1000)
+                        };
+
+                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        
+                        // Post to all enabled relays
+                        const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                        const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, signedEvent));
+                        
+                        const results = await Promise.allSettled(postPromises);
+                        const successful = results.filter(r => r.status === 'fulfilled').length;
+                        
+                        console.log(`Profile posted to ${successful}/${postingRelays.length} relays`);
+                        return successful > 0;
+                    } else {
+                        // Fallback method
+                        console.log('nostr-tools not available, using fallback profile creation');
+                        const event = {
+                            kind: 0,
+                            content: JSON.stringify(profileContent),
+                            tags: [
+                                ['nip05', `${username}@trustroots.org`],
+                                ['L', 'org.trustroots'],
+                                ['l', username, 'org.trustroots']
+                            ],
+                            pubkey: this.generateFakePublicKey(this.privateKey),
+                            created_at: Math.floor(Date.now() / 1000),
+                            id: this.generateFakeEventId(JSON.stringify(profileContent), 'profile'),
+                            sig: this.generateFakeSignature(this.privateKey, JSON.stringify(profileContent))
+                        };
+
+                        // Post to all enabled relays
+                        const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                        const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, event));
+                        
+                        const results = await Promise.allSettled(postPromises);
+                        const successful = results.filter(r => r.status === 'fulfilled').length;
+                        
+                        console.log(`Profile posted to ${successful}/${postingRelays.length} relays`);
+                        return successful > 0;
+                    }
+                } catch (error) {
+                    console.error('Error posting profile to Nostr:', error);
+                    return false;
+                }
+            }
+
+            // Post event to a specific relay
+            async postEventToRelay(relayUrl, event) {
+                return new Promise((resolve, reject) => {
+                    if (!this.websockets[relayUrl] || this.websockets[relayUrl].readyState !== WebSocket.OPEN) {
+                        reject(new Error(`Relay ${relayUrl} not connected`));
+                        return;
+                    }
+
+                    const message = JSON.stringify(["EVENT", event]);
+                    
+                    const handleMessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (Array.isArray(data) && data.length >= 2) {
+                                const [messageType, eventId, success, message] = data;
+                                
+                                if (messageType === 'OK' && eventId === event.id) {
+                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                    if (success) {
+                                        resolve(true);
+                                    } else {
+                                        reject(new Error(message || 'Event rejected by relay'));
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            // Ignore parsing errors for other messages
+                        }
+                    };
+
+                    this.websockets[relayUrl].addEventListener('message', handleMessage);
+                    this.websockets[relayUrl].send(message);
+
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                        reject(new Error('Timeout posting to relay'));
+                    }, 10000);
+                });
             }
 
             async publishEvent(event) {
@@ -4030,6 +4533,9 @@
                         connectionTime: null
                     };
                     
+                    // Save settings to localStorage
+                    this.saveRelaySettings();
+                    
                     // Connect to the new relay
                     this.connectToRelay(url);
                     console.log(`Added new relay: ${url}`);
@@ -4050,6 +4556,9 @@
                         delete this.websockets[url];
                     }
                     
+                    // Save settings to localStorage
+                    this.saveRelaySettings();
+                    
                     // Update the relay list display
                     this.updateRelayList();
                     
@@ -4059,6 +4568,8 @@
 
             togglePostingRelay(url) {
                 this.postingRelays[url] = !this.postingRelays[url];
+                // Save settings to localStorage
+                this.saveRelaySettings();
                 // Update the display if compose modal is open
                 this.updatePostingRelaysDisplay();
             }
@@ -4264,6 +4775,61 @@
                     // Only hitchwiki and trustroots enabled for posting by default
                     this.postingRelays[relayUrl] = relayUrl.includes('hitchwiki.org') || relayUrl.includes('trustroots.org');
                 });
+                
+                // Load saved relay settings from localStorage
+                this.loadRelaySettings();
+            }
+
+            // Save relay settings to localStorage
+            saveRelaySettings() {
+                try {
+                    const settings = {
+                        relays: this.relays,
+                        postingRelays: this.postingRelays,
+                        relayEnabled: this.relayEnabled
+                    };
+                    localStorage.setItem('tripchat_relay_settings', JSON.stringify(settings));
+                    console.log('Relay settings saved to localStorage');
+                } catch (error) {
+                    console.error('Failed to save relay settings to localStorage:', error);
+                }
+            }
+
+            // Load relay settings from localStorage
+            loadRelaySettings() {
+                try {
+                    const saved = localStorage.getItem('tripchat_relay_settings');
+                    if (saved) {
+                        const settings = JSON.parse(saved);
+                        
+                        // Restore relay list if available
+                        if (settings.relays && Array.isArray(settings.relays)) {
+                            this.relays = settings.relays;
+                        }
+                        
+                        // Restore posting relay settings
+                        if (settings.postingRelays) {
+                            Object.keys(settings.postingRelays).forEach(relayUrl => {
+                                if (this.postingRelays.hasOwnProperty(relayUrl)) {
+                                    this.postingRelays[relayUrl] = settings.postingRelays[relayUrl];
+                                }
+                            });
+                        }
+                        
+                        // Restore relay enabled settings
+                        if (settings.relayEnabled) {
+                            Object.keys(settings.relayEnabled).forEach(relayUrl => {
+                                if (this.relayEnabled.hasOwnProperty(relayUrl)) {
+                                    this.relayEnabled[relayUrl] = settings.relayEnabled[relayUrl];
+                                }
+                            });
+                        }
+                        
+                        console.log('Relay settings loaded from localStorage');
+                    }
+                } catch (error) {
+                    console.error('Failed to load relay settings from localStorage:', error);
+                }
             }
 
             updateRelayStatus(relayUrl, status, notesCount = null) {
@@ -4283,8 +4849,22 @@
             }
         }
 
+        // Show welcome modal on first visit
+        function showWelcomeModal() {
+            const hasVisited = localStorage.getItem('tripchat_has_visited');
+            if (!hasVisited) {
+                setTimeout(() => {
+                    document.getElementById('welcomeModal').style.display = 'flex';
+                }, 1000); // Show after 1 second delay
+                localStorage.setItem('tripchat_has_visited', 'true');
+            }
+        }
+
         // Initialize the app when the page loads
         window.tripchatVisualizer = new TRipchatVisualizer();
+        
+        // Show welcome modal if first visit
+        showWelcomeModal();
     </script>
 </body>
 </html>
