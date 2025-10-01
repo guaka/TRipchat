@@ -985,18 +985,18 @@
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
-        /* Inline Compose Form Styles */
+        /* Compact Inline Compose Form Styles */
         .compose-form {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .compose-form-header {
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
-            padding: 12px 16px;
+            padding: 8px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1004,18 +1004,20 @@
 
         .compose-form-header h3 {
             margin: 0;
-            font-size: 1rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .cancel-compose-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             transition: background 0.2s ease;
         }
 
@@ -1024,11 +1026,11 @@
         }
 
         .compose-form-body {
-            padding: 16px;
+            padding: 8px;
         }
 
         .compose-form .compose-section {
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
 
         .compose-form .compose-section:last-child {
@@ -1037,22 +1039,30 @@
 
         .compose-form label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
             font-weight: 600;
             color: #2c3e50;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .compose-form textarea,
         .compose-form input,
         .compose-form select {
             width: 100%;
-            padding: 10px 12px;
+            padding: 6px 8px;
             border: 1px solid #dee2e6;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
             font-family: 'Inter', sans-serif;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .compose-form textarea {
+            resize: vertical;
+            min-height: 40px;
+            max-height: 80px;
         }
 
         .compose-form textarea:focus,
@@ -1060,12 +1070,12 @@
         .compose-form select:focus {
             outline: none;
             border-color: #27ae60;
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
         }
 
         .compose-form .location-input-group {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .compose-form .location-input-group input {
@@ -1076,10 +1086,10 @@
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
-            padding: 10px 12px;
-            border-radius: 8px;
+            padding: 6px 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 600;
             white-space: nowrap;
             transition: all 0.2s ease;
@@ -1092,18 +1102,18 @@
 
         .compose-form .posting-relays-display {
             background: #f8f9fa;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
             color: #6c757d;
         }
 
         .compose-form .compose-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
-            margin-top: 16px;
-            padding-top: 16px;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid #dee2e6;
         }
 
@@ -1111,10 +1121,10 @@
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             transition: all 0.2s ease;
         }
@@ -1122,7 +1132,7 @@
         .compose-form .post-btn:hover {
             background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
         }
 
 
@@ -1852,10 +1862,10 @@
                 
                 <!-- Compose Button at Bottom -->
                 <div class="compose-bottom-container">
-                    <div id="composeButtonContainer">
+                    <div id="composeButtonContainer" style="display: none;">
                         <button id="composeBtn" class="compose-btn-bottom">✍️ COMPOSE</button>
                     </div>
-                    <div id="composeFormContainer" style="display: none;">
+                    <div id="composeFormContainer">
                         <div class="compose-form">
                             <div class="compose-form-header">
                                 <h3>✍️ Compose Note</h3>
@@ -2403,34 +2413,15 @@
                 const postNoteBtn = document.getElementById('postNoteBtn');
                 const getLocationBtn = document.getElementById('getLocationBtn');
 
-                composeBtn.addEventListener('click', () => {
-                    // Check if user has a private key
-                    const nsecKey = localStorage.getItem('tripchat_nsec');
-                    if (!nsecKey) {
-                        alert('Please generate or add a private key in Settings first.');
-                        return;
-                    }
-                    
-                    // Set the location field to the current filter if one is active
-                    const locationInput = document.getElementById('composeLocation');
-                    if (this.geohashFilter) {
-                        locationInput.value = this.geohashFilter;
-                    } else {
-                        locationInput.value = '';
-                    }
-                    
-                    // Update posting relays display
-                    this.updatePostingRelaysDisplay();
-                    
-                    // Show inline compose form
-                    document.getElementById('composeButtonContainer').style.display = 'none';
-                    document.getElementById('composeFormContainer').style.display = 'block';
-                });
+                // Initialize the compose form since it's always visible
+                this.updatePostingRelaysDisplay();
+                this.populateCircleSelect();
+
+                // Compose button is now hidden since form is always visible
+                // composeBtn.addEventListener('click', () => { ... });
 
                 cancelComposeBtn.addEventListener('click', () => {
-                    // Hide inline compose form and show button
-                    document.getElementById('composeFormContainer').style.display = 'none';
-                    document.getElementById('composeButtonContainer').style.display = 'block';
+                    // Clear the compose form
                     this.clearComposeForm();
                 });
 
@@ -4449,9 +4440,7 @@
                     const event = await this.createBitchatEvent(content, geohash, circle);
                     await this.publishEvent(event);
                     
-                    // Hide inline compose form and show button
-                    document.getElementById('composeFormContainer').style.display = 'none';
-                    document.getElementById('composeButtonContainer').style.display = 'block';
+                    // Clear the compose form after successful post
                     this.clearComposeForm();
                     
                     alert('Note posted successfully!');
