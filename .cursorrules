@@ -1,0 +1,53 @@
+# TRipchat Development Guidelines
+
+## Project Overview
+This is a web-based visualization tool for travel chat on Nostr. It displays location-based messages from the Nostr network in a map interface, inspired by Trustroots design principles.
+
+## Key References
+- **Original Bitchat iOS App**: https://github.com/permissionlesstech/bitchat
+- **Bitchat Android App**: https://github.com/permissionlesstech/bitchat-android
+- **Web Version Repository**: https://github.com/guaka/WEBitchat
+- **Bitchat App**: https://bitchat.free/
+- **Trustroots Repository**: https://github.com/Trustroots/trustroots
+- **Nostroots (Trustroots on Nostr)**: https://github.com/Trustroots/nostroots
+- **Nostr NIPs (Protocol Standards)**: https://github.com/nostr-protocol/nips
+
+## Important Notes
+- This web version does NOT implement the actual bluetooth bitchat protocol
+- It visualizes Nostr notes with geohash tags (Kind 20000 events)
+- Username formats like `@dialup#838e` come from user profile metadata in Nostr
+- The `#` discriminator format is used by some Nostr clients to distinguish users
+
+## Development Guidelines
+1. **Check the original bitchat repos** for understanding username formats, UI patterns, and protocol details:
+   - **iOS repo**: Username handling, UI patterns, and core protocol implementation
+   - **Android repo**: Cross-platform compatibility and additional UI patterns
+2. **Check Trustroots repositories** for design patterns, UI components, and user experience guidelines:
+   - **Trustroots repo**: Design system, color schemes, typography, and component patterns
+   - **Nostroots repo**: Nostr integration patterns, mobile app UI, and transition strategies
+3. **Nostr Integration**: Uses nostr-tools library for key management and event signing
+4. **Location-based**: Focuses on geohash-tagged messages for location-specific communication
+5. **UI Theme**: Trustroots-inspired design with clean, modern styling and green accents
+6. **Reply System**: Implements @username mentions for replies
+7. **Protocol Standards**: Reference Nostr NIPs for proper event handling and data formats
+
+## Code Structure
+- Single HTML file with embedded CSS and JavaScript
+- Uses Leaflet for map visualization
+- Connects to multiple Nostr relays
+- Implements compose functionality for posting new notes
+- Relay management for adding/removing connections
+
+## When Investigating Features
+- Always check the original bitchat repositories for reference implementations
+- Check Trustroots repositories for design patterns, UI components, and styling approaches
+- Look for username handling, discriminator formats, and UI patterns
+- Consider how features work in the native app vs web limitations
+- Reference relevant Nostr NIPs for protocol compliance:
+  - **NIP-01**: Basic protocol flow
+  - **NIP-02**: Contact Lists
+  - **NIP-19**: bech32-encoded entities (npub, nsec, etc.)
+  - **NIP-17**: Gift Wrapped Events (for private messages)
+  - **NIP-20**: Command Results
+  - **NIP-25**: Reactions
+  - **NIP-28**: Public Chat

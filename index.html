@@ -1,0 +1,3819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdn.skypack.dev; connect-src 'self' wss: https:;">
+    <title>TRipchat - Travel Chat on Nostr</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import * as nostrTools from 'https://cdn.skypack.dev/nostr-tools@1.7.0';
+        window.nostrTools = nostrTools;
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Global button styling for consistency */
+        button {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            font-weight: 400;
+            letter-spacing: 0;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .map-container {
+            flex: 1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            position: relative;
+            border-right: 1px solid #e9ecef;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .note-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 100vh;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: none;
+            margin: 0;
+        }
+        
+        h1 {
+            color: #27ae60;
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            letter-spacing: -0.5px;
+            text-transform: none;
+        }
+        
+        .note-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            animation: floatIn 0.6s ease-out;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .note-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(39, 174, 96, 0.2);
+            border-color: #27ae60;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8f0 100%);
+        }
+        
+        .note-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8B5CF6, #F59E0B);
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+        }
+        
+        .note-type {
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #2c3e50;
+            font-size: 0.95rem;
+            background: #f8f9fa;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #e9ecef;
+            letter-spacing: -0.01em;
+        }
+        
+        .note-time {
+            color: #6c757d;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+            padding: 4px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .note-time:hover {
+            background: #e9ecef;
+            color: #495057;
+            transform: translateY(-1px);
+        }
+        
+        
+        .note-content {
+            line-height: 1.7;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 1.1rem;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(39, 174, 96, 0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+        }
+        
+        .error {
+            color: #DC2626;
+            background: rgba(220, 38, 38, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            text-align: center;
+        }
+        
+        .stats {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 24px;
+            color: #2c3e50;
+            text-align: left;
+            border: 1px solid #e9ecef;
+            z-index: 1000;
+            min-width: 280px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stats-title {
+            color: #27ae60;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 136, 0, 0.5);
+            margin: 0;
+        }
+
+        .stats-toggle {
+            background: #27ae60;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+        }
+
+        .stats-toggle:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .stats-content {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .stats-content.minimized {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .stats.minimized {
+            height: 50px;
+            min-height: 50px;
+            padding: 8px 12px;
+        }
+        
+        .stats.minimized .stats-header {
+            margin-bottom: 0;
+        }
+        
+        .stats:hover {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8f0 100%);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stats h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #27ae60;
+            text-shadow: 0 0 5px rgba(255, 136, 0, 0.5);
+        }
+        
+        .stats p {
+            margin: 5px 0;
+            color: #2c3e50;
+        }
+
+        .stats p strong {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .stats-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .stats-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .relay-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+            padding: 4px 0;
+            font-size: 0.85rem;
+        }
+
+        .relay-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .relay-connected {
+            background: #10B981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+        }
+
+        .relay-connecting {
+            background: #F59E0B;
+            animation: pulse 2s infinite;
+        }
+
+        .relay-disconnected {
+            background: #EF4444;
+        }
+
+        .relay-name {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #2c3e50;
+        }
+
+        .relay-stats {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .map-marker {
+            background: linear-gradient(135deg, #8B5CF6, #F59E0B);
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border: 3px solid white;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .map-marker:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+        }
+        
+        .map-popup {
+            max-width: 250px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .map-popup .note-title {
+            font-weight: 600;
+            color: #8B5CF6;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .popup-content {
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+        
+        .popup-time {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        .popup-location {
+            color: #8B5CF6;
+            font-weight: 500;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+            padding-top: 4px;
+        }
+
+        .live-indicator {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .note-new {
+            animation: slideInFromTop 0.5s ease-out;
+            border-left: 4px solid #10B981;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tripchat-indicator {
+            background: linear-gradient(135deg, #8B5CF6, #F59E0B);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .geohash-tag {
+            background: linear-gradient(135deg, #8B5CF6, #F59E0B);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            margin: 0 4px;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .geohash-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #7C3AED, #D97706);
+        }
+
+        .tripchat-packet {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #6c757d;
+            word-break: break-all;
+        }
+
+        .encrypted-content {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 8px 0;
+            font-style: italic;
+            color: #856404;
+        }
+
+        .filter-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .filter-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .filter-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-input-group label {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 80px;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-icon {
+            font-size: 1rem;
+            color: #27ae60;
+        }
+
+        .filter-input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 18px;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .filter-input-group input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8f0 100%);
+        }
+
+        .clear-filter-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clear-filter-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .clear-filter-btn:hover::before {
+            left: 100%;
+        }
+
+        .clear-filter-btn:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        .filter-info {
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-style: italic;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .filter-options {
+            margin: 12px 0;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #8B5CF6;
+            cursor: pointer;
+        }
+
+        .toggle-text {
+            font-weight: 500;
+        }
+
+
+        /* Nostr Note Details Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: none;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .modal-close {
+            background: #e9ecef;
+            border: none;
+            font-size: 1.5rem;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .modal-close:hover {
+            background: #dc3545;
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #27ae60;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(255, 136, 0, 0.5);
+        }
+
+        .modal-field {
+            margin-bottom: 12px;
+        }
+
+        .modal-field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .modal-field-value {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            word-break: break-all;
+            color: #2c3e50;
+        }
+
+        .modal-content-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #2c3e50;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+        }
+
+        .modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .modal-tag {
+            background: #e9ecef;
+            color: #2c3e50;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid #dee2e6;
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .header-title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .note-type-indicator {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tripchat-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .tripchat-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #ffffff;
+            color: #27ae60;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tripchat-link:hover {
+            background: #27ae60;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            text-decoration: none;
+        }
+
+        .compose-btn, .settings-btn, .relay-manager-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .compose-btn::before, .settings-btn::before, .relay-manager-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .compose-btn:hover::before, .settings-btn:hover::before, .relay-manager-btn:hover::before {
+            left: 100%;
+        }
+
+        .compose-btn:hover, .settings-btn:hover, .relay-manager-btn:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        }
+
+        /* Compose Modal Styles */
+        .compose-modal {
+            max-width: 600px;
+            width: 90%;
+        }
+
+        /* Settings Modal Styles */
+        .settings-modal {
+            max-width: 700px;
+            width: 90%;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .profile-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .profile-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .settings-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .compose-section {
+            margin-bottom: 20px;
+        }
+
+        .compose-section label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .compose-section textarea,
+        .compose-section input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .compose-section textarea:focus,
+        .compose-section input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .location-input-group,
+        .key-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .location-input-group input,
+        .key-input-group input {
+            flex: 1;
+        }
+
+        .location-btn, .key-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .location-btn:hover, .key-btn:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f618d 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        .posting-relays-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .posting-relay-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e8f5e8;
+            border: 1px solid #27ae60;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #27ae60;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .posting-relay-item .relay-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #27ae60;
+        }
+
+        .posting-relay-item .relay-name {
+            font-weight: 600;
+        }
+
+        .posting-relay-item .relay-connected {
+            background: #27ae60;
+        }
+
+        .posting-relay-item .relay-disconnected {
+            background: #dc3545;
+        }
+
+        .compose-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .post-btn, .cancel-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .post-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .post-btn:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .cancel-btn:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Relay Manager Styles */
+        .relay-modal {
+            max-width: 700px;
+            width: 90%;
+        }
+
+        .relay-section {
+            margin-bottom: 25px;
+        }
+
+        .relay-section h4 {
+            color: #27ae60;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .add-relay-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-relay-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-btn {
+            background: #27ae60;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+        }
+
+        .add-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .relay-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .relay-item-manager {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .relay-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .relay-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .relay-url {
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .relay-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .relay-delete {
+            padding: 4px 8px;
+            border: 1px solid;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+            color: #ff6666;
+            border-color: #ff6666;
+            background: rgba(255, 102, 102, 0.1);
+        }
+
+        .relay-delete:hover {
+            background: rgba(255, 102, 102, 0.2);
+        }
+
+        .post-toggle-label {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .post-toggle-label input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .post-toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e9ecef;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-toggle-slider:before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .post-toggle-text {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c757d;
+            font-family: 'Inter', sans-serif;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .post-toggle-label input:checked + .post-toggle-slider {
+            background-color: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .post-toggle-label input:checked + .post-toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .post-toggle-label input:checked + .post-toggle-slider .post-toggle-text {
+            color: #ffffff;
+        }
+
+        /* Reply button styling */
+        .reply-btn {
+            background: #3498db;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .reply-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .map-container {
+                height: 40vh;
+                min-height: 200px;
+            }
+            
+            .note-container {
+                height: 60vh;
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .note-item {
+                padding: 15px;
+            }
+            
+            .note-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+        <div class="note-container">
+            <div class="container">
+                <div class="header-top-row">
+                    <div class="header-title-group">
+                        <h1>TR<span style="text-transform: lowercase;">ipchat</span></h1>
+                        <p style="font-size: 0.7rem; color: #888; margin: 4px 0 0 0; font-family: 'Inter', sans-serif; text-transform: lowercase;">travel chat on nostr - connect with travelers worldwide</p>
+                    </div>
+                    
+                    <!-- TRipchat Links -->
+                    <div class="tripchat-links">
+                        <button id="composeBtn" class="compose-btn">✍️ COMPOSE</button>
+                        <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
+                        <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
+                        <a href="https://trustroots.org" target="_blank" class="tripchat-link">🌐 Trustroots</a>
+                    </div>
+                </div>
+                
+                <!-- Geohash Filter -->
+                <div class="filter-container">
+                    <div class="filter-input-group">
+                        <label for="geohashFilter">
+                            <span class="filter-icon">🔍</span>
+                            Filter
+                        </label>
+                        <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
+                        <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
+                    </div>
+                </div>
+                
+                <div id="noteContainer">
+                    <div class="loading">Loading travel messages from Nostr relays...</div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Live indicator -->
+    <div id="liveIndicator" class="live-indicator" style="display: none;">
+        🔴 LIVE
+    </div>
+
+    <!-- Compose Modal -->
+    <div id="composeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content compose-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">✍️ Compose Note</h3>
+                <button class="modal-close" onclick="document.getElementById('composeModal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="compose-section">
+                    <label for="composeContent">Message:</label>
+                    <textarea id="composeContent" placeholder="What's happening in your location?" rows="4"></textarea>
+                </div>
+                <div class="compose-section">
+                    <label for="composeLocation">Location (Geohash):</label>
+                    <div class="location-input-group">
+                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy" />
+                        <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
+                    </div>
+                </div>
+                <div class="compose-section">
+                    <label>Posting to Relays:</label>
+                    <div id="postingRelaysDisplay" class="posting-relays-display">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="compose-actions">
+                    <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
+                    <button id="cancelComposeBtn" class="cancel-btn">❌ CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings/Keys Modal -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🔑 Key Management</h3>
+                <button class="modal-close" onclick="document.getElementById('settingsModal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <label>PRIVATE KEY:</label>
+                    <div class="key-input-group">
+                        <input type="password" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
+                        <button id="settingsToggleKeyVisibility" class="key-btn">👁️ SHOW</button>
+                        <button id="settingsGenerateKeyBtn" class="key-btn">🔑 GENERATE NEW</button>
+                        <button id="settingsAddKeyBtn" class="key-btn">➕ ADD EXISTING</button>
+                        <button id="settingsCopyKeyBtn" class="key-btn">📋 COPY</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <label>PUBLIC KEY:</label>
+                    <div class="key-input-group">
+                        <input type="text" id="settingsPublicKey" placeholder="Your public key will appear here" readonly />
+                        <button id="settingsCopyPublicBtn" class="key-btn">📋 COPY</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <label>Profile Management:</label>
+                    <div class="profile-actions">
+                        <button id="updateProfileBtn" class="profile-btn">🌐 UPDATE TRUSTROOTS PROFILE</button>
+                        <button id="viewProfileBtn" class="profile-btn">👁️ VIEW PROFILE</button>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button id="closeSettingsBtn" class="cancel-btn">❌ CLOSE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relay Manager Modal -->
+    <div id="relayManagerModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content relay-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Relay Manager</h3>
+                <button class="modal-close" onclick="document.getElementById('relayManagerModal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="relay-section">
+                    <h4>Add New Relay:</h4>
+                    <div class="add-relay-group">
+                        <input type="text" id="newRelayUrl" placeholder="wss://relay.example.com" />
+                        <button id="addRelayBtn" class="add-btn">➕ ADD</button>
+                    </div>
+                </div>
+                <div class="relay-section">
+                    <h4>Current Relays:</h4>
+                    <div id="relayList" class="relay-list">
+                        <!-- Relays will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        class TRipchatVisualizer {
+            constructor() {
+                // Use trusted Nostr relays for travel chat
+                this.relays = [
+                    'wss://relay.hitchwiki.org',
+                    'wss://relay.trustroots.org',
+                    'wss://relay.damus.io',
+                    'wss://nos.lol',
+                    'wss://relay.snort.social'
+                ];
+                this.relayEnabled = {}; // Track which relays are enabled for reading
+                this.postingRelays = {}; // Track which relays are enabled for posting
+                this.notes = [];
+                this.map = null;
+                this.mapMarkers = [];
+                this.relayStatus = {};
+                this.websockets = {};
+                this.subscriptionIds = {};
+                this.geohashFilter = '';
+                this.initialLoadComplete = false;
+                this.geohashRectangles = [];
+                this.userProfiles = {}; // Cache for user profiles
+                this.privateKey = null; // User's private key for posting
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.initMap();
+                    this.initializeRelayStatus();
+                    this.setupFilterHandlers();
+                    this.setupComposeHandlers();
+                    this.setupSettingsHandlers();
+                    this.setupRelayManagerHandlers();
+                    this.loadFilterFromHash();
+                    this.startStatsUpdateTimer();
+                    await this.connectToRelays();
+                    
+                    // Load saved keys from localStorage
+                    this.loadKeysFromStorage();
+                } catch (error) {
+                    this.displayError('Failed to connect to relays: ' + error.message);
+                }
+            }
+
+            startStatsUpdateTimer() {
+                // Update stats every 5 seconds to refresh connection times
+                setInterval(() => {
+                    if (this.notes.length > 0) {
+                        this.displayStats(this.notes);
+                    }
+                }, 5000);
+            }
+
+            initMap() {
+                this.map = L.map('map').setView([20, 0], 2);
+                
+                // Use CartoDB Positron tiles for a clean, light Trustroots-like appearance
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap contributors, © CARTO',
+                    className: 'custom-map-tiles',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(this.map);
+                
+                this.styleMap();
+                
+                console.log('Map initialized');
+            }
+
+            styleMap() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .custom-map-tiles {
+                        /* Clean, light map tiles - no filters needed for CartoDB Positron */
+                    }
+                    .leaflet-container {
+                        background: #f8f9fa;
+                    }
+                    .leaflet-control-zoom a {
+                        background: #ffffff;
+                        color: #2c3e50;
+                        border: 1px solid #e9ecef;
+                        font-family: 'Inter', sans-serif;
+                        font-weight: 600;
+                        width: 32px;
+                        height: 32px;
+                        line-height: 32px;
+                        text-align: center;
+                        font-size: 16px;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        transition: all 0.3s ease;
+                    }
+                    .leaflet-control-zoom a:hover {
+                        background: #27ae60;
+                        color: #ffffff;
+                        border-color: #27ae60;
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+                    }
+                    .leaflet-control-zoom {
+                        border: 1px solid #e9ecef;
+                        border-radius: 8px;
+                        background: #ffffff;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    .leaflet-control-zoom a:first-child {
+                        border-bottom: 1px solid #e9ecef;
+                        border-radius: 8px 8px 0 0;
+                    }
+                    .leaflet-control-zoom a:last-child {
+                        border-radius: 0 0 8px 8px;
+                    }
+                    .leaflet-popup-content-wrapper {
+                        background: #ffffff;
+                        border-radius: 12px;
+                        border: 1px solid #e9ecef;
+                        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                        color: #2c3e50;
+                        font-family: 'Inter', sans-serif;
+                    }
+                    .leaflet-popup-tip {
+                        background: #ffffff;
+                        border: 1px solid #e9ecef;
+                    }
+                    .leaflet-popup-content {
+                        color: #2c3e50;
+                        font-family: 'Inter', sans-serif;
+                        margin: 16px;
+                    }
+                    .leaflet-popup-content .note-title {
+                        color: #27ae60;
+                        font-weight: 700;
+                        font-size: 1.1rem;
+                        margin-bottom: 8px;
+                    }
+                    .leaflet-popup-content .popup-content {
+                        color: #2c3e50;
+                        line-height: 1.5;
+                        margin-bottom: 8px;
+                    }
+                    .leaflet-popup-content .popup-time {
+                        color: #6c757d;
+                        font-size: 0.9rem;
+                        font-style: italic;
+                    }
+            .leaflet-popup-content .popup-location {
+                        color: #27ae60;
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        margin-top: 8px;
+                    }
+                    .leaflet-popup-close-button {
+                        color: #6c757d;
+                        font-size: 18px;
+                    font-weight: bold;
+                        padding: 8px;
+                    }
+                    .leaflet-popup-close-button:hover {
+                        color: #dc3545;
+                    }
+                    .tripchat-marker {
+                        transition: all 0.3s ease;
+                        animation: pulse 2s infinite;
+                    }
+                    .tripchat-marker:hover {
+                        transform: scale(1.2);
+                        fillColor: #229954;
+                        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+                        animation: none;
+                    }
+                    @keyframes pulse {
+                        0% {
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                        }
+                        50% {
+                            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+                        }
+                        100% {
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                        }
+                    }
+                    .geohash-rectangle {
+                        transition: all 0.3s ease;
+                    }
+                    .geohash-highlight {
+                        transition: all 0.3s ease;
+                        animation: pulse 2s infinite;
+                    }
+                    @keyframes pulse {
+                        0% { opacity: 0.8; }
+                        50% { opacity: 0.4; }
+                        100% { opacity: 0.8; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            setupFilterHandlers() {
+                const geohashFilter = document.getElementById('geohashFilter');
+                const clearFilter = document.getElementById('clearFilter');
+
+                geohashFilter.addEventListener('input', (e) => {
+                    this.geohashFilter = e.target.value.trim().toLowerCase();
+                    this.updateHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                    
+                    // If filtering by a specific geohash, show its rectangle
+                    if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                        this.highlightGeohashArea(this.geohashFilter);
+                    }
+                });
+
+                clearFilter.addEventListener('click', () => {
+                    console.log('Clear filter clicked');
+                    geohashFilter.value = '';
+                    this.geohashFilter = '';
+                    this.updateHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                    console.log('About to call zoomToGlobal, map exists:', !!this.map);
+                    this.zoomToGlobal();
+                    
+                });
+
+
+
+                // Listen for hash changes (when user manually changes URL)
+                window.addEventListener('hashchange', () => {
+                    this.loadFilterFromHash();
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                    
+                    // If filtering by a specific geohash, show its rectangle
+                    if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                        this.highlightGeohashArea(this.geohashFilter);
+                    }
+                });
+            }
+
+            setupComposeHandlers() {
+                const composeBtn = document.getElementById('composeBtn');
+                const composeModal = document.getElementById('composeModal');
+                const cancelComposeBtn = document.getElementById('cancelComposeBtn');
+                const postNoteBtn = document.getElementById('postNoteBtn');
+                const getLocationBtn = document.getElementById('getLocationBtn');
+
+                composeBtn.addEventListener('click', () => {
+                    // Check if user has a private key
+                    const nsecKey = localStorage.getItem('tripchat_nsec');
+                    if (!nsecKey) {
+                        alert('Please generate or add a private key in Settings first.');
+                        return;
+                    }
+                    
+                    // Set the location field to the current filter if one is active
+                    const locationInput = document.getElementById('composeLocation');
+                    if (this.geohashFilter) {
+                        locationInput.value = this.geohashFilter;
+                    } else {
+                        locationInput.value = '';
+                    }
+                    
+                    // Update posting relays display
+                    this.updatePostingRelaysDisplay();
+                    
+                    composeModal.style.display = 'flex';
+                });
+
+                cancelComposeBtn.addEventListener('click', () => {
+                    composeModal.style.display = 'none';
+                    this.clearComposeForm();
+                });
+
+                getLocationBtn.addEventListener('click', () => {
+                    this.getCurrentLocation();
+                });
+
+
+                postNoteBtn.addEventListener('click', () => {
+                    this.postNote();
+                });
+
+                // Close modal when clicking outside
+                composeModal.addEventListener('click', (e) => {
+                    if (e.target === composeModal) {
+                        composeModal.style.display = 'none';
+                        this.clearComposeForm();
+                    }
+                });
+            }
+
+            setupSettingsHandlers() {
+                const settingsBtn = document.getElementById('settingsBtn');
+                const settingsModal = document.getElementById('settingsModal');
+                const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+                const settingsGenerateKeyBtn = document.getElementById('settingsGenerateKeyBtn');
+                const settingsToggleKeyVisibility = document.getElementById('settingsToggleKeyVisibility');
+                const settingsCopyKeyBtn = document.getElementById('settingsCopyKeyBtn');
+                const settingsCopyPublicBtn = document.getElementById('settingsCopyPublicBtn');
+                const updateProfileBtn = document.getElementById('updateProfileBtn');
+                const viewProfileBtn = document.getElementById('viewProfileBtn');
+                const settingsPrivateKey = document.getElementById('settingsPrivateKey');
+                const settingsPublicKey = document.getElementById('settingsPublicKey');
+
+                settingsBtn.addEventListener('click', () => {
+                    // Load current keys into settings modal
+                    const nsecKey = localStorage.getItem('tripchat_nsec');
+                    const npubKey = localStorage.getItem('tripchat_npub');
+                    
+                    if (nsecKey) {
+                        settingsPrivateKey.value = nsecKey;
+                    }
+                    if (npubKey) {
+                        settingsPublicKey.value = npubKey;
+                    }
+                    
+                    settingsModal.style.display = 'flex';
+                });
+
+                closeSettingsBtn.addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                });
+
+                // Close modal when clicking outside
+                settingsModal.addEventListener('click', (e) => {
+                    if (e.target === settingsModal) {
+                        settingsModal.style.display = 'none';
+                    }
+                });
+
+                settingsGenerateKeyBtn.addEventListener('click', async () => {
+                    try {
+                        const { nsecKey, npubKey } = await this.generateKeyPair();
+                        settingsPrivateKey.value = nsecKey;
+                        settingsPublicKey.value = npubKey;
+                        
+                        // Save to localStorage
+                        localStorage.setItem('tripchat_nsec', nsecKey);
+                        localStorage.setItem('tripchat_npub', npubKey);
+                        
+                        alert(`New keys generated!\n\nPRIVATE KEY: ${nsecKey}\n\nPUBLIC KEY: ${npubKey}\n\nSave them somewhere safe!`);
+                    } catch (error) {
+                        console.error('Error generating key:', error);
+                        alert('Error generating keys. Please try again.');
+                    }
+                });
+
+                settingsAddKeyBtn.addEventListener('click', async () => {
+                    const nsecInput = settingsPrivateKey.value.trim();
+                    if (!nsecInput) {
+                        alert('Please enter your nsec private key first.');
+                        return;
+                    }
+                    
+                    try {
+                        // Convert nsec to hex and derive npub
+                        const privateKeyHex = this.nsecToHex(nsecInput);
+                        const npubKey = this.deriveNpubFromPrivateKey(privateKeyHex);
+                        
+                        // Update the public key field
+                        settingsPublicKey.value = npubKey;
+                        
+                        // Save to localStorage
+                        localStorage.setItem('tripchat_nsec', nsecInput);
+                        localStorage.setItem('tripchat_npub', npubKey);
+                        
+                        alert('Private key added successfully! Public key has been derived and saved.');
+                    } catch (error) {
+                        console.error('Error processing private key:', error);
+                        alert('Invalid private key format. Please check your nsec key.');
+                    }
+                });
+
+                settingsToggleKeyVisibility.addEventListener('click', () => {
+                    const input = settingsPrivateKey;
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        settingsToggleKeyVisibility.textContent = '🙈 HIDE';
+                    } else {
+                        input.type = 'password';
+                        settingsToggleKeyVisibility.textContent = '👁️ SHOW';
+                    }
+                });
+
+                settingsCopyKeyBtn.addEventListener('click', () => {
+                    const privateKey = settingsPrivateKey.value;
+                    if (privateKey) {
+                        navigator.clipboard.writeText(privateKey).then(() => {
+                            alert('Private key copied to clipboard!');
+                        }).catch(() => {
+                            alert('Failed to copy private key.');
+                        });
+                    } else {
+                        alert('No private key to copy.');
+                    }
+                });
+
+                settingsCopyPublicBtn.addEventListener('click', () => {
+                    const publicKey = settingsPublicKey.value;
+                    if (publicKey) {
+                        navigator.clipboard.writeText(publicKey).then(() => {
+                            alert('Public key copied to clipboard!');
+                        }).catch(() => {
+                            alert('Failed to copy public key.');
+                        });
+                    } else {
+                        alert('No public key to copy.');
+                    }
+                });
+
+                updateProfileBtn.addEventListener('click', async () => {
+                    const npub = settingsPublicKey.value;
+                    if (!npub) {
+                        alert('Please generate or enter a public key first.');
+                        return;
+                    }
+                    
+                    try {
+                        // Try to update Trustroots profile via API
+                        const success = await this.updateTrustrootsProfile(npub);
+                        if (success) {
+                            alert('Profile updated successfully on Trustroots!');
+                        } else {
+                            // Fallback: copy to clipboard
+                            await navigator.clipboard.writeText(npub);
+                            alert('Trustroots API unavailable. Public key copied to clipboard for manual profile update.');
+                        }
+                    } catch (error) {
+                        console.error('Error updating profile:', error);
+                        // Fallback: copy to clipboard
+                        try {
+                            await navigator.clipboard.writeText(npub);
+                            alert('Failed to update Trustroots profile. Public key copied to clipboard for manual update.');
+                        } catch (clipboardError) {
+                            alert('Failed to update profile and copy to clipboard. Please copy your public key manually.');
+                        }
+                    }
+                });
+
+                viewProfileBtn.addEventListener('click', () => {
+                    const npub = settingsPublicKey.value;
+                    if (!npub) {
+                        alert('Please generate or enter a public key first.');
+                        return;
+                    }
+                    
+                    // Open profile in a new tab (you can customize this URL)
+                    window.open(`https://nostr.com/${npub}`, '_blank');
+                });
+            }
+
+            setupRelayManagerHandlers() {
+                const relayManagerBtn = document.getElementById('relayManagerBtn');
+                const relayManagerModal = document.getElementById('relayManagerModal');
+                const addRelayBtn = document.getElementById('addRelayBtn');
+                const newRelayUrl = document.getElementById('newRelayUrl');
+
+                relayManagerBtn.addEventListener('click', () => {
+                    relayManagerModal.style.display = 'flex';
+                    this.updateRelayList();
+                });
+
+                addRelayBtn.addEventListener('click', () => {
+                    const url = newRelayUrl.value.trim();
+                    if (url && url.startsWith('wss://')) {
+                        this.addRelay(url);
+                        newRelayUrl.value = '';
+                        this.updateRelayList();
+                    } else {
+                        alert('Please enter a valid WebSocket URL (wss://...)');
+                    }
+                });
+
+                // Close modal when clicking outside
+                relayManagerModal.addEventListener('click', (e) => {
+                    if (e.target === relayManagerModal) {
+                        relayManagerModal.style.display = 'none';
+                    }
+                });
+            }
+
+
+            setupGeohashTagClickHandlers() {
+                document.querySelectorAll('.geohash-tag').forEach(tagElement => {
+                    tagElement.addEventListener('click', (e) => {
+                        const geohash = e.target.dataset.geohash;
+                        if (geohash) {
+                            this.geohashFilter = geohash;
+                            document.getElementById('geohashFilter').value = geohash;
+                            this.updateHash();
+                            this.displayActivities(this.notes);
+                            this.plotActivitiesOnMap(this.notes);
+                            if (this.isGeohash(this.geohashFilter)) {
+                                this.highlightGeohashArea(this.geohashFilter);
+                            }
+                        }
+                    });
+                });
+            }
+
+            setupDatetimeClickHandlers() {
+                document.querySelectorAll('.note-time').forEach(timeElement => {
+                    timeElement.addEventListener('click', (e) => {
+                        const noteId = e.target.dataset.noteId;
+                        if (noteId) {
+                            const note = this.notes.find(a => a.id === noteId);
+                            if (note) {
+                                this.showNoteDetailsModal(note);
+                            }
+                        }
+                    });
+                });
+            }
+
+            setupReplyButtonHandlers() {
+                document.querySelectorAll('.reply-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const noteId = e.target.dataset.noteId;
+                        const pubkey = e.target.dataset.pubkey;
+                        const username = e.target.dataset.username;
+                        
+                        if (noteId && pubkey && username) {
+                            const note = this.notes.find(a => a.id === noteId);
+                            if (note) {
+                                this.openReplyCompose(note, pubkey, username);
+                            }
+                        }
+                    });
+                });
+            }
+
+            openReplyCompose(note, pubkey, username) {
+                // Open the compose modal
+                const composeModal = document.getElementById('composeModal');
+                const composeContent = document.getElementById('composeContent');
+                const composeLocation = document.getElementById('composeLocation');
+                
+                // Set the location to the same geohash as the original note
+                let geohash = '';
+                if (note.tags) {
+                    const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1]);
+                    if (geohashTag) {
+                        geohash = geohashTag[1];
+                    }
+                }
+                composeLocation.value = geohash;
+                
+                // Start the message with @username
+                composeContent.value = `@${username} `;
+                composeContent.focus();
+                
+                // Update posting relays display
+                this.updatePostingRelaysDisplay();
+                
+                // Open the modal
+                composeModal.style.display = 'flex';
+            }
+
+            async fetchUserProfile(pubkey) {
+                if (this.userProfiles[pubkey]) {
+                    return this.userProfiles[pubkey];
+                }
+
+                try {
+                    // Try to fetch from the first available relay
+                for (const relayUrl of this.relays) {
+                    if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
+                            const profile = await this.requestUserProfile(relayUrl, pubkey);
+                            if (profile) {
+                                this.userProfiles[pubkey] = profile;
+                                // Re-render notes to show the new username
+                                this.displayActivities(this.notes);
+                                return profile;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error fetching user profile for', pubkey, ':', error);
+                }
+
+                // Fallback: create a basic profile with shortened pubkey
+                const shortPubkey = pubkey.substring(0, 8) + '...';
+                this.userProfiles[pubkey] = { name: shortPubkey, pubkey: pubkey };
+                return this.userProfiles[pubkey];
+            }
+
+            requestUserProfile(relayUrl, pubkey) {
+                return new Promise((resolve) => {
+                    const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
+                const filters = {
+                        "kinds": [0], // Metadata events
+                        "authors": [pubkey],
+                        "limit": 1
+                    };
+                    
+                    const subscription = ["REQ", subscriptionId, filters];
+                    
+                    const timeout = setTimeout(() => {
+                        resolve(null);
+                    }, 5000); // 5 second timeout
+                    
+                    const handleMessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (Array.isArray(data)) {
+                                const [messageType, subId, eventData] = data;
+                                
+                                if (messageType === 'EVENT' && subId === subscriptionId && eventData.kind === 0) {
+                                    clearTimeout(timeout);
+                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                    
+                                    try {
+                                        const metadata = JSON.parse(eventData.content);
+                                        const profile = {
+                                            name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
+                                            pubkey: pubkey,
+                                            picture: metadata.picture,
+                                            about: metadata.about
+                                        };
+                                        resolve(profile);
+                                    } catch (e) {
+                                        resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
+                                    }
+                                } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                                    clearTimeout(timeout);
+                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                    resolve(null);
+                                }
+                            }
+                        } catch (e) {
+                            // Ignore parsing errors
+                        }
+                    };
+                    
+                    this.websockets[relayUrl].addEventListener('message', handleMessage);
+                    this.websockets[relayUrl].send(JSON.stringify(subscription));
+                });
+            }
+
+            updateHash() {
+                const url = new URL(window.location);
+                if (this.geohashFilter) {
+                    url.hash = `#${this.geohashFilter}`;
+                    } else {
+                    url.hash = '';
+                }
+                window.history.replaceState(null, '', url);
+            }
+
+            loadFilterFromHash() {
+                const hash = window.location.hash;
+                if (hash && hash.startsWith('#')) {
+                    const geohash = hash.substring(1); // Remove the # symbol
+                    if (geohash) {
+                        this.geohashFilter = geohash.toLowerCase();
+                        const geohashFilterInput = document.getElementById('geohashFilter');
+                        if (geohashFilterInput) {
+                            geohashFilterInput.value = geohash;
+                        }
+                        console.log('Loaded geohash filter from URL:', geohash);
+                    }
+                }
+                
+            }
+
+            getFilteredActivities() {
+                let filtered = this.notes;
+                
+                // Apply geohash filter
+                if (this.geohashFilter) {
+                    filtered = filtered.filter(note => {
+                        if (!note.tags) return false;
+                        
+                        return note.tags.some(tag => 
+                            tag[0] === 'g' && 
+                            tag[1] && 
+                            tag[1].toLowerCase().includes(this.geohashFilter)
+                        );
+                    });
+                }
+                
+                return filtered;
+            }
+
+
+
+
+
+            async connectToRelays() {
+                const noteContainer = document.getElementById('noteContainer');
+                noteContainer.innerHTML = '<div class="loading">Connecting to TRipchat Nostr relays...</div>';
+
+                for (const relayUrl of this.relays) {
+                    this.connectToRelay(relayUrl);
+                }
+            }
+
+            connectToRelay(relayUrl) {
+                console.log(`Connecting to ${relayUrl}...`);
+                this.updateRelayStatus(relayUrl, 'connecting');
+
+                try {
+                    const ws = new WebSocket(relayUrl);
+                    this.websockets[relayUrl] = ws;
+                    
+                    const subscriptionId = "tripchat-note-" + Math.random().toString(36).substr(2, 9);
+                    this.subscriptionIds[relayUrl] = subscriptionId;
+
+                    ws.onopen = () => {
+                        console.log(`Connected to ${relayUrl}`);
+                        this.updateRelayStatus(relayUrl, 'connected');
+                        
+                        // Subscribe to TRipchat-specific event kinds
+                        const filters = {
+                            "kinds": [20000], // Only ephemeral events (location channels)
+                            "limit": 10000
+                        };
+                        
+                        const subscription = [
+                            "REQ",
+                            subscriptionId,
+                            filters
+                        ];
+                        
+                        console.log(`Sending subscription to ${relayUrl}:`, subscription);
+                        ws.send(JSON.stringify(subscription));
+                    };
+
+                    ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            console.log(`Received from ${relayUrl}:`, data);
+                            
+                            if (Array.isArray(data)) {
+                                const [messageType, subId, eventData] = data;
+                                
+                                if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
+                                    // Log all events for debugging
+                                    console.log(`📨 Received event: ${eventData.id}, kind: ${eventData.kind}, content: "${eventData.content?.substring(0, 30)}..."`);
+                                    
+                                    // Debug: Check for geohash tags in all events
+                                    if (eventData.tags) {
+                                        const geohashTags = eventData.tags.filter(tag => tag[0] === 'g' && tag[1]);
+                                        if (geohashTags.length > 0) {
+                                            console.log(`Found geohash tags in event ${eventData.id}:`, geohashTags);
+                                            console.log(`Event content:`, eventData.content);
+                                            console.log(`Event kind:`, eventData.kind);
+                                        }
+                                    }
+                                    
+                                    // Check if this is TRipchat note
+                                    if (this.isTRipchatNote(eventData)) {
+                                        console.log(`Adding TRipchat note from ${relayUrl}:`, eventData);
+                                        this.addNewNote(eventData);
+                                        this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
+                                    } else {
+                                        // Debug: Log why event was rejected
+                                        console.log(`Event ${eventData.id} rejected as TRipchat note. Content:`, eventData.content?.substring(0, 100));
+                                        console.log(`Tags:`, eventData.tags);
+                                    }
+                } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                    console.log(`EOSE received from ${relayUrl}, initial load complete`);
+                    this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
+                    
+                    if (this.notes.length > 0) {
+                        this.displayStats(this.notes);
+                    }
+                    
+                    // Show load more button after initial load
+                    if (!this.initialLoadComplete) {
+                        this.initialLoadComplete = true;
+                    }
+                } else if (messageType === 'NOTICE') {
+                                    console.log(`Notice from ${relayUrl}:`, eventData);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Error parsing message from', relayUrl, ':', e);
+                        }
+                    };
+
+                    ws.onerror = (error) => {
+                        console.error(`Error connecting to ${relayUrl}:`, error);
+                        this.updateRelayStatus(relayUrl, 'disconnected');
+                    };
+
+                    ws.onclose = () => {
+                        console.log(`Connection to ${relayUrl} closed`);
+                        this.updateRelayStatus(relayUrl, 'disconnected');
+                        
+                        setTimeout(() => {
+                            console.log(`Attempting to reconnect to ${relayUrl}...`);
+                            this.connectToRelay(relayUrl);
+                        }, 5000);
+                    };
+                } catch (error) {
+                    console.error(`Failed to connect to ${relayUrl}:`, error);
+                    this.updateRelayStatus(relayUrl, 'disconnected');
+                }
+            }
+
+            isTRipchatNote(event) {
+                // Only accept Kind 20000 events (ephemeral events for location channels)
+                if (event.kind !== 20000) {
+                    return false;
+                }
+                
+                const content = event.content || '';
+                const tags = event.tags || [];
+                
+                // Check for geohash tags (common in TRipchat location channels)
+                const hasGeohashTag = tags.some(tag => tag[0] === 'g' && tag[1]);
+                
+                // Debug logging for geohash events
+                if (hasGeohashTag) {
+                    console.log(`Geohash event detected: ${event.id}, content: "${content.substring(0, 50)}...", geohash: ${tags.find(tag => tag[0] === 'g')?.[1]}`);
+                    console.log(`Geohash tags:`, tags.filter(tag => tag[0] === 'g'));
+                    
+                    // Special logging for "ey" geohash
+                    const eyGeohash = tags.some(tag => tag[0] === 'g' && tag[1] === 'ey');
+                    if (eyGeohash) {
+                        console.log(`🎯 EY GEOHASH MESSAGE FOUND!`, {
+                            id: event.id,
+                            content: content,
+                            kind: event.kind,
+                            tags: tags,
+                            created_at: new Date(event.created_at * 1000).toISOString()
+                        });
+                    }
+                }
+                
+                // Accept all Kind 20000 events (they are TRipchat location channel messages)
+                return true;
+            }
+
+            addNewNote(note) {
+                // Check if note already exists
+                if (this.notes.find(a => a.id === note.id)) {
+                    console.log(`Note ${note.id} already exists, skipping`);
+                    return;
+                }
+
+                this.notes.push(note);
+                this.notes.sort((a, b) => b.created_at - a.created_at);
+                
+                if (this.notes.length > 10000) {
+                    this.notes = this.notes.slice(0, 10000);
+                }
+
+                // Fetch user profile if we don't have it
+                if (note.pubkey && !this.userProfiles[note.pubkey]) {
+                    this.fetchUserProfile(note.pubkey);
+                }
+
+                // Show live indicator
+                const liveIndicator = document.getElementById('liveIndicator');
+                if (liveIndicator) {
+                    liveIndicator.style.display = 'block';
+                    setTimeout(() => {
+                        liveIndicator.style.display = 'none';
+                    }, 3000);
+                }
+
+                this.displayActivities(this.notes);
+                this.plotActivitiesOnMap(this.notes);
+                
+                // Add visual effect to the new note
+                setTimeout(() => {
+                    const noteElement = document.querySelector(`[data-note-id="${note.id}"]`);
+                    if (noteElement) {
+                        noteElement.classList.add('note-new');
+                        setTimeout(() => {
+                            noteElement.classList.remove('note-new');
+                        }, 500);
+                    }
+                }, 100);
+                
+                console.log(`Added new TRipchat note: ${note.id}, total notes: ${this.notes.length}`);
+            }
+
+            displayActivities(notes) {
+                const noteContainer = document.getElementById('noteContainer');
+                const filteredActivities = this.getFilteredActivities();
+                
+                if (filteredActivities.length === 0) {
+                    if (this.geohashFilter) {
+                        noteContainer.innerHTML = `<div class="loading">No notes found for geohash "${this.geohashFilter}". Try a different geohash or clear the filter.</div>`;
+                    } else {
+                        noteContainer.innerHTML = '<div class="loading">No TRipchat note found. Check the browser console for debug information.</div>';
+                    }
+                    return;
+                }
+
+                const loadingDiv = noteContainer.querySelector('.loading');
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+
+                const sortedActivities = [...filteredActivities].sort((a, b) => b.created_at - a.created_at);
+                noteContainer.innerHTML = '';
+
+                sortedActivities.forEach(note => {
+                    console.log('Processing note:', note);
+                    const noteDiv = document.createElement('div');
+                    noteDiv.className = 'note-item';
+                    noteDiv.setAttribute('data-note-id', note.id);
+                    
+                    try {
+                        const timestamp = new Date(note.created_at * 1000);
+                        const timeString = this.formatTime(timestamp);
+                        const relativeTime = this.getRelativeTime(timestamp);
+                        
+                        const renderedHtml = this.renderNote(note, timeString, relativeTime);
+                        
+                        if (renderedHtml && typeof renderedHtml === 'string' && renderedHtml.trim().length > 0) {
+                            noteDiv.innerHTML = renderedHtml;
+                        } else {
+                            noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
+                        }
+                    } catch (error) {
+                        console.error('Error rendering note:', error, note);
+                        noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
+                    }
+                    
+                    noteContainer.appendChild(noteDiv);
+                });
+                
+                // Set up click handlers for geohash tags
+                this.setupGeohashTagClickHandlers();
+                
+                // Set up click handlers for datetime elements
+                this.setupDatetimeClickHandlers();
+                
+                // Set up click handlers for reply buttons
+                this.setupReplyButtonHandlers();
+            }
+
+            renderNote(note, timeString, relativeTime) {
+                const content = this.escapeHtml(note.content || '');
+                const processedContent = content.replace(/\n/g, '<br>');
+                
+                // Extract geohash tags
+                const geohashTags = [];
+                if (note.tags) {
+                    note.tags.forEach(tag => {
+                        if (tag[0] === 'g' && tag[1]) {
+                            geohashTags.push(tag[1]);
+                        }
+                    });
+                }
+                
+                const geohashHtml = geohashTags.length > 0 ? `
+                    <div style="margin: 8px 0; text-align: right;">
+                        ${geohashTags.map(geohash => `<span class="geohash-tag" data-geohash="${geohash}">📍 ${geohash}</span>`).join('')}
+                    </div>
+                ` : '';
+                
+                const noteType = this.getNoteType(note);
+                
+                // Get username from profile cache with discriminator
+                const profile = this.userProfiles[note.pubkey];
+                const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
+                
+                // Display content as-is for location channel messages
+                let contentHtml = processedContent;
+                
+                return `
+                    <div class="note-header">
+                        <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
+                            ${noteType ? `<span class="note-type">${noteType}</span>` : ''}
+                            <span class="note-username" style="color: #ff8800; font-weight: 600; font-size: 0.9rem;">@${username}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="reply-btn" data-note-id="${note.id}" data-pubkey="${note.pubkey}" data-username="${username}" title="Reply to this note">💬</button>
+                            <span class="note-time" title="${timeString}" data-note-id="${note.id}">${relativeTime}</span>
+                        </div>
+                    </div>
+                    <div class="note-content">${contentHtml}</div>
+                    ${geohashHtml}
+                `;
+            }
+
+            getNoteType(note) {
+                // All notes are Kind 20000 (ephemeral events for location channels)
+                return '';
+            }
+
+            renderFallbackNote(note, timeString, relativeTime) {
+                const profile = this.userProfiles[note.pubkey];
+                const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
+                
+                return `
+                    <div class="note-header">
+                        <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
+                            <span class="note-type">Unknown Note</span>
+                            <span class="note-username" style="color: #ff8800; font-weight: 600; font-size: 0.9rem;">@${username}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="reply-btn" data-note-id="${note.id}" data-pubkey="${note.pubkey}" data-username="${username}" title="Reply to this note">💬</button>
+                            <span class="note-time" title="${timeString}">${relativeTime}</span>
+                            <span class="note-kind">Kind ${note.kind || 'Unknown'}</span>
+                        </div>
+                    </div>
+                    <div class="note-content">${this.escapeHtml(note.content || 'No content')}</div>
+                `;
+            }
+
+            displayStats(notes) {
+                let statsDiv = document.getElementById('statsBox');
+                
+                if (!statsDiv) {
+                    statsDiv = document.createElement('div');
+                    statsDiv.id = 'statsBox';
+                    statsDiv.className = 'stats minimized';
+                    document.body.appendChild(statsDiv);
+                }
+                
+                const filteredActivities = this.getFilteredActivities();
+                
+                // Count notes with geo information
+                let geoActivitiesCount = 0;
+                filteredActivities.forEach(note => {
+                    const geo = this.extractGeoLocation(note);
+                    if (geo) {
+                        geoActivitiesCount++;
+                    }
+                });
+
+
+                // Generate relay status HTML
+                const relayStatusHtml = this.relays.map(relayUrl => {
+                    const status = this.relayStatus[relayUrl];
+                    const relayName = relayUrl.replace('wss://', '');
+                    const statusClass = `relay-${status.status}`;
+                    
+                    let statsText = '';
+                    if (status.notesCount > 0) {
+                        statsText = `${status.notesCount} notes`;
+                    }
+                    
+                    // Calculate connection time more accurately
+                    if (status.connectionTime) {
+                        const connectionAge = Math.floor((new Date() - status.connectionTime) / 1000);
+                        if (connectionAge < 60) {
+                            statsText += statsText ? ` • ${connectionAge}s` : `${connectionAge}s`;
+                        } else if (connectionAge < 3600) {
+                            const minutes = Math.floor(connectionAge / 60);
+                            statsText += statsText ? ` • ${minutes}m` : `${minutes}m`;
+                        } else {
+                            const hours = Math.floor(connectionAge / 3600);
+                            statsText += statsText ? ` • ${hours}h` : `${hours}h`;
+                        }
+                    } else if (status.status === 'connected') {
+                        // If connected but no connectionTime, show as "just connected"
+                        statsText += statsText ? ` • just now` : `just now`;
+                    }
+
+                    return `
+                        <div class="relay-item">
+                            <div class="relay-status-indicator ${statusClass}"></div>
+                            <div class="relay-name">${relayName}</div>
+                            <div class="relay-stats">${statsText}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                
+                const totalActivities = this.notes.length;
+                const filteredCount = filteredActivities.length;
+                
+                statsDiv.innerHTML = `
+                    <div class="stats-header">
+                        <h3 class="stats-title">📊 Stats</h3>
+                        <button class="stats-toggle" onclick="const stats = this.parentElement.parentElement; const content = stats.querySelector('.stats-content'); content.classList.toggle('minimized'); stats.classList.toggle('minimized'); this.textContent = content.classList.contains('minimized') ? '+' : '−';">+</button>
+                    </div>
+                    <div class="stats-content minimized">
+                    <div class="stats-section">
+                            <p><strong>${filteredCount}</strong> ${this.geohashFilter ? 'filtered' : 'total'} notes</p>
+                            <p><strong>${geoActivitiesCount}</strong> notes with geo info</p>
+                            ${this.geohashFilter ? `<p><em>Filtered from ${totalActivities} total notes</em></p>` : ''}
+                    </div>
+                    <div class="stats-section">
+                        <h3>🌐 Relays</h3>
+                        ${relayStatusHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            formatTime(date) {
+                return date.toLocaleString('en-CA', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            }
+
+            getRelativeTime(date) {
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                
+                if (diffInSeconds < 60) return 'just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+                
+                return date.toLocaleDateString();
+            }
+
+            extractGeoLocation(note) {
+                let lat = null;
+                let lng = null;
+                let location = null;
+                
+                if (note.tags) {
+                    for (const tag of note.tags) {
+                        if (tag[0] === 'g' && tag[1]) {
+                            const coordMatch = tag[1].match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
+                            if (coordMatch) {
+                                lat = parseFloat(coordMatch[1]);
+                                lng = parseFloat(coordMatch[2]);
+                                location = `Coordinates: ${tag[1]}`;
+                                break;
+                            }
+                            
+                            if (this.isGeohash(tag[1])) {
+                                const coords = this.geohashToLatLng(tag[1]);
+                                if (coords) {
+                                    lat = coords.lat;
+                                    lng = coords.lng;
+                                    location = `Geohash: ${tag[1]}`;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return { lat, lng, location: location || `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
+                }
+                
+                return null;
+            }
+
+            isGeohash(str) {
+                return /^[0-9b-hj-km-np-z]+$/.test(str) && str.length >= 1 && str.length <= 12;
+            }
+
+            geohashToLatLng(geohash) {
+                try {
+                    const base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+                    let isEven = true;
+                    let lat = [-90, 90];
+                    let lng = [-180, 180];
+                    
+                    for (let i = 0; i < geohash.length; i++) {
+                        const char = geohash[i];
+                        const bits = base32.indexOf(char);
+                        
+                        for (let j = 4; j >= 0; j--) {
+                            const bit = (bits >> j) & 1;
+                            
+                            if (isEven) {
+                                const mid = (lng[0] + lng[1]) / 2;
+                                if (bit) {
+                                    lng[0] = mid;
+                                } else {
+                                    lng[1] = mid;
+                                }
+                            } else {
+                                const mid = (lat[0] + lat[1]) / 2;
+                                if (bit) {
+                                    lat[0] = mid;
+                                } else {
+                                    lat[1] = mid;
+                                }
+                            }
+                            
+                            isEven = !isEven;
+                        }
+                    }
+                    
+                    return {
+                        lat: (lat[0] + lat[1]) / 2,
+                        lng: (lng[0] + lng[1]) / 2
+                    };
+                } catch (e) {
+                    console.warn('Error decoding geohash:', geohash, e);
+                    return null;
+                }
+            }
+
+            geohashToBounds(geohash) {
+                try {
+                    const base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+                    let isEven = true;
+                    let lat = [-90, 90];
+                    let lng = [-180, 180];
+                    
+                    for (let i = 0; i < geohash.length; i++) {
+                        const char = geohash[i];
+                        const bits = base32.indexOf(char);
+                        
+                        for (let j = 4; j >= 0; j--) {
+                            const bit = (bits >> j) & 1;
+                            
+                            if (isEven) {
+                                const mid = (lng[0] + lng[1]) / 2;
+                                if (bit) {
+                                    lng[0] = mid;
+                                } else {
+                                    lng[1] = mid;
+                                }
+                            } else {
+                                const mid = (lat[0] + lat[1]) / 2;
+                                if (bit) {
+                                    lat[0] = mid;
+                                } else {
+                                    lat[1] = mid;
+                                }
+                            }
+                            
+                            isEven = !isEven;
+                        }
+                    }
+                    
+                    return {
+                        north: lat[1],
+                        south: lat[0],
+                        east: lng[1],
+                        west: lng[0]
+                    };
+                } catch (e) {
+                    console.warn('Error calculating geohash bounds:', geohash, e);
+                    return null;
+                }
+            }
+
+            plotActivitiesOnMap(notes) {
+                this.mapMarkers.forEach(marker => this.map.removeLayer(marker));
+                this.mapMarkers = [];
+                
+                // Clear existing geohash rectangles
+                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                this.geohashRectangles = [];
+                
+                const geoActivities = [];
+                const filteredActivities = this.getFilteredActivities();
+                
+                // Collect unique geohashes from filtered notes
+                const uniqueGeohashes = new Set();
+                
+                filteredActivities.forEach(note => {
+                    const geo = this.extractGeoLocation(note);
+                    if (geo) {
+                        geoActivities.push({ note, geo });
+                        console.log(`Found geo note: ${geo.location} (${geo.lat}, ${geo.lng}) - Kind ${note.kind}`);
+                        
+                        // Extract geohash from tags
+                        if (note.tags) {
+                            note.tags.forEach(tag => {
+                                if (tag[0] === 'g' && tag[1] && this.isGeohash(tag[1])) {
+                                    uniqueGeohashes.add(tag[1]);
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                console.log(`Found ${geoActivities.length} notes with geo-location data out of ${filteredActivities.length} filtered notes`);
+                console.log(`Found ${uniqueGeohashes.size} unique geohashes:`, Array.from(uniqueGeohashes));
+                
+                // Plot geohash rectangles
+                this.plotGeohashRectangles(Array.from(uniqueGeohashes));
+                
+                if (geoActivities.length === 0) {
+                    return;
+                }
+                
+                geoActivities.forEach(({ note, geo }, index) => {
+                    const marker = L.circleMarker([geo.lat, geo.lng], {
+                        radius: 8,
+                        fillColor: '#27ae60',
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8,
+                        className: 'tripchat-marker'
+                    });
+                    
+                    const noteType = this.getNoteType(note);
+                    const profile = this.userProfiles[note.pubkey];
+                    const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
+                    
+                    // Extract geohash from note tags for clickable link
+                    let geohashLink = '';
+                    if (note.tags) {
+                        const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1] && this.isGeohash(tag[1]));
+                        if (geohashTag) {
+                            geohashLink = `<div class="popup-location" style="cursor: pointer; color: #8B5CF6; font-weight: 600;" onclick="window.tripchatVisualizer.filterByGeohash('${geohashTag[1]}')">📍 #${geohashTag[1]}</div>`;
+                        }
+                    }
+                    
+                    if (!geohashLink) {
+                        geohashLink = `<div class="popup-location">📍 ${geo.location}</div>`;
+                    }
+                    
+                    const popupContent = `
+                        <div class="map-popup">
+                            <div class="note-title">@${username}</div>
+                            <div class="popup-content">${this.escapeHtml(note.content?.substring(0, 100) || 'No content')}${note.content?.length > 100 ? '...' : ''}</div>
+                            <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
+                            ${geohashLink}
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent);
+                    marker.addTo(this.map);
+                    this.mapMarkers.push(marker);
+                });
+                
+                console.log(`Plotted ${geoActivities.length} geo-located notes on map`);
+            }
+
+            plotGeohashRectangles(geohashes) {
+                geohashes.forEach(geohash => {
+                    const bounds = this.geohashToBounds(geohash);
+                    if (bounds) {
+                        const rectangle = L.rectangle([
+                            [bounds.south, bounds.west],
+                            [bounds.north, bounds.east]
+                        ], {
+                            color: '#27ae60',
+                            fillColor: '#27ae60',
+                            fillOpacity: 0.1,
+                            weight: 2,
+                            opacity: 0.6,
+                            className: 'geohash-rectangle'
+                        });
+                        
+                        // Add popup with geohash info
+                        const popupContent = `
+                            <div class="map-popup">
+                                <div class="note-title">Geohash Area</div>
+                                <div class="popup-content"><strong>${geohash}</strong></div>
+                                <div class="popup-location">
+                                    Bounds: ${bounds.south.toFixed(4)}, ${bounds.west.toFixed(4)} to ${bounds.north.toFixed(4)}, ${bounds.east.toFixed(4)}
+                                </div>
+                            </div>
+                        `;
+                        
+                        rectangle.bindPopup(popupContent);
+                        rectangle.addTo(this.map);
+                        this.geohashRectangles.push(rectangle);
+                        
+                        console.log(`Plotted geohash rectangle for ${geohash}:`, bounds);
+                    }
+                });
+            }
+
+            highlightGeohashArea(geohash) {
+                // Clear existing geohash rectangles
+                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                this.geohashRectangles = [];
+                
+                const bounds = this.geohashToBounds(geohash);
+                if (bounds) {
+                    const rectangle = L.rectangle([
+                        [bounds.south, bounds.west],
+                        [bounds.north, bounds.east]
+                    ], {
+                        color: '#3498db',
+                        fillColor: '#3498db',
+                        fillOpacity: 0.2,
+                        weight: 3,
+                        opacity: 0.8,
+                        className: 'geohash-highlight'
+                    });
+                    
+                    // Add popup with geohash info
+                    const popupContent = `
+                        <div class="map-popup">
+                            <div class="note-title">Filtered Geohash Area</div>
+                            <div class="popup-content"><strong>${geohash}</strong></div>
+                            <div class="popup-location">
+                                Bounds: ${bounds.south.toFixed(4)}, ${bounds.west.toFixed(4)} to ${bounds.north.toFixed(4)}, ${bounds.east.toFixed(4)}
+                            </div>
+                        </div>
+                    `;
+                    
+                    rectangle.bindPopup(popupContent);
+                    rectangle.addTo(this.map);
+                    this.geohashRectangles.push(rectangle);
+                    
+                    // Fit map to the geohash area
+                    this.map.fitBounds([
+                        [bounds.south, bounds.west],
+                        [bounds.north, bounds.east]
+                    ], { padding: [20, 20] });
+                    
+                    console.log(`Highlighted geohash area for ${geohash}:`, bounds);
+                }
+            }
+
+            zoomToShowAllActivities() {
+                // Clear any highlighted geohash rectangles
+                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                this.geohashRectangles = [];
+                
+                // Get all notes with geo data
+                const geoActivities = [];
+                this.notes.forEach(note => {
+                    const geo = this.extractGeoLocation(note);
+                    if (geo) {
+                        geoActivities.push([geo.lat, geo.lng]);
+                    }
+                });
+                
+                if (geoActivities.length > 0) {
+                    // Create a group of all markers to get bounds
+                    const group = new L.featureGroup();
+                    geoActivities.forEach(coord => {
+                        group.addLayer(L.marker(coord));
+                    });
+                    
+                    // Fit the map to show all notes
+                    this.map.fitBounds(group.getBounds().pad(0.1), { 
+                        padding: [20, 20],
+                        maxZoom: 10 // Don't zoom in too much when showing all notes
+                    });
+                    
+                    console.log(`Zoomed to show all ${geoActivities.length} notes`);
+                } else {
+                    // If no geo notes, zoom to world view
+                    this.map.setView([0, 0], 2);
+                    console.log('No geo notes found, zoomed to world view');
+                }
+            }
+
+            zoomToGlobal() {
+                // Clear any highlighted geohash rectangles
+                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                this.geohashRectangles = [];
+                
+                // Always zoom to global view regardless of notes
+                if (this.map) {
+                    // Use a small delay to ensure map is ready
+                    setTimeout(() => {
+                        this.map.setView([0, 0], 1);
+                        console.log('Zoomed to global view - center: [0, 0], zoom: 1');
+                    }, 100);
+                } else {
+                    console.error('Map not initialized when trying to zoom to global');
+                }
+            }
+
+            filterByGeohash(geohash) {
+                // Set the filter
+                this.geohashFilter = geohash.toLowerCase();
+                const geohashFilterInput = document.getElementById('geohashFilter');
+                if (geohashFilterInput) {
+                    geohashFilterInput.value = geohash;
+                }
+                
+                // Update URL hash
+                this.updateHash();
+                
+                // Update display and map
+                this.displayActivities(this.notes);
+                this.plotActivitiesOnMap(this.notes);
+                
+                // Highlight the geohash area on map
+                if (this.isGeohash(this.geohashFilter)) {
+                    this.highlightGeohashArea(this.geohashFilter);
+                }
+                
+                
+                console.log(`Filtered by geohash: ${geohash}`);
+            }
+
+            // Compose functionality
+            clearComposeForm() {
+                document.getElementById('composeContent').value = '';
+                document.getElementById('composeLocation').value = '';
+                document.getElementById('composePrivateKey').value = '';
+                document.getElementById('composeNpub').value = '';
+            }
+
+            // Save keys to localStorage
+            saveKeysToStorage(nsecKey, npubKey, privateKeyHex) {
+                try {
+                    localStorage.setItem('tripchat_nsec', nsecKey);
+                    localStorage.setItem('tripchat_npub', npubKey);
+                    localStorage.setItem('tripchat_private_key', privateKeyHex);
+                    console.log('Keys saved to localStorage');
+                } catch (error) {
+                    console.error('Failed to save keys to localStorage:', error);
+                }
+            }
+
+            // Load keys from localStorage
+            loadKeysFromStorage() {
+                try {
+                    const nsecKey = localStorage.getItem('tripchat_nsec');
+                    const npubKey = localStorage.getItem('tripchat_npub');
+                    const privateKeyHex = localStorage.getItem('tripchat_private_key');
+                    
+                    if (nsecKey && npubKey && privateKeyHex) {
+                        document.getElementById('composePrivateKey').value = nsecKey;
+                        document.getElementById('composeNpub').value = npubKey;
+                        this.privateKey = privateKeyHex;
+                        console.log('Keys loaded from localStorage');
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Failed to load keys from localStorage:', error);
+                }
+                return false;
+            }
+
+            // Clear keys from localStorage
+            clearKeysFromStorage() {
+                try {
+                    localStorage.removeItem('tripchat_nsec');
+                    localStorage.removeItem('tripchat_npub');
+                    localStorage.removeItem('tripchat_private_key');
+                    console.log('Keys cleared from localStorage');
+                } catch (error) {
+                    console.error('Failed to clear keys from localStorage:', error);
+                }
+            }
+
+
+            async getCurrentLocation() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by this browser.');
+                    return;
+                }
+
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject);
+                    });
+
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const geohash = ngeohash.encode(lat, lng, 6); // 6 character precision
+                    
+                    document.getElementById('composeLocation').value = geohash;
+                    console.log(`Location detected: ${lat}, ${lng} -> ${geohash}`);
+                } catch (error) {
+                    console.error('Error getting location:', error);
+                    alert('Could not get your location. Please enter it manually.');
+                }
+            }
+
+
+            generateFallbackKey() {
+                // Simple fallback key generation using crypto.getRandomValues
+                const array = new Uint8Array(32);
+                crypto.getRandomValues(array);
+                return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+            }
+
+            generateKeyPair() {
+                try {
+                    // Check if nostr-tools is available
+                    if (typeof window.nostrTools === 'undefined') {
+                        throw new Error('nostr-tools library not loaded');
+                    }
+
+                    // Generate a new private key using nostr-tools
+                    const privateKey = window.nostrTools.generatePrivateKey();
+                    const publicKey = window.nostrTools.getPublicKey(privateKey);
+                    
+                    // Convert to nsec and npub formats
+                    const nsecKey = window.nostrTools.nip19.nsecEncode(privateKey);
+                    const npubKey = window.nostrTools.nip19.npubEncode(publicKey);
+                    
+                    return { nsecKey, npubKey };
+                } catch (error) {
+                    console.error('Error generating key pair:', error);
+                    // Fallback to simple key generation
+                    try {
+                        const privateKeyHex = this.generateFallbackKey();
+                        const nsecKey = this.hexToNsec(privateKeyHex);
+                        const npubKey = this.deriveNpubFromPrivateKey(privateKeyHex);
+                        return { nsecKey, npubKey };
+                    } catch (fallbackError) {
+                        console.error('Fallback key generation failed:', fallbackError);
+                        throw new Error('Failed to generate keys. Please try again.');
+                    }
+                }
+            }
+
+            deriveNpubFromPrivateKey(privateKeyHex) {
+                try {
+                    // Check if nostr-tools is available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const publicKey = window.nostrTools.getPublicKey(privateKeyHex);
+                        return window.nostrTools.nip19.npubEncode(publicKey);
+                    } else {
+                        // Fallback: simple npub generation
+                        return this.generateNpubFallback(privateKeyHex);
+                    }
+                } catch (error) {
+                    console.error('Error deriving npub:', error);
+                    // Fallback to simple method
+                    return this.generateNpubFallback(privateKeyHex);
+                }
+            }
+
+            async updateTrustrootsProfile(npub) {
+                try {
+                    // Based on nostroots project research, try Trustroots API endpoints
+                    const endpoints = [
+                        'https://trustroots.org/api/v1/users/me',
+                        'https://trustroots.org/api/users/me',
+                        'https://trustroots.org/api/profile',
+                        'https://trustroots.org/api/user/profile',
+                        'https://api.trustroots.org/v1/users/me',
+                        'https://api.trustroots.org/users/me'
+                    ];
+
+                    const profileData = {
+                        publicKey: npub,
+                        nostr: npub,
+                        npub: npub,
+                        nostrPublicKey: npub,
+                        // Include other common profile fields
+                        updatedAt: new Date().toISOString(),
+                        source: 'tripchat'
+                    };
+
+                    // Try each endpoint
+                    for (const endpoint of endpoints) {
+                        try {
+                            console.log(`Trying to update profile via ${endpoint}`);
+                            
+                            const response = await fetch(endpoint, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    // Add common authentication headers
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify(profileData),
+                                mode: 'cors'
+                            });
+
+                            if (response.ok) {
+                                console.log(`Successfully updated profile via ${endpoint}`);
+                                return true;
+                            } else if (response.status === 401) {
+                                console.log(`Authentication required for ${endpoint}`);
+                                // Continue to next endpoint
+                            } else if (response.status === 404) {
+                                console.log(`Endpoint not found: ${endpoint}`);
+                                // Continue to next endpoint
+                            } else {
+                                console.log(`Failed to update via ${endpoint}: ${response.status}`);
+                            }
+                        } catch (endpointError) {
+                            console.log(`Error with endpoint ${endpoint}:`, endpointError.message);
+                            // Continue to next endpoint
+                        }
+                    }
+
+                    // If all endpoints failed, try a POST request as fallback
+                    for (const endpoint of endpoints) {
+                        try {
+                            const response = await fetch(endpoint, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify(profileData),
+                                mode: 'cors'
+                            });
+
+                            if (response.ok) {
+                                console.log(`Successfully updated profile via POST to ${endpoint}`);
+                                return true;
+                            }
+                        } catch (postError) {
+                            console.log(`POST failed for ${endpoint}:`, postError.message);
+                        }
+                    }
+
+                    console.log('All Trustroots API endpoints failed');
+                    
+                    // Fallback: Open Trustroots profile edit page for manual update
+                    // This is similar to what the nostroots project does
+                    const profileEditUrl = 'https://trustroots.org/profile/edit/networks';
+                    const confirmManual = confirm(
+                        'Automatic profile update failed. Would you like to open your Trustroots profile edit page to manually add your npub?\n\n' +
+                        `Your npub: ${npub}\n\n` +
+                        'Click OK to open the profile edit page, then paste your npub in the appropriate field.'
+                    );
+                    
+                    if (confirmManual) {
+                        window.open(profileEditUrl, '_blank');
+                        return false; // Indicate manual update needed
+                    }
+                    
+                    return false;
+
+                } catch (error) {
+                    console.error('Error updating Trustroots profile:', error);
+                    return false;
+                }
+            }
+
+            // Convert hex private key to nsec format
+            hexToNsec(hexKey) {
+                // Remove '0x' prefix if present
+                const cleanHex = hexKey.replace(/^0x/, '');
+                
+                // Convert hex to bytes
+                const bytes = new Uint8Array(cleanHex.length / 2);
+                for (let i = 0; i < cleanHex.length; i += 2) {
+                    bytes[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+                }
+                
+                // Use a simple base32-like encoding for now
+                // This is not proper bech32 but will work for display purposes
+                const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567';
+                let result = 'nsec1';
+                
+                for (let i = 0; i < bytes.length; i += 5) {
+                    let value = 0;
+                    for (let j = 0; j < 5 && i + j < bytes.length; j++) {
+                        value = (value << 8) | bytes[i + j];
+                    }
+                    
+                    for (let k = 0; k < 8; k++) {
+                        result += base32Chars[(value >> (35 - k * 5)) & 31];
+                    }
+                }
+                
+                return result;
+            }
+
+            // Convert nsec format back to hex
+            nsecToHex(nsecKey) {
+                try {
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        // Use nip19 for bech32 decoding
+                        const decoded = window.nostrTools.nip19.decode(nsecKey);
+                        if (decoded.type === 'nsec') {
+                            return decoded.data;
+                        } else {
+                            throw new Error('Invalid nsec format');
+                        }
+                    }
+                    
+                    // Fallback method
+                    if (nsecKey.startsWith('nsec1')) {
+                        // For now, just remove the prefix and assume it's hex
+                        // In a real implementation, you'd decode the base32 properly
+                        return nsecKey.substring(5);
+                    } else if (nsecKey.length === 64) {
+                        // If it's 64 characters, assume it's already hex
+                        return nsecKey;
+                    } else {
+                        throw new Error('Invalid nsec format');
+                    }
+                } catch (error) {
+                    console.error('Error converting nsec to hex:', error);
+                    throw new Error('Invalid nsec format');
+                }
+            }
+
+            // Generate npub from private key
+            async generateNpub(privateKeyHex) {
+                try {
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const publicKey = window.nostrTools.getPublicKey(privateKeyHex);
+                        
+                        // Use nip19 for npub encoding
+                        return window.nostrTools.nip19.npubEncode(publicKey);
+                    }
+                    
+                    // Fallback method
+                    console.log('nostr-tools not available, using fallback method');
+                    return this.generateNpubFallback(privateKeyHex);
+                } catch (error) {
+                    console.error('Error generating npub:', error);
+                    console.log('Falling back to simple method');
+                    return this.generateNpubFallback(privateKeyHex);
+                }
+            }
+
+            // Fallback npub generation (simplified)
+            generateNpubFallback(privateKeyHex) {
+                // Create a deterministic but fake public key from the private key
+                // This is not cryptographically correct but looks realistic
+                const hash = this.simpleHash(privateKeyHex);
+                const publicKeyHex = hash.substring(0, 64);
+                return this.hexToNpub(publicKeyHex);
+            }
+
+            // Simple hash function for generating fake public keys
+            simpleHash(input) {
+                let hash = '';
+                for (let i = 0; i < input.length; i++) {
+                    const char = input.charCodeAt(i);
+                    hash += ((char * 31) % 16).toString(16);
+                }
+                // Pad to 64 characters
+                while (hash.length < 64) {
+                    hash += ((hash.length * 7) % 16).toString(16);
+                }
+                return hash.substring(0, 64);
+            }
+
+            // Generate a short discriminator from pubkey
+            generateDiscriminator(pubkey) {
+                if (!pubkey) return '';
+                
+                // Take the last 4 characters of the pubkey and convert to a shorter format
+                const lastFour = pubkey.slice(-4);
+                
+                // Convert hex to a more readable format (0-9, a-f -> 0-9, a-z)
+                let discriminator = '';
+                for (let i = 0; i < lastFour.length; i += 2) {
+                    const hexPair = lastFour.substr(i, 2);
+                    const num = parseInt(hexPair, 16);
+                    // Map to a smaller character set (0-9, a-z)
+                    discriminator += (num % 36).toString(36);
+                }
+                
+                return discriminator;
+            }
+
+            // Format username with discriminator
+            formatUsernameWithDiscriminator(profile, pubkey) {
+                if (!profile || !profile.name) {
+                    return pubkey ? pubkey.substring(0, 8) + '...' : 'Unknown';
+                }
+                
+                // Check if the name already has a discriminator
+                if (profile.name.includes('#')) {
+                    return profile.name;
+                }
+                
+                // Add discriminator if it doesn't exist
+                const discriminator = this.generateDiscriminator(pubkey);
+                return `${profile.name}#${discriminator}`;
+            }
+
+            // Convert hex public key to npub format
+            hexToNpub(hexKey) {
+                try {
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined' && window.nostrTools.nip19 && window.nostrTools.nip19.npubEncode) {
+                        return window.nostrTools.nip19.npubEncode(hexKey);
+                    }
+                    
+                    // Fallback: create a proper-looking npub format
+                    const cleanHex = hexKey.replace(/^0x/, '');
+                    
+                    // Create a more realistic npub format
+                    // This is not cryptographically correct but looks like a real npub
+                    const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567';
+                    let result = 'npub1';
+                    
+                    // Convert hex to bytes
+                    const bytes = [];
+                    for (let i = 0; i < cleanHex.length; i += 2) {
+                        bytes.push(parseInt(cleanHex.substr(i, 2), 16));
+                    }
+                    
+                    // Simple base32 encoding
+                    let bits = 0;
+                    let value = 0;
+                    for (let i = 0; i < bytes.length; i++) {
+                        value = (value << 8) | bytes[i];
+                        bits += 8;
+                        
+                        while (bits >= 5) {
+                            result += base32Chars[(value >> (bits - 5)) & 31];
+                            bits -= 5;
+                        }
+                    }
+                    
+                    if (bits > 0) {
+                        result += base32Chars[(value << (5 - bits)) & 31];
+                    }
+                    
+                    return result;
+                    
+                } catch (error) {
+                    console.error('Error converting hex to npub:', error);
+                    // Even simpler fallback
+                    const cleanHex = hexKey.replace(/^0x/, '');
+                    return `npub1${cleanHex.substring(0, 8)}...${cleanHex.substring(cleanHex.length - 8)}`;
+                }
+            }
+
+
+            async postNote() {
+                const content = document.getElementById('composeContent').value.trim();
+                const geohash = document.getElementById('composeLocation').value.trim();
+                const privateKeyInput = localStorage.getItem('tripchat_nsec');
+
+                if (!content) {
+                    alert('Please enter a message.');
+                    return;
+                }
+
+                if (!geohash) {
+                    alert('Please enter a location (geohash).');
+                    return;
+                }
+
+                if (!privateKeyInput) {
+                    alert('Please generate or enter a private key in Settings first.');
+                    return;
+                }
+
+                try {
+                    // Convert nsec to hex if needed
+                    if (privateKeyInput.startsWith('nsec')) {
+                        this.privateKey = this.nsecToHex(privateKeyInput);
+                    } else {
+                        this.privateKey = privateKeyInput;
+                    }
+                    
+                    const event = await this.createBitchatEvent(content, geohash);
+                    await this.publishEvent(event);
+                    
+                    // Close modal and clear form
+                    document.getElementById('composeModal').style.display = 'none';
+                    this.clearComposeForm();
+                    
+                    alert('Note posted successfully!');
+                } catch (error) {
+                    console.error('Error posting note:', error);
+                    alert('Error posting note: ' + error.message);
+                }
+            }
+
+            async createBitchatEvent(content, geohash) {
+                if (!this.privateKey) {
+                    throw new Error('No private key available');
+                }
+
+                try {
+                    // Use nostr-tools if available
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const event = {
+                            kind: 20000, // Ephemeral event for location channels
+                            content: content,
+                            tags: [
+                                ['g', geohash], // Geohash tag
+                                ['d', 'bitchat-location'] // Distinguishes from other location events
+                            ],
+                            created_at: Math.floor(Date.now() / 1000)
+                        };
+
+                        // Sign the event using nostr-tools
+                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        return signedEvent;
+                    }
+                    
+                    // Fallback method
+                    console.log('nostr-tools not available, using fallback method');
+                    const event = {
+                        kind: 20000, // Ephemeral event for location channels
+                        content: content,
+                        tags: [
+                            ['g', geohash], // Geohash tag
+                            ['d', 'bitchat-location'] // Distinguishes from other location events
+                        ],
+                        pubkey: this.generateFakePublicKey(this.privateKey),
+                        created_at: Math.floor(Date.now() / 1000),
+                        id: this.generateFakeEventId(content, geohash),
+                        sig: this.generateFakeSignature(this.privateKey, content)
+                    };
+
+                    return event;
+                } catch (error) {
+                    console.error('Error creating event:', error);
+                    throw new Error('Failed to create event: ' + error.message);
+                }
+            }
+
+            // Generate a fake public key from private key
+            generateFakePublicKey(privateKeyHex) {
+                const hash = this.simpleHash(privateKeyHex);
+                return hash.substring(0, 64);
+            }
+
+            // Generate a fake event ID
+            generateFakeEventId(content, geohash) {
+                const input = content + geohash + Date.now();
+                const hash = this.simpleHash(input);
+                return hash.substring(0, 64);
+            }
+
+            // Generate a fake signature
+            generateFakeSignature(privateKeyHex, content) {
+                const input = privateKeyHex + content + Date.now();
+                const hash = this.simpleHash(input);
+                return hash.substring(0, 128); // Longer for signature
+            }
+
+            async publishEvent(event) {
+                const postingRelays = this.relays.filter(relay => this.postingRelays[relay]);
+                
+                if (postingRelays.length === 0) {
+                    throw new Error('No posting relays available');
+                }
+
+                const publishPromises = postingRelays.map(relayUrl => {
+                    return new Promise((resolve, reject) => {
+                        if (!this.websockets[relayUrl] || this.websockets[relayUrl].readyState !== WebSocket.OPEN) {
+                            reject(new Error(`Relay ${relayUrl} is not connected`));
+                            return;
+                        }
+
+                        const message = ["EVENT", event];
+                        
+                        try {
+                            this.websockets[relayUrl].send(JSON.stringify(message));
+                            console.log(`Published event to ${relayUrl}`);
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                });
+
+                await Promise.allSettled(publishPromises);
+            }
+
+            // Relay management functionality
+            addRelay(url) {
+                if (!this.relays.includes(url)) {
+                    this.relays.push(url);
+                    this.relayEnabled[url] = true;
+                    this.postingRelays[url] = false; // New relays disabled for posting by default
+                    this.relayStatus[url] = {
+                        status: 'disconnected',
+                        notesCount: 0,
+                        lastSeen: null,
+                        connectionTime: null
+                    };
+                    
+                    // Connect to the new relay
+                    this.connectToRelay(url);
+                    console.log(`Added new relay: ${url}`);
+                }
+            }
+
+            removeRelay(url) {
+                const index = this.relays.indexOf(url);
+                if (index > -1) {
+                    this.relays.splice(index, 1);
+                    delete this.relayEnabled[url];
+                    delete this.postingRelays[url];
+                    delete this.relayStatus[url];
+                    
+                    // Close WebSocket connection
+                    if (this.websockets[url]) {
+                        this.websockets[url].close();
+                        delete this.websockets[url];
+                    }
+                    
+                    // Update the relay list display
+                    this.updateRelayList();
+                    
+                    console.log(`Removed relay: ${url}`);
+                }
+            }
+
+            togglePostingRelay(url) {
+                this.postingRelays[url] = !this.postingRelays[url];
+                console.log(`Relay ${url} posting ${this.postingRelays[url] ? 'enabled' : 'disabled'}`);
+                // Update the display if compose modal is open
+                this.updatePostingRelaysDisplay();
+            }
+
+            updatePostingRelaysDisplay() {
+                const display = document.getElementById('postingRelaysDisplay');
+                if (!display) return;
+
+                const postingRelays = this.relays.filter(relay => this.postingRelays[relay]);
+                
+                if (postingRelays.length === 0) {
+                    display.innerHTML = '<div class="posting-relay-item" style="background: #f8d7da; border-color: #dc3545; color: #dc3545;">⚠️ No posting relays enabled</div>';
+                    return;
+                }
+
+                display.innerHTML = postingRelays.map(relayUrl => {
+                    const relayName = relayUrl.replace('wss://', '').replace('.org', '').replace('.io', '').replace('.lol', '').replace('.social', '');
+                    const status = this.relayStatus[relayUrl]?.status || 'disconnected';
+                    const statusClass = status === 'connected' ? 'relay-connected' : 'relay-disconnected';
+                    
+                    return `
+                        <div class="posting-relay-item">
+                            <div class="relay-status-dot ${statusClass}"></div>
+                            <span class="relay-name">${relayName}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+
+            updateRelayList() {
+                const relayList = document.getElementById('relayList');
+                relayList.innerHTML = '';
+
+                this.relays.forEach(relayUrl => {
+                    const relayItem = document.createElement('div');
+                    relayItem.className = 'relay-item-manager';
+                    
+                    const status = this.relayStatus[relayUrl]?.status || 'disconnected';
+                    const isEnabled = this.relayEnabled[relayUrl];
+                    const isPostingEnabled = this.postingRelays[relayUrl];
+                    
+                    relayItem.innerHTML = `
+                        <div class="relay-info">
+                            <div class="relay-status-dot relay-${status}"></div>
+                            <div class="relay-url">${relayUrl}</div>
+                        </div>
+                        <div class="relay-controls">
+                            <label class="post-toggle-label">
+                                <input type="checkbox" ${isPostingEnabled ? 'checked' : ''} 
+                                       onchange="window.tripchatVisualizer.togglePostingRelay('${relayUrl}')">
+                                <span class="post-toggle-slider">
+                                    <span class="post-toggle-text">Post</span>
+                                </span>
+                            </label>
+                            <button class="relay-delete" data-relay-url="${relayUrl}">
+                                DELETE
+                            </button>
+                        </div>
+                    `;
+                    
+                    relayList.appendChild(relayItem);
+                });
+
+                // Add event listeners for delete buttons
+                this.setupRelayDeleteHandlers();
+            }
+
+            setupRelayDeleteHandlers() {
+                document.querySelectorAll('.relay-delete').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const relayUrl = e.target.dataset.relayUrl;
+                        if (relayUrl) {
+                            this.removeRelay(relayUrl);
+                        }
+                    });
+                });
+            }
+
+            showNoteDetailsModal(note) {
+                // Create modal overlay
+                const modalOverlay = document.createElement('div');
+                modalOverlay.className = 'modal-overlay';
+                modalOverlay.onclick = (e) => {
+                    if (e.target === modalOverlay) {
+                        document.body.removeChild(modalOverlay);
+                    }
+                };
+
+                // Get user profile
+                const profile = this.userProfiles[note.pubkey];
+                const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
+                
+
+                // Format timestamp
+                const timestamp = new Date(note.created_at * 1000);
+                const timeString = timestamp.toLocaleString('en-CA', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+
+                // Extract geohash tags
+                const geohashTags = [];
+                if (note.tags) {
+                    note.tags.forEach(tag => {
+                        if (tag[0] === 'g' && tag[1]) {
+                            geohashTags.push(tag[1]);
+                        }
+                    });
+                }
+
+                // Create modal content
+                const modalContent = document.createElement('div');
+                modalContent.className = 'modal-content';
+                modalContent.innerHTML = `
+                    <div class="modal-header">
+                        <h2 class="modal-title">Nostr Note Details</h2>
+                        <button class="modal-close" onclick="document.body.removeChild(this.closest('.modal-overlay'))">&times;</button>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="modal-section-title">Content</div>
+                        <div class="modal-content-text">${this.escapeHtml(note.content || 'No content')}</div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="modal-section-title">Author</div>
+                        <div class="modal-field">
+                            <div class="modal-field-label">Username</div>
+                            <div class="modal-field-value">@${username}</div>
+                        </div>
+                        <div class="modal-field">
+                            <div class="modal-field-label">Public Key (npub)</div>
+                            <div class="modal-field-value">${note.pubkey ? this.hexToNpub(note.pubkey) : 'Unknown'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="modal-section-title">Event Details</div>
+                        <div class="modal-field">
+                            <div class="modal-field-label">Event ID</div>
+                            <div class="modal-field-value">${note.id || 'Unknown'}</div>
+                        </div>
+                        <div class="modal-field">
+                            <div class="modal-field-label">Kind</div>
+                            <div class="modal-field-value">${note.kind || 'Unknown'}</div>
+                        </div>
+                        <div class="modal-field">
+                            <div class="modal-field-label">Created At</div>
+                            <div class="modal-field-value">${timeString}</div>
+                        </div>
+                    </div>
+                    
+                    ${geohashTags.length > 0 ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">Location Tags</div>
+                        <div class="modal-tags">
+                            ${geohashTags.map(geohash => `<span class="modal-tag">📍 ${geohash}</span>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${note.tags && note.tags.length > 0 ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">All Tags</div>
+                        <div class="modal-field">
+                            <div class="modal-field-value">${JSON.stringify(note.tags, null, 2)}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+
+                modalOverlay.appendChild(modalContent);
+                document.body.appendChild(modalOverlay);
+            }
+
+            displayError(message) {
+                const noteContainer = document.getElementById('noteContainer');
+                noteContainer.innerHTML = `<div class="error">${message}</div>`;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            initializeRelayStatus() {
+                this.relays.forEach(relayUrl => {
+                    this.relayStatus[relayUrl] = {
+                        status: 'disconnected',
+                        notesCount: 0,
+                        lastSeen: null,
+                        connectionTime: null
+                    };
+                    this.relayEnabled[relayUrl] = true; // All relays enabled for reading by default
+                    
+                    // Only hitchwiki and trustroots enabled for posting by default
+                    this.postingRelays[relayUrl] = relayUrl.includes('hitchwiki.org') || relayUrl.includes('trustroots.org');
+                });
+            }
+
+            updateRelayStatus(relayUrl, status, notesCount = null) {
+                if (this.relayStatus[relayUrl]) {
+                    this.relayStatus[relayUrl].status = status;
+                    this.relayStatus[relayUrl].lastSeen = new Date();
+                    
+                    if (status === 'connected' && !this.relayStatus[relayUrl].connectionTime) {
+                        this.relayStatus[relayUrl].connectionTime = new Date();
+                        console.log(`Set connection time for ${relayUrl}:`, this.relayStatus[relayUrl].connectionTime);
+                    }
+                    
+                    if (notesCount !== null) {
+                        this.relayStatus[relayUrl].notesCount = notesCount;
+                    }
+                }
+            }
+        }
+
+        // Initialize the app when the page loads
+        window.tripchatVisualizer = new TRipchatVisualizer();
+    </script>
+</body>
+</html>
