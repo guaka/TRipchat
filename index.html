@@ -1795,29 +1795,6 @@
                     </div>
                 </div>
                 
-                <!-- Geohash Filter -->
-                <div class="filter-container">
-                    <div class="filter-row">
-                        <div class="filter-input-group">
-                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
-                        </div>
-                        <div class="filter-options">
-                            <label class="filter-toggle-label">
-                                <input type="checkbox" id="nip05Filter" />
-                                <span class="filter-toggle-slider">
-                                    <span class="filter-toggle-text">Verified</span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="filter-circles">
-                            <select id="circleFilter" class="circle-select">
-                                <option value="">All Circles</option>
-                            </select>
-                        </div>
-                        <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
-                    </div>
-                </div>
-                
                 <div id="noteContainer">
                     <div class="loading">Loading travel messages from Nostr relays...</div>
                 </div>
@@ -1850,6 +1827,29 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Container at Bottom -->
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <div class="filter-input-group">
+                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
+                        </div>
+                        <div class="filter-options">
+                            <label class="filter-toggle-label">
+                                <input type="checkbox" id="nip05Filter" />
+                                <span class="filter-toggle-slider">
+                                    <span class="filter-toggle-text">Verified</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="filter-circles">
+                            <select id="circleFilter" class="circle-select">
+                                <option value="">All Circles</option>
+                            </select>
+                        </div>
+                        <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
                     </div>
                 </div>
                 
