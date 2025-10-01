@@ -1810,12 +1810,6 @@
                                 <div class="compose-section">
                                     <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                                 </div>
-                                <div class="compose-section">
-                                    <div class="location-input-group">
-                                        <input type="text" id="composeLocation" placeholder="e.g., u1, ey, 9q8yy (optional - leave empty for global post)" />
-                                        <button id="getLocationBtn" class="location-btn">📍 MY LOCATION</button>
-                                    </div>
-                                </div>
                                 <div class="compose-actions">
                                     <button id="postNoteBtn" class="post-btn">📤 POST NOTE</button>
                                 </div>
@@ -1828,7 +1822,7 @@
                 <div class="filter-container">
                     <div class="filter-row">
                         <div class="filter-input-group">
-                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash..." />
+                            <input type="text" id="geohashFilter" placeholder="Search notes, users, locations, or geohash... (also used for posting location)" />
                         </div>
                         <div class="filter-options">
                             <label class="filter-toggle-label">
@@ -2354,16 +2348,12 @@
             setupComposeHandlers() {
                 const composeBtn = document.getElementById('composeBtn');
                 const postNoteBtn = document.getElementById('postNoteBtn');
-                const getLocationBtn = document.getElementById('getLocationBtn');
 
                 // Initialize the compose form since it's always visible
 
                 // Compose button is now hidden since form is always visible
                 // composeBtn.addEventListener('click', () => { ... });
 
-                getLocationBtn.addEventListener('click', () => {
-                    this.getCurrentLocation();
-                });
 
                 postNoteBtn.addEventListener('click', () => {
                     this.postNote();
@@ -3875,7 +3865,6 @@
             // Compose functionality
             clearComposeForm() {
                 document.getElementById('composeContent').value = '';
-                document.getElementById('composeLocation').value = '';
             }
 
             // Save keys to localStorage
@@ -4354,7 +4343,7 @@
 
             async postNote() {
                 const content = document.getElementById('composeContent').value.trim();
-                const geohash = document.getElementById('composeLocation').value.trim();
+                const geohash = document.getElementById('geohashFilter').value.trim();
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
                 if (!content) {
