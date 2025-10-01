@@ -23,6 +23,29 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            button:hover {
+                transform: none;
+            }
+            
+            .note-item:hover {
+                background: #ffffff;
+                border-left: none;
+                padding-left: 12px;
+            }
+            
+            .filter-container:hover {
+                transform: none;
+            }
+            
+            .compose-form:hover {
+                transform: none;
+            }
         }
         
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
@@ -66,6 +89,8 @@
             overflow-y: auto;
             max-height: 100vh;
             background: #f8f9fa;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
         
         .container {
@@ -1036,6 +1061,9 @@
             font-family: 'Inter', sans-serif;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
             background: white;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .compose-form textarea {
@@ -1761,15 +1789,25 @@
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
+                height: 100vh;
             }
             
             .map-container {
                 height: 20vh;
                 min-height: 120px;
+                order: 2;
             }
 
             .note-container {
                 height: 80vh;
+                order: 1;
+                padding: 0;
+                background: #f8f9fa;
+            }
+
+            #noteContainer {
+                padding: 8px 0;
+                background: transparent;
             }
 
             .stats {
@@ -1777,16 +1815,92 @@
             }
             
             h1 {
-                font-size: 2rem;
+                font-size: 1.4rem;
+                margin-bottom: 8px;
             }
             
             .note-item {
-                padding: 15px;
+                padding: 12px 16px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
             
             .note-header {
+                flex-direction: row;
+                align-items: center;
+                margin-bottom: 6px;
+            }
+
+            .note-content {
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+            .note-username {
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+
+            .note-time {
+                font-size: 0.7rem;
+                margin-left: auto;
+            }
+
+            /* Mobile-specific improvements */
+            .header {
+                padding: 12px 16px;
+                margin-bottom: 0;
+            }
+
+            .filter-container {
+                padding: 12px 16px;
+                margin: 0 16px 12px 16px;
+                border-radius: 8px;
+            }
+
+            .filter-row {
                 flex-direction: column;
-                align-items: flex-start;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .filter-input-group {
+                min-width: auto;
+                flex: 1;
+            }
+
+            .filter-options {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .filter-circles {
+                min-width: auto;
+                flex: 1;
+            }
+
+            .clear-filter-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+
+            .compose-form {
+                padding: 12px 16px;
+                margin: 0 16px 16px 16px;
+                border-radius: 8px;
+            }
+
+            .compose-form textarea {
+                min-height: 60px;
+                font-size: 0.9rem;
+            }
+
+            .compose-form .post-btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
             }
         }
 
@@ -1799,6 +1913,39 @@
             .note-container {
                 height: 85vh;
             }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .note-item {
+                padding: 10px 12px;
+                margin-bottom: 6px;
+            }
+
+            .note-content {
+                font-size: 0.85rem;
+            }
+
+            .filter-container {
+                padding: 10px 12px;
+                margin: 0 12px 10px 12px;
+            }
+
+            .compose-form {
+                margin: 0 12px 12px 12px;
+                padding: 10px 12px;
+            }
+
+            .compose-form textarea {
+                min-height: 50px;
+                font-size: 0.85rem;
+            }
+
+            .compose-form .post-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
         }
 
         @media (max-width: 360px) {
@@ -1809,6 +1956,47 @@
 
             .note-container {
                 height: 88vh;
+            }
+
+            h1 {
+                font-size: 1.1rem;
+            }
+
+            .note-item {
+                padding: 8px 10px;
+                margin-bottom: 4px;
+            }
+
+            .note-content {
+                font-size: 0.8rem;
+            }
+
+            .note-username {
+                font-size: 0.75rem;
+            }
+
+            .note-time {
+                font-size: 0.65rem;
+            }
+
+            .filter-container {
+                padding: 8px 10px;
+                margin: 0 8px 8px 8px;
+            }
+
+            .compose-form {
+                margin: 0 8px 8px 8px;
+                padding: 8px 10px;
+            }
+
+            .compose-form textarea {
+                min-height: 45px;
+                font-size: 0.8rem;
+            }
+
+            .compose-form .post-btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
     </style>
