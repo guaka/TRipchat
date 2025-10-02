@@ -86,7 +86,8 @@ A separate HTML file that can be embedded on external sites like Trustroots and 
 ### Implementation
 - Separate `embed.html` file
 - Same Nostr relay connections
-- Simplified UI without compose form
+- Simplified UI without compose form and without filter
+- Show link to `index.html` (with same parameters)
 - Configurable via URL parameters
 - Cross-origin iframe friendly
 
