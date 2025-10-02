@@ -103,7 +103,7 @@
             <div class="test-section">
                 <h2>1. Basic Embed</h2>
                 <div class="test-description">
-                    Default configuration with both map and notes visible
+                    Default configuration showing notes list
                 </div>
                 <div class="iframe-container">
                     <iframe src="embed.html" height="400"></iframe>
@@ -111,33 +111,21 @@
                 <div class="url-display">embed.html</div>
             </div>
 
-            <!-- Notes Only -->
+            <!-- Dark Theme -->
             <div class="test-section">
-                <h2>2. Notes Only</h2>
+                <h2>2. Dark Theme</h2>
                 <div class="test-description">
-                    Map hidden, only showing notes list
+                    Forced dark theme regardless of system preference
                 </div>
                 <div class="iframe-container">
-                    <iframe src="embed.html?showMap=false" height="300"></iframe>
+                    <iframe src="embed.html?theme=dark" height="400"></iframe>
                 </div>
-                <div class="url-display">embed.html?showMap=false</div>
-            </div>
-
-            <!-- Map Only -->
-            <div class="test-section">
-                <h2>3. Map Only</h2>
-                <div class="test-description">
-                    Notes hidden, only showing map
-                </div>
-                <div class="iframe-container">
-                    <iframe src="embed.html?showNotes=false" height="400"></iframe>
-                </div>
-                <div class="url-display">embed.html?showNotes=false</div>
+                <div class="url-display">embed.html?theme=dark</div>
             </div>
 
             <!-- Hashtag Filter -->
             <div class="test-section">
-                <h2>4. Hashtag Filter</h2>
+                <h2>3. Hashtag Filter</h2>
                 <div class="test-description">
                     Filtering for #hitchhiking related notes
                 </div>
@@ -145,6 +133,18 @@
                     <iframe src="embed.html#hitchhiking" height="400"></iframe>
                 </div>
                 <div class="url-display">embed.html#hitchhiking</div>
+            </div>
+
+            <!-- Geohash Filter -->
+            <div class="test-section">
+                <h2>4. Geohash Filter</h2>
+                <div class="test-description">
+                    Filtering for notes in geohash area 'u1' (Europe)
+                </div>
+                <div class="iframe-container">
+                    <iframe src="embed.html#&geohash=u1" height="400"></iframe>
+                </div>
+                <div class="url-display">embed.html#&geohash=u1</div>
             </div>
         </div>
     </div>

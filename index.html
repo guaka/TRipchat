@@ -2640,7 +2640,6 @@
                     // Only process hash changes if we're not programmatically updating the hash
                     if (!this.updatingHash) {
                         this.loadFilterFromHash();
-                        this.displayActivities(this.notes);
                         this.plotActivitiesOnMap(this.notes);
                         
                         // If filtering by a specific geohash, show its rectangle
@@ -3423,7 +3422,8 @@
                 if (this.searchFilter) {
                     // Check if it's just a hashtag (starts with #)
                     if (this.searchFilter.startsWith('#')) {
-                        hashParts.push(this.searchFilter);
+                        // Remove the # prefix since we'll add it when constructing the hash
+                        hashParts.push(this.searchFilter.substring(1));
                     } else {
                         // For other search terms, use parameter format
                         hashParts.push(`search=${encodeURIComponent(this.searchFilter)}`);
@@ -3453,20 +3453,23 @@
 
             loadFilterFromHash() {
                 const hash = window.location.hash;
+                console.log('Loading filter from hash:', hash);
                 if (hash && hash.startsWith('#')) {
                     const hashContent = hash.substring(1); // Remove the # symbol
                     
-                    // Check if it starts with a hashtag (direct format like #hitch)
-                    if (hashContent.startsWith('#')) {
-                        // Direct hashtag format: #hitch or #hitch&geohash=u1&nip05=true
+                    // Check if it's a simple hashtag or hashtag with parameters
+                    if (!hashContent.includes('=')) {
+                        // Direct hashtag format: hitchhiking or hitchhiking&geohash=u1&nip05=true
                         const parts = hashContent.split('&');
-                        const hashtag = parts[0]; // #hitch
+                        const hashtag = parts[0]; // hitchhiking
                         
-                        // Set the hashtag as search filter
-                        this.searchFilter = hashtag.toLowerCase();
+                        // Set the hashtag as search filter (add # prefix)
+                        this.searchFilter = '#' + hashtag.toLowerCase();
+                        console.log('Set search filter to:', this.searchFilter);
                         const searchFilterInput = document.getElementById('searchFilter');
                         if (searchFilterInput) {
-                            searchFilterInput.value = hashtag;
+                            searchFilterInput.value = '#' + hashtag;
+                            console.log('Updated search filter input to:', '#' + hashtag);
                         }
                         
                         // Parse additional parameters
@@ -3535,6 +3538,9 @@
                         nip05FilterInput.checked = false;
                     }
                 }
+                
+                // Update display after loading filters
+                this.displayActivities();
                 // Filter state loaded from hash
             }
 
