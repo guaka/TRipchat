@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRipchat Embed Test Page</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #27ae60;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section h2 {
+            color: #27ae60;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .test-description {
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .iframe-container {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+
+        .url-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #495057;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TRipchat Embed Test Page</h1>
+        <p style="text-align: center; color: #6c757d; margin-bottom: 40px;">
+            Testing 4 different iframe configurations
+        </p>
+
+        <div class="grid">
+            <!-- Basic Embed -->
+            <div class="test-section">
+                <h2>1. Basic Embed</h2>
+                <div class="test-description">
+                    Default configuration with both map and notes visible
+                </div>
+                <div class="iframe-container">
+                    <iframe src="embed.html" height="400"></iframe>
+                </div>
+                <div class="url-display">embed.html</div>
+            </div>
+
+            <!-- Notes Only -->
+            <div class="test-section">
+                <h2>2. Notes Only</h2>
+                <div class="test-description">
+                    Map hidden, only showing notes list
+                </div>
+                <div class="iframe-container">
+                    <iframe src="embed.html?showMap=false" height="300"></iframe>
+                </div>
+                <div class="url-display">embed.html?showMap=false</div>
+            </div>
+
+            <!-- Map Only -->
+            <div class="test-section">
+                <h2>3. Map Only</h2>
+                <div class="test-description">
+                    Notes hidden, only showing map
+                </div>
+                <div class="iframe-container">
+                    <iframe src="embed.html?showNotes=false" height="400"></iframe>
+                </div>
+                <div class="url-display">embed.html?showNotes=false</div>
+            </div>
+
+            <!-- Hashtag Filter -->
+            <div class="test-section">
+                <h2>4. Hashtag Filter</h2>
+                <div class="test-description">
+                    Filtering for #hitchhiking related notes
+                </div>
+                <div class="iframe-container">
+                    <iframe src="embed.html#hitchhiking" height="400"></iframe>
+                </div>
+                <div class="url-display">embed.html#hitchhiking</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

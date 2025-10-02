@@ -3289,7 +3289,7 @@
                     if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
-                                console.log('Caching profile for', pubkey, ':', profile);
+                                // Profile cached successfully
                                 this.userProfiles[pubkey] = profile;
                                 // Re-render notes to show the new username
                                 this.displayActivities(this.notes);
@@ -3387,7 +3387,7 @@
                                                 about: metadata.about,
                                                 nip05: metadata.nip05 // Add NIP-05 field
                                             };
-                                            console.log('Fetched profile for', pubkey, ':', profile);
+                                            // Profile fetched successfully
                                             resolve(profile);
                                         } catch (e) {
                                             resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
@@ -3417,25 +3417,32 @@
                 this.updatingHash = true; // Prevent circular hash updates
                 
                 const url = new URL(window.location);
-                const params = new URLSearchParams();
+                let hashParts = [];
                 
-                // Always start with a clean slate - only add parameters that are actually active
+                // Handle search filter - if it's a simple hashtag, use direct format
                 if (this.searchFilter) {
-                    params.set('search', this.searchFilter);
-                }
-                if (this.geohashFilter) {
-                    params.set('geohash', this.geohashFilter);
-                }
-                if (this.nip05Filter) {
-                    params.set('nip05', 'true');
-                } else {
-                    // Explicitly remove nip05 parameter when filter is off
-                    params.delete('nip05');
+                    // Check if it's just a hashtag (starts with #)
+                    if (this.searchFilter.startsWith('#')) {
+                        hashParts.push(this.searchFilter);
+                    } else {
+                        // For other search terms, use parameter format
+                        hashParts.push(`search=${encodeURIComponent(this.searchFilter)}`);
+                    }
                 }
                 
-                // Always update the hash - either with parameters or empty
-                if (params.toString()) {
-                    url.hash = `#${params.toString()}`;
+                // Handle geohash filter
+                if (this.geohashFilter) {
+                    hashParts.push(`geohash=${this.geohashFilter}`);
+                }
+                
+                // Handle NIP-05 filter
+                if (this.nip05Filter) {
+                    hashParts.push('nip05=true');
+                }
+                
+                // Update the hash
+                if (hashParts.length > 0) {
+                    url.hash = `#${hashParts.join('&')}`;
                 } else {
                     url.hash = '';
                 }
@@ -3449,46 +3456,76 @@
                 if (hash && hash.startsWith('#')) {
                     const hashContent = hash.substring(1); // Remove the # symbol
                     
-                    // Try to parse as URL parameters first
-                    try {
-                        const params = new URLSearchParams(hashContent);
-                        const search = params.get('search');
-                        const geohash = params.get('geohash');
-                        const nip05 = params.get('nip05');
+                    // Check if it starts with a hashtag (direct format like #hitch)
+                    if (hashContent.startsWith('#')) {
+                        // Direct hashtag format: #hitch or #hitch&geohash=u1&nip05=true
+                        const parts = hashContent.split('&');
+                        const hashtag = parts[0]; // #hitch
                         
-                        if (search) {
-                            this.searchFilter = search.toLowerCase();
-                            const searchFilterInput = document.getElementById('searchFilter');
-                            if (searchFilterInput) {
-                                searchFilterInput.value = search;
-                            }
+                        // Set the hashtag as search filter
+                        this.searchFilter = hashtag.toLowerCase();
+                        const searchFilterInput = document.getElementById('searchFilter');
+                        if (searchFilterInput) {
+                            searchFilterInput.value = hashtag;
                         }
                         
-                        if (geohash) {
-                            this.geohashFilter = geohash.toLowerCase();
-                            const geohashFilterInput = document.getElementById('geohashFilter');
-                            if (geohashFilterInput) {
-                                geohashFilterInput.value = geohash;
+                        // Parse additional parameters
+                        for (let i = 1; i < parts.length; i++) {
+                            const [key, value] = parts[i].split('=');
+                            if (key === 'geohash') {
+                                this.geohashFilter = value.toLowerCase();
+                                const geohashFilterInput = document.getElementById('geohashFilter');
+                                if (geohashFilterInput) {
+                                    geohashFilterInput.value = value;
+                                }
+                            } else if (key === 'nip05' && value === 'true') {
+                                this.nip05Filter = true;
+                                const nip05FilterInput = document.getElementById('nip05Filter');
+                                if (nip05FilterInput) {
+                                    nip05FilterInput.checked = true;
+                                }
                             }
                         }
-                        
-                        if (nip05 === 'true') {
-                            this.nip05Filter = true;
-                            const nip05FilterInput = document.getElementById('nip05Filter');
-                            if (nip05FilterInput) {
-                                nip05FilterInput.checked = true;
+                    } else {
+                        // Try to parse as URL parameters (legacy format)
+                        try {
+                            const params = new URLSearchParams(hashContent);
+                            const search = params.get('search');
+                            const geohash = params.get('geohash');
+                            const nip05 = params.get('nip05');
+                            
+                            if (search) {
+                                this.searchFilter = search.toLowerCase();
+                                const searchFilterInput = document.getElementById('searchFilter');
+                                if (searchFilterInput) {
+                                    searchFilterInput.value = search;
+                                }
                             }
-                        } else {
-                            this.nip05Filter = false;
-                            const nip05FilterInput = document.getElementById('nip05Filter');
-                            if (nip05FilterInput) {
-                                nip05FilterInput.checked = false;
+                            
+                            if (geohash) {
+                                this.geohashFilter = geohash.toLowerCase();
+                                const geohashFilterInput = document.getElementById('geohashFilter');
+                                if (geohashFilterInput) {
+                                    geohashFilterInput.value = geohash;
+                                }
                             }
+                            
+                            if (nip05 === 'true') {
+                                this.nip05Filter = true;
+                                const nip05FilterInput = document.getElementById('nip05Filter');
+                                if (nip05FilterInput) {
+                                    nip05FilterInput.checked = true;
+                                }
+                            } else {
+                                this.nip05Filter = false;
+                                const nip05FilterInput = document.getElementById('nip05Filter');
+                                if (nip05FilterInput) {
+                                    nip05FilterInput.checked = false;
+                                }
+                            }
+                        } catch (e) {
+                            // Invalid hash format - ignore
                         }
-                        
-                        
-                    } catch (e) {
-                        // Invalid hash format - ignore
                     }
                 } else {
                     // No hash parameters - ensure filters are in default state
@@ -3909,7 +3946,7 @@
                 
                 // Get username from profile cache with discriminator
                 const profile = this.userProfiles[note.pubkey];
-                console.log('Rendering note for pubkey', note.pubkey, 'with profile:', profile);
+                // Rendering note with profile data
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
                 // Process hashtags to make them clickable
@@ -4870,24 +4907,18 @@
             formatUsernameWithDiscriminator(profile, pubkey) {
                 let username;
                 
-                console.log('formatUsernameWithDiscriminator called with:', { profile, pubkey });
-                
                 // Priority 1: Use NIP-05 name if available (most trustworthy)
                 if (profile && profile.nip05) {
-                    console.log('Profile has NIP-05:', profile.nip05);
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     if (isTrustrootsVerified) {
                         // Show full NIP-05 name for Trustroots verified users
                         username = `@${profile.nip05} 🟢`; // Green circle for Trustroots verified
-                        console.log('Using Trustroots NIP-05:', username);
                     } else if (profile.nip05.includes('@')) {
                         // Show full NIP-05 name for other verified users
                         username = `@${profile.nip05} 🔵`; // Blue circle for other NIP-05 verified
-                        console.log('Using other NIP-05:', username);
                     } else {
                         // Fallback to profile name if NIP-05 exists but is malformed
                         username = profile.name || 'Unknown';
-                        console.log('Using profile name fallback:', username);
                     }
                 }
                 // Priority 2: Use profile name with discriminator if no NIP-05
@@ -4961,11 +4992,20 @@
 
 
             async postNote() {
+                console.log('🚀 Starting postNote process...');
+                
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('geohashFilter').value.trim();
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
 
+                console.log('📝 Post data:', { 
+                    content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+                    geohash: geohash || 'none',
+                    hasPrivateKey: !!privateKeyInput
+                });
+
                 if (!content) {
+                    console.log('❌ No content provided');
                     alert('Please enter a message.');
                     return;
                 }
@@ -4973,15 +5013,19 @@
                 // Extract hashtags from searchFilter and add them to content
                 let finalContent = content;
                 if (this.searchFilter) {
+                    console.log('🔍 Processing search filter for hashtags:', this.searchFilter);
                     const hashtagRegex = /#\w+/g;
                     const hashtags = this.searchFilter.match(hashtagRegex);
                     if (hashtags && hashtags.length > 0) {
+                        console.log('🏷️ Found hashtags in search filter:', hashtags);
                         // Add hashtags to content if they're not already there
                         const existingHashtags = content.match(hashtagRegex) || [];
                         const newHashtags = hashtags.filter(tag => !existingHashtags.includes(tag));
                         if (newHashtags.length > 0) {
                             finalContent = content + ' ' + newHashtags.join(' ');
-                            console.log(`Added hashtags from search filter: ${newHashtags.join(' ')}`);
+                            console.log(`✅ Added hashtags from search filter: ${newHashtags.join(' ')}`);
+                        } else {
+                            console.log('ℹ️ All hashtags already present in content');
                         }
                     }
                 }
@@ -4993,34 +5037,56 @@
                 // }
 
                 if (!privateKeyInput) {
+                    console.log('❌ No private key found');
                     alert('Please generate or enter a private key in Settings first.');
                     return;
                 }
 
                 try {
+                    console.log('🔐 Processing private key...');
                     // Convert nsec to hex if needed
                     if (privateKeyInput.startsWith('nsec')) {
                         this.privateKey = this.nsecToHex(privateKeyInput);
+                        console.log('🔑 Converted nsec to hex private key');
                     } else {
                         this.privateKey = privateKeyInput;
+                        console.log('🔑 Using hex private key directly');
                     }
                     
                     // Get current persistence selection
                     const currentPersistence = document.getElementById('notePersistence')?.value;
-                    console.log('About to create event with persistence:', currentPersistence);
+                    console.log('⏰ Persistence setting:', currentPersistence);
+                    
+                    console.log('📦 Creating event with:', {
+                        content: finalContent.substring(0, 50) + (finalContent.length > 50 ? '...' : ''),
+                        geohash: geohash || 'none',
+                        persistence: currentPersistence
+                    });
                     
                     const event = await this.createBitchatEvent(finalContent, geohash, currentPersistence);
+                    console.log('✅ Event created successfully:', event.id);
+                    
+                    console.log('📡 Publishing event to relays...');
                     await this.publishEvent(event);
+                    console.log('✅ Event published successfully');
                     
                     // Auto-scroll to show the new post
+                    console.log('📜 Auto-scrolling to show new post...');
                     setTimeout(() => {
                         this.scrollToBottom();
                     }, 500);
                     
                     // Clear the compose form after successful post
+                    console.log('🧹 Clearing compose form...');
                     this.clearComposeForm();
+                    console.log('🎉 Post completed successfully!');
                 } catch (error) {
-                    console.error('Error posting note:', error);
+                    console.error('❌ Error posting note:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
                     alert('Error posting note: ' + error.message);
                 }
             }
@@ -5128,6 +5194,8 @@
                             event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
                         }
 
+                        console.log('🏷️ Event tags (main):', event.tags);
+                        
                         // Sign the event using nostr-tools
                         const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
                         return signedEvent;
@@ -5158,6 +5226,7 @@
                         event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
                     }
 
+                    console.log('🏷️ Event tags (ephemeral):', event.tags);
                     return event;
                 } catch (error) {
                     console.error('Error creating ephemeral event:', error);
@@ -5325,6 +5394,7 @@
                         event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
                     }
 
+                    console.log('🏷️ Event tags (persistent):', event.tags);
                     return event;
                 } catch (error) {
                     console.error('Error creating persistent event:', error);
@@ -5490,32 +5560,59 @@
             }
 
             async publishEvent(event) {
+                console.log('📡 Starting event publication...');
                 const postingRelays = this.relays.filter(relay => this.postingRelays[relay]);
+                console.log('🌐 Available posting relays:', postingRelays);
                 
                 if (postingRelays.length === 0) {
+                    console.error('❌ No posting relays available');
                     throw new Error('No posting relays available');
                 }
 
                 const publishPromises = postingRelays.map(relayUrl => {
                     return new Promise((resolve, reject) => {
+                        console.log(`🔗 Attempting to publish to ${relayUrl}...`);
+                        
                         if (!this.websockets[relayUrl] || this.websockets[relayUrl].readyState !== WebSocket.OPEN) {
+                            console.error(`❌ Relay ${relayUrl} is not connected (state: ${this.websockets[relayUrl]?.readyState})`);
                             reject(new Error(`Relay ${relayUrl} is not connected`));
                             return;
                         }
 
                         const message = ["EVENT", event];
+                        console.log(`📤 Sending event to ${relayUrl}:`, {
+                            eventId: event.id,
+                            kind: event.kind,
+                            contentLength: event.content?.length || 0
+                        });
                         
                         try {
                             this.websockets[relayUrl].send(JSON.stringify(message));
-                            console.log(`Published event to ${relayUrl}`);
+                            console.log(`✅ Successfully published event to ${relayUrl}`);
                             resolve();
                         } catch (error) {
+                            console.error(`❌ Failed to publish to ${relayUrl}:`, error);
                             reject(error);
                         }
                     });
                 });
 
-                await Promise.allSettled(publishPromises);
+                console.log('⏳ Waiting for all relay responses...');
+                const results = await Promise.allSettled(publishPromises);
+                
+                const successful = results.filter(r => r.status === 'fulfilled').length;
+                const failed = results.filter(r => r.status === 'rejected').length;
+                
+                console.log(`📊 Publication results: ${successful} successful, ${failed} failed`);
+                
+                if (failed > 0) {
+                    console.warn('⚠️ Some relays failed to publish the event');
+                    results.forEach((result, index) => {
+                        if (result.status === 'rejected') {
+                            console.error(`❌ ${postingRelays[index]}: ${result.reason}`);
+                        }
+                    });
+                }
             }
 
             // Relay management functionality
