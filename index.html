@@ -1070,127 +1070,85 @@
             transition: color 0.3s ease;
         }
 
-
-        /* Welcome Modal Styles */
-        .welcome-modal {
-            max-width: 700px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .welcome-content {
-            padding: 20px 0;
-        }
-
-        .welcome-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        .welcome-content h3 {
-            color: var(--accent-color);
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        .welcome-content p {
-            color: #6c757d;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .welcome-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            text-align: left;
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .step-number {
-            background: var(--accent-color);
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-
-        .step-content h4 {
-            color: #2c3e50;
-            font-size: 1.2rem;
-            margin: 0 0 8px 0;
-            font-weight: 600;
-        }
-
-        .step-content p {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        .welcome-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-        }
-
         /* Settings Modal Styles */
         .settings-modal {
             max-width: 700px;
             width: 90%;
+        }
+
+        .settings-modal-message {
+            display: none;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            background: rgba(39, 174, 96, 0.12);
+            border: 1px solid rgba(39, 174, 96, 0.35);
+            color: #1f7a52;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .key-setup-prompt {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            background: rgba(231, 244, 255, 0.6);
+            border: 1px solid rgba(25, 118, 210, 0.25);
+        }
+
+        .key-setup-prompt.compact {
+            background: transparent;
+            border: none;
+            padding: 8px 0 0 0;
+            margin-bottom: 16px;
+        }
+
+        .key-setup-prompt.compact .key-setup-actions {
+            justify-content: flex-start;
+        }
+
+        .key-setup-question {
+            font-weight: 600;
+            color: #1976d2;
+            font-size: 0.95rem;
+        }
+
+        .key-setup-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .key-btn.key-choice {
+            flex: 1 1 200px;
+            justify-content: center;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: #ffffff;
+        }
+
+        .key-btn.key-choice:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(25, 118, 210, 0.35);
+        }
+
+        .key-hint {
+            display: none;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #1f5f3d;
+            background: rgba(39, 174, 96, 0.12);
+            border: 1px solid rgba(39, 174, 96, 0.25);
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .key-hint a {
+            color: #1976d2;
+            text-decoration: underline;
         }
 
         .settings-section {
@@ -1314,12 +1272,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        .profile-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
         .profile-btn {
             background: #3498db;
             color: white;
@@ -1334,6 +1286,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+            margin-top: 12px;
         }
 
         .profile-btn:hover {
@@ -1395,6 +1348,12 @@
         .location-input-group input,
         .key-input-group input {
             flex: 1;
+        }
+
+        .key-input-group input.readonly {
+            background: rgba(240, 244, 248, 0.85);
+            border: 1px dashed rgba(39, 174, 96, 0.4);
+            cursor: not-allowed;
         }
 
         .location-btn, .key-btn {
@@ -2138,57 +2097,6 @@
         🔴 LIVE
     </div>
 
-
-    <!-- Welcome Modal -->
-    <div id="welcomeModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content welcome-modal">
-            <div class="modal-header">
-                <h3 class="modal-title">🌟 Welcome to TRipchat!</h3>
-                <button class="modal-close" onclick="document.getElementById('welcomeModal').style.display='none'">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="welcome-content">
-                    <div class="welcome-icon">🗺️</div>
-                    <h3>Your Travel Chat on Nostr</h3>
-                    <p>TRipchat lets you discover and share location-based messages with fellow travelers using the Nostr protocol.</p>
-                    
-                    <div class="welcome-steps">
-                        <div class="step">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h4>🔑 Set up your keys</h4>
-                                <p>Click the "🔑 KEYS" button to generate or add your Nostr keys</p>
-                </div>
-                    </div>
-                        <div class="step">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h4>✍️ Start chatting</h4>
-                                <p>Click "COMPOSE" to share your first travel message</p>
-                </div>
-                        </div>
-                        <div class="step">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h4>🔍 Explore the map</h4>
-                                <p>Browse messages from travelers around the world</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="welcome-actions">
-                        <button class="btn btn-primary" onclick="document.getElementById('welcomeModal').style.display='none'; document.getElementById('settingsModal').style.display='flex';">
-                            🔑 Set up Keys
-                        </button>
-                        <button class="btn btn-secondary" onclick="document.getElementById('welcomeModal').style.display='none';">
-                            Let's Explore!
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Settings/Keys Modal -->
     <div id="settingsModal" class="modal-overlay" style="display: none;">
         <div class="modal-content settings-modal">
@@ -2197,28 +2105,37 @@
                 <button class="modal-close" onclick="document.getElementById('settingsModal').style.display='none'">&times;</button>
             </div>
             <div class="modal-body">
+                <div id="settingsModalMessage" class="settings-modal-message"></div>
+                <div id="keySetupPrompt" class="key-setup-prompt">
+                    <div id="keySetupQuestion" class="key-setup-question">
+                        Do you want to use an existing nsec or generate a new one?
+                        <span style="display: block; font-weight: 400; font-size: 0.8rem; color: #3a5161; margin-top: 6px;">
+                            An <strong>nsec</strong> is your Nostr private key. Keep it secret—anyone who gets it can post as you. Use the options below to import an existing one or create a fresh keypair.
+                        </span>
+                    </div>
+                    <div class="key-setup-actions">
+                        <button id="settingsAddKeyBtn" class="key-btn key-choice">➕ Use Existing nsec</button>
+                        <button id="settingsGenerateKeyBtn" class="key-btn key-choice">🔑 Generate New nsec</button>
+                    </div>
+                </div>
                 <div class="settings-section">
                     <label>PRIVATE KEY:</label>
                     <div class="key-input-group">
-                        <input type="password" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
-                        <button id="settingsToggleKeyVisibility" class="key-btn">👁️ SHOW</button>
-                        <button id="settingsGenerateKeyBtn" class="key-btn">🔑 GENERATE NEW</button>
-                        <button id="settingsAddKeyBtn" class="key-btn">➕ ADD EXISTING</button>
-                        <button id="settingsCopyKeyBtn" class="key-btn">📋 COPY</button>
+                        <input type="text" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
                     </div>
+                    <div id="settingsPrivateKeyHint" class="key-hint"></div>
                 </div>
                 <div class="settings-section">
                     <label>PUBLIC KEY:</label>
                     <div class="key-input-group">
                         <input type="text" id="settingsPublicKey" placeholder="Your public key will appear here" readonly />
-                        <button id="settingsCopyPublicBtn" class="key-btn">📋 COPY</button>
                     </div>
+                    <button id="updateProfileBtn" type="button" class="profile-btn">🌐 UPDATE TRUSTROOTS PROFILE</button>
                 </div>
                 <div class="settings-section">
                     <label>TRUSTROOTS USERNAME:</label>
                     <div class="key-input-group">
                         <input type="text" id="trustrootsUsername" placeholder="Enter your Trustroots username (e.g., john)" />
-                        <button id="saveUsernameBtn" class="key-btn">💾 SAVE</button>
                 </div>
                     <div id="usernameStatus" class="username-status" style="margin-top: 8px; font-size: 0.8rem; color: #6c757d; font-style: italic;"></div>
             </div>
@@ -2226,33 +2143,13 @@
                     <label>NIP-05 VERIFICATION:</label>
                     <div class="verification-info">
                         <div id="nip05Identifier" class="nip05-identifier" style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #2c3e50;"></div>
-                        <div id="nip05Url" class="nip05-url" style="margin-bottom: 8px; padding: 8px; background: #f0f8ff; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #1976d2; word-break: break-all; border: 1px solid #bbdefb;"></div>
+                        <div id="nip05Url" class="nip05-url" style="margin-bottom: 8px; padding: 8px; background: #f0f8ff; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #1976d2; word-break: break-all; border: 1px solid #bbdefb; display: none;"></div>
                         <div class="verification-actions">
                             <button id="verifyNip05Btn" class="key-btn">🔍 VERIFY</button>
-                            <button id="copyNip05Btn" class="key-btn">📋 COPY</button>
-                            <button id="openNip05UrlBtn" class="key-btn">🌐 OPEN URL</button>
+                            <button id="retryProfilePostBtn" class="key-btn" style="display: none;">🔁 RETRY PROFILE POST</button>
                         </div>
                         <div id="verificationStatus" class="verification-status" style="margin-top: 8px; font-size: 0.8rem; font-style: italic;"></div>
-                        <div class="verification-instructions" style="margin-top: 12px; padding: 12px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
-                            <strong style="color: #1976d2;">How to set up NIP-05 verification:</strong>
-                            <ol style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.8rem; color: #2c3e50;">
-                                <li>Copy the NIP-05 identifier above</li>
-                                <li>Go to your Trustroots profile settings</li>
-                                <li>Add the identifier to your Nostr profile field</li>
-                                <li>Click "VERIFY" to check if it's working, or "OPEN URL" to check manually</li>
-                            </ol>
-                        </div>
                     </div>
-                </div>
-                <div class="settings-section">
-                    <label>Profile Management:</label>
-                    <div class="profile-actions">
-                        <button id="updateProfileBtn" class="profile-btn">🌐 UPDATE TRUSTROOTS PROFILE</button>
-                        <button id="viewProfileBtn" class="profile-btn">👁️ VIEW PROFILE</button>
-                    </div>
-                </div>
-                <div class="settings-actions">
-                    <button id="closeSettingsBtn" class="cancel-btn">❌ CLOSE</button>
                 </div>
             </div>
         </div>
@@ -2288,10 +2185,7 @@
             constructor() {
                 this.relays = [
                     'wss://relay.hitchwiki.org',
-                    'wss://relay.trustroots.org',
-                    'wss://relay.damus.io',
-                    'wss://nos.lol',
-                    'wss://relay.snort.social'
+                    'wss://relay.trustroots.org'
                 ];
                 this.relayEnabled = {}; // Track which relays are enabled for reading
                 this.postingRelays = {}; // Track which relays are enabled for posting
@@ -2320,6 +2214,7 @@
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
                 this.privateKey = null; // User's private key for posting
+                this.shouldPreserveSettingsMessage = false; // Control modal message resets
                 
                 // Request queue system to limit concurrent REQ requests
                 this.requestQueue = [];
@@ -2749,22 +2644,17 @@
             setupSettingsHandlers() {
                 const settingsBtn = document.getElementById('settingsBtn');
                 const settingsModal = document.getElementById('settingsModal');
-                const closeSettingsBtn = document.getElementById('closeSettingsBtn');
                 const settingsGenerateKeyBtn = document.getElementById('settingsGenerateKeyBtn');
-                const settingsToggleKeyVisibility = document.getElementById('settingsToggleKeyVisibility');
-                const settingsCopyKeyBtn = document.getElementById('settingsCopyKeyBtn');
-                const settingsCopyPublicBtn = document.getElementById('settingsCopyPublicBtn');
                 const updateProfileBtn = document.getElementById('updateProfileBtn');
-                const viewProfileBtn = document.getElementById('viewProfileBtn');
                 const settingsPrivateKey = document.getElementById('settingsPrivateKey');
                 const settingsPublicKey = document.getElementById('settingsPublicKey');
+                const settingsPrivateKeyHint = document.getElementById('settingsPrivateKeyHint');
                 const trustrootsUsername = document.getElementById('trustrootsUsername');
                 const usernameStatus = document.getElementById('usernameStatus');
                 const nip05Identifier = document.getElementById('nip05Identifier');
                 const nip05Url = document.getElementById('nip05Url');
                 const verifyNip05Btn = document.getElementById('verifyNip05Btn');
-                const copyNip05Btn = document.getElementById('copyNip05Btn');
-                const openNip05UrlBtn = document.getElementById('openNip05UrlBtn');
+                const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
                 const verificationStatus = document.getElementById('verificationStatus');
 
                 // Update username status display
@@ -2787,19 +2677,15 @@
                     
                     if (savedUsername && npub) {
                         const identifier = `${savedUsername}@trustroots.org`;
-                        const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
-                        
                         nip05Identifier.textContent = identifier;
                         nip05Identifier.style.display = 'block';
-                        
-                        nip05Url.textContent = `Verification URL: ${verificationUrl}`;
-                        nip05Url.style.display = 'block';
+                        nip05Url.textContent = '';
+                        nip05Url.style.display = 'none';
                     } else {
                         nip05Identifier.textContent = 'Enter username and generate keys first';
                         nip05Identifier.style.display = 'block';
-                        
-                        nip05Url.textContent = 'Verification URL will appear here';
-                        nip05Url.style.display = 'block';
+                        nip05Url.textContent = '';
+                        nip05Url.style.display = 'none';
                     }
                 };
 
@@ -2815,6 +2701,10 @@
                     if (npubKey) {
                         settingsPublicKey.value = npubKey;
                     }
+                    if (settingsPrivateKeyHint) {
+                        settingsPrivateKeyHint.style.display = 'none';
+                        settingsPrivateKeyHint.innerHTML = '';
+                    }
                     if (savedUsername) {
                         trustrootsUsername.value = savedUsername;
                     }
@@ -2823,19 +2713,23 @@
                     setTimeout(() => {
                         updateUsernameStatus();
                         updateNip05Display();
+                        this.highlightKeyInputs();
+                        this.toggleKeyButtonsVisibility();
                     }, 100);
-                    
-                    settingsModal.style.display = 'flex';
-                });
 
-                closeSettingsBtn.addEventListener('click', () => {
-                    settingsModal.style.display = 'none';
+                    if (!this.shouldPreserveSettingsMessage) {
+                        this.setSettingsModalMessage('');
+                    }
+
+                    settingsModal.style.display = 'flex';
+                    this.shouldPreserveSettingsMessage = false;
                 });
 
                 // Close modal when clicking outside
                 settingsModal.addEventListener('click', (e) => {
                     if (e.target === settingsModal) {
                         settingsModal.style.display = 'none';
+                        this.setSettingsModalMessage('');
                     }
                 });
 
@@ -2852,7 +2746,12 @@
                         // Set class property for immediate use
                         this.privateKey = nsecKey;
                         
-                        alert(`New keys generated!\n\nPRIVATE KEY: ${nsecKey}\n\nPUBLIC KEY: ${npubKey}\n\nSave them somewhere safe!`);
+                        if (settingsPrivateKeyHint) {
+                            settingsPrivateKeyHint.innerHTML = 'Store this nsec safely in your password manager. We recommend <a href="https://bitwarden.com/" target="_blank" rel="noopener noreferrer">Bitwarden</a> if you don\'t have one yet.';
+                            settingsPrivateKeyHint.style.display = 'block';
+                        }
+                        this.highlightKeyInputs();
+                        this.toggleKeyButtonsVisibility();
                     } catch (error) {
                         console.error('Error generating key:', error);
                         alert('Error generating keys. Please try again.');
@@ -2882,92 +2781,34 @@
                         this.privateKey = nsecInput;
                         
                         alert('Private key added successfully! Public key has been derived and saved.');
+                        if (settingsPrivateKeyHint) {
+                            settingsPrivateKeyHint.style.display = 'none';
+                            settingsPrivateKeyHint.innerHTML = '';
+                        }
+                        this.highlightKeyInputs();
+                        this.toggleKeyButtonsVisibility();
                     } catch (error) {
                         console.error('Error processing private key:', error);
                         alert('Invalid private key format. Please check your nsec key.');
                     }
                 });
 
-                settingsToggleKeyVisibility.addEventListener('click', () => {
-                    const input = settingsPrivateKey;
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        settingsToggleKeyVisibility.textContent = '🙈 HIDE';
-                    } else {
-                        input.type = 'password';
-                        settingsToggleKeyVisibility.textContent = '👁️ SHOW';
-                    }
-                });
-
-                settingsCopyKeyBtn.addEventListener('click', () => {
-                    const privateKey = settingsPrivateKey.value;
-                    if (privateKey) {
-                        navigator.clipboard.writeText(privateKey).then(() => {
-                            alert('Private key copied to clipboard!');
-                        }).catch(() => {
-                            alert('Failed to copy private key.');
-                        });
-                    } else {
-                        alert('No private key to copy.');
-                    }
-                });
-
-                settingsCopyPublicBtn.addEventListener('click', () => {
-                    const publicKey = settingsPublicKey.value;
-                    if (publicKey) {
-                        navigator.clipboard.writeText(publicKey).then(() => {
-                            alert('Public key copied to clipboard!');
-                        }).catch(() => {
-                            alert('Failed to copy public key.');
-                        });
-                    } else {
-                        alert('No public key to copy.');
-                    }
-                });
-
-                updateProfileBtn.addEventListener('click', async () => {
-                    const npub = settingsPublicKey.value;
-                    if (!npub) {
-                        alert('Please generate or enter a public key first.');
-                        return;
-                    }
-                    
-                    try {
-                        // Try to update Trustroots profile via API
-                        const success = await this.updateTrustrootsProfile(npub);
-                        if (success) {
-                            alert('Profile updated successfully on Trustroots!');
-                        } else {
-                            // Fallback: copy to clipboard
-                            await navigator.clipboard.writeText(npub);
-                            alert('Trustroots API unavailable. Public key copied to clipboard for manual profile update.');
-                        }
-                    } catch (error) {
-                        console.error('Error updating profile:', error);
-                        // Fallback: copy to clipboard
+                updateProfileBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    const npub = settingsPublicKey.value.trim();
+                    if (npub) {
                         try {
                             await navigator.clipboard.writeText(npub);
-                            alert('Failed to update Trustroots profile. Public key copied to clipboard for manual update.');
+                            alert('Your public key has been copied to the clipboard. Please paste this npub into the Nostr field on Trustroots.');
                         } catch (clipboardError) {
-                            alert('Failed to update profile and copy to clipboard. Please copy your public key manually.');
+                            console.warn('Failed to copy public key to clipboard:', clipboardError);
+                            alert('Could not copy the public key automatically. Please copy it manually before updating Trustroots and paste it into the Nostr field.');
                         }
                     }
-                });
-
-                viewProfileBtn.addEventListener('click', () => {
-                    const npub = settingsPublicKey.value;
-                    if (!npub) {
-                        alert('Please generate or enter a public key first.');
-                        return;
-                    }
-                    
-                    // Open profile in a new tab (you can customize this URL)
-                    window.open(`https://nostr.com/${npub}`, '_blank');
+                    window.open('https://www.trustroots.org/profile/edit/networks', '_blank');
                 });
 
                 // Trustroots username handlers
-                const saveUsernameBtn = document.getElementById('saveUsernameBtn');
-
                 // Verify NIP-05 identifier
                 const verifyNip05 = async () => {
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
@@ -2981,16 +2822,21 @@
 
                     verificationStatus.textContent = 'Verifying...';
                     verificationStatus.style.color = '#6c757d';
+                    console.log('🔍 Starting NIP-05 verification', { savedUsername, npub });
 
                     try {
                         const identifier = `${savedUsername}@trustroots.org`;
                         const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
+                        console.log('🌐 Fetching verification URL:', verificationUrl);
                         
                         const response = await fetch(verificationUrl);
+                        console.log('📥 Received response status:', response.status);
                         const data = await response.json();
-                        
+                        console.log('📄 Parsed verification data:', data);
+
                         if (data.names && data.names[savedUsername]) {
                             const hexPubkey = data.names[savedUsername];
+                            console.log('✅ Trustroots returned pubkey:', hexPubkey);
                             
                             // Convert hex to npub for comparison
                             let expectedNpub;
@@ -3007,17 +2853,22 @@
                             }
                             
                             if (expectedNpub && expectedNpub === npub) {
+                                console.log('🎉 NIP-05 verification matched npub');
                                 verificationStatus.textContent = '✓ NIP-05 verification successful!';
                                 verificationStatus.style.color = 'var(--accent-color)';
                                 
                                 // Post kind 0 profile event to Nostr after successful verification
                                 verificationStatus.textContent = '✓ NIP-05 verified! Posting profile to Nostr...';
                                 try {
+                                    console.log('📝 Posting profile to Nostr...');
                                     const profilePosted = await this.postProfileToNostr(savedUsername, npub);
                                     if (profilePosted) {
+                                        console.log('🚀 Profile posted to at least one relay');
                                         verificationStatus.textContent = '✓ NIP-05 verified & profile posted to Nostr!';
                                         verificationStatus.style.color = 'var(--accent-color)';
+                                        this.toggleKeyButtonsVisibility();
                                     } else {
+                                        console.warn('⚠️ Profile post returned false');
                                         verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
                                         verificationStatus.style.color = '#f39c12';
                                     }
@@ -3027,62 +2878,59 @@
                                     verificationStatus.style.color = '#f39c12';
                                 }
                             } else {
+                                console.warn('❌ NIP-05 pubkey mismatch', { expectedNpub, npub });
                                 verificationStatus.textContent = `✗ NIP-05 verification failed. Expected: ${expectedNpub}, Got: ${npub}`;
                                 verificationStatus.style.color = '#dc3545';
+                                this.toggleKeyButtonsVisibility();
                             }
                         } else {
+                            console.warn('⚠️ Username not found in Trustroots data', data);
                             verificationStatus.textContent = '✗ NIP-05 verification failed. Username not found in Trustroots data.';
                             verificationStatus.style.color = '#dc3545';
+                            this.toggleKeyButtonsVisibility();
                         }
                     } catch (error) {
                         console.error('NIP-05 verification error:', error);
                         verificationStatus.textContent = '✗ Verification failed. Check your internet connection.';
                         verificationStatus.style.color = '#dc3545';
+                        this.toggleKeyButtonsVisibility();
                     }
+                    this.toggleKeyButtonsVisibility();
                 };
 
-                // Copy NIP-05 identifier
-                const copyNip05 = () => {
+                retryProfilePostBtn.addEventListener('click', async () => {
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
-                    if (savedUsername) {
-                        const identifier = `${savedUsername}@trustroots.org`;
-                        navigator.clipboard.writeText(identifier).then(() => {
-                            alert('NIP-05 identifier copied to clipboard!');
-                        }).catch(() => {
-                            alert('Failed to copy NIP-05 identifier.');
-                        });
-                    } else {
-                        alert('Please enter a Trustroots username first.');
+                    const npub = localStorage.getItem('tripchat_npub');
+                    if (!savedUsername || !npub) {
+                        alert('Please ensure you have generated keys and saved your Trustroots username first.');
+                        return;
                     }
-                };
 
-                // Open NIP-05 URL in new tab
-                const openNip05Url = () => {
-                    const savedUsername = localStorage.getItem('tripchat_trustroots_username');
-                    if (savedUsername) {
-                        const verificationUrl = `https://trustroots.org/.well-known/nostr.json?name=${savedUsername}`;
-                        window.open(verificationUrl, '_blank');
-                    } else {
-                        alert('Please enter a Trustroots username first.');
+                    console.log('🔁 Manual retry requested for profile post', { savedUsername, npub });
+                    verificationStatus.textContent = 'Retrying profile post...';
+                    verificationStatus.style.color = '#6c757d';
+
+                    try {
+                        const profilePosted = await this.postProfileToNostr(savedUsername, npub);
+                        if (profilePosted) {
+                            console.log('✅ Manual retry succeeded');
+                            verificationStatus.textContent = '✓ Profile posted to Nostr!';
+                            verificationStatus.style.color = 'var(--accent-color)';
+                        } else {
+                            console.warn('⚠️ Manual retry reported failure');
+                            verificationStatus.textContent = '✗ Failed to post profile. Please try again later or confirm relay connectivity.';
+                            verificationStatus.style.color = '#dc3545';
+                        }
+                    } catch (error) {
+                        console.error('❌ Error during manual profile post retry:', error);
+                        verificationStatus.textContent = '✗ Error posting profile. Check console for details.';
+                        verificationStatus.style.color = '#dc3545';
                     }
-                };
+                    this.toggleKeyButtonsVisibility();
+                });
 
                 // Event listeners
                 verifyNip05Btn.addEventListener('click', verifyNip05);
-                copyNip05Btn.addEventListener('click', copyNip05);
-                openNip05UrlBtn.addEventListener('click', openNip05Url);
-
-                saveUsernameBtn.addEventListener('click', () => {
-                    const username = trustrootsUsername.value.trim();
-                    if (username) {
-                        localStorage.setItem('tripchat_trustroots_username', username);
-                        updateUsernameStatus();
-                        updateNip05Display();
-                        alert(`Trustroots username "${username}" saved successfully!`);
-                    } else {
-                        alert('Please enter a valid Trustroots username.');
-                    }
-                });
 
                 // Auto-save username when typing (with debounce)
                 let usernameTimeout;
@@ -3098,12 +2946,200 @@
                     }, 500); // 500ms delay
                 });
 
+                const handleManualUsernameSave = () => {
+                    const username = trustrootsUsername.value.trim();
+                    if (username) {
+                        localStorage.setItem('tripchat_trustroots_username', username);
+                        updateUsernameStatus();
+                        updateNip05Display();
+                        alert(`Trustroots username "${username}" saved successfully!`);
+                    } else {
+                        alert('Please enter a valid Trustroots username.');
+                    }
+                };
+
                 // Allow saving with Enter key
                 trustrootsUsername.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
-                        saveUsernameBtn.click();
+                        e.preventDefault();
+                        handleManualUsernameSave();
                     }
                 });
+            }
+
+            setSettingsModalMessage(message) {
+                const messageElement = document.getElementById('settingsModalMessage');
+                if (!messageElement) {
+                    console.warn('Settings modal message element not found.');
+                    return;
+                }
+
+                if (message) {
+                    messageElement.textContent = message;
+                    messageElement.style.display = 'block';
+                } else {
+                    messageElement.textContent = '';
+                    messageElement.style.display = 'none';
+                }
+            }
+
+            enableAutoSelect(input) {
+                if (!input) {
+                    return;
+                }
+
+                if (input.dataset.autoselectInitialized === 'true') {
+                    return;
+                }
+
+                input.addEventListener('focus', () => {
+                    // Delay selection to ensure focus styling applies first
+                    setTimeout(() => {
+                        if (document.activeElement === input) {
+                            input.select();
+                        }
+                    }, 0);
+                });
+                input.dataset.autoselectInitialized = 'true';
+            }
+
+            highlightKeyInputs() {
+                const privateKeyInput = document.getElementById('settingsPrivateKey');
+                const publicKeyInput = document.getElementById('settingsPublicKey');
+
+                this.enableAutoSelect(privateKeyInput);
+                this.enableAutoSelect(publicKeyInput);
+
+                if (privateKeyInput) {
+                    privateKeyInput.focus();
+                    if (privateKeyInput.value) {
+                        privateKeyInput.select();
+                    }
+                }
+            }
+
+            updateKeySetupPrompt() {
+                const prompt = document.getElementById('keySetupPrompt');
+                const question = document.getElementById('keySetupQuestion');
+                const verificationStatus = document.getElementById('verificationStatus');
+
+                if (!prompt) {
+                    return;
+                }
+
+                const verificationText = verificationStatus?.textContent || '';
+                const isVerified = verificationText.includes('✓ NIP-05 verified');
+
+                if (isVerified) {
+                    prompt.style.display = 'none';
+                    return;
+                }
+
+                const privateKeyValue = document.getElementById('settingsPrivateKey')?.value.trim();
+                const publicKeyValue = document.getElementById('settingsPublicKey')?.value.trim();
+                const hasKeys = !!privateKeyValue && !!publicKeyValue;
+
+                prompt.style.display = 'flex';
+                if (hasKeys) {
+                    prompt.classList.add('compact');
+                } else {
+                    prompt.classList.remove('compact');
+                }
+                if (question) {
+                    question.style.display = hasKeys ? 'none' : 'block';
+                }
+            }
+
+            toggleKeyButtonsVisibility() {
+                const generateBtn = document.getElementById('settingsGenerateKeyBtn');
+                const addExistingBtn = document.getElementById('settingsAddKeyBtn');
+                const verificationStatus = document.getElementById('verificationStatus');
+                const prompt = document.getElementById('keySetupPrompt');
+                const updateProfileBtn = document.getElementById('updateProfileBtn');
+                const trustrootsUsername = document.getElementById('trustrootsUsername');
+                const verifyNip05Btn = document.getElementById('verifyNip05Btn');
+                const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
+
+                if (!generateBtn || !addExistingBtn || !verificationStatus) {
+                    return;
+                }
+
+                const verificationText = verificationStatus.textContent || '';
+                const isVerified = verificationText.includes('✓ NIP-05 verified');
+                const isVerificationAttempted = verificationText.length > 0;
+
+                if (isVerified) {
+                    generateBtn.style.display = 'none';
+                    addExistingBtn.style.display = 'none';
+                    if (prompt) {
+                        prompt.style.display = 'none';
+                    }
+                    if (updateProfileBtn) {
+                        updateProfileBtn.style.display = 'none';
+                    }
+                    if (trustrootsUsername) {
+                        trustrootsUsername.setAttribute('readonly', 'readonly');
+                        trustrootsUsername.classList.add('readonly');
+                    }
+                    if (verifyNip05Btn) {
+                    verifyNip05Btn.style.display = 'none';
+                }
+                if (retryProfilePostBtn) {
+                    retryProfilePostBtn.style.display = 'none';
+                }
+                    if (retryProfilePostBtn) {
+                        retryProfilePostBtn.style.display = 'none';
+                    }
+                } else {
+                    generateBtn.style.display = '';
+                    addExistingBtn.style.display = '';
+                    if (prompt) {
+                        prompt.style.display = 'flex';
+                    }
+                    if (updateProfileBtn) {
+                        updateProfileBtn.style.display = '';
+                    }
+                    if (trustrootsUsername) {
+                        trustrootsUsername.removeAttribute('readonly');
+                        trustrootsUsername.classList.remove('readonly');
+                    }
+                    if (verifyNip05Btn) {
+                        verifyNip05Btn.style.display = isVerificationAttempted ? 'none' : '';
+                    }
+                    if (retryProfilePostBtn) {
+                        retryProfilePostBtn.style.display = isVerificationAttempted ? '' : 'none';
+                    }
+                    this.updateKeySetupPrompt();
+                }
+            }
+
+            openKeysDialog(message = '') {
+                const finalMessage = message || "Let's help you set up some keys so you can start posting.";
+                this.shouldPreserveSettingsMessage = true;
+
+                const afterOpen = () => {
+                    this.setSettingsModalMessage(finalMessage);
+                    this.highlightKeyInputs();
+                    this.updateKeySetupPrompt();
+                    this.toggleKeyButtonsVisibility();
+                    this.shouldPreserveSettingsMessage = false;
+                };
+
+                const settingsBtn = document.getElementById('settingsBtn');
+                if (settingsBtn) {
+                    settingsBtn.click();
+                    setTimeout(afterOpen, 60);
+                    return;
+                }
+
+                const settingsModal = document.getElementById('settingsModal');
+                if (settingsModal) {
+                    settingsModal.style.display = 'flex';
+                    setTimeout(afterOpen, 10);
+                } else {
+                    console.warn('Settings modal not found when attempting to open keys dialog.');
+                    this.shouldPreserveSettingsMessage = false;
+                }
             }
 
             setupRelayManagerHandlers() {
@@ -4557,6 +4593,31 @@
                     localStorage.removeItem('tripchat_npub');
                     localStorage.removeItem('tripchat_private_key');
                     console.log('Keys cleared from localStorage');
+
+                    const settingsPrivateKey = document.getElementById('settingsPrivateKey');
+                    const settingsPublicKey = document.getElementById('settingsPublicKey');
+                    if (settingsPrivateKey) {
+                        settingsPrivateKey.value = '';
+                    }
+                    if (settingsPublicKey) {
+                        settingsPublicKey.value = '';
+                    }
+
+                    const settingsPrivateKeyHint = document.getElementById('settingsPrivateKeyHint');
+                    if (settingsPrivateKeyHint) {
+                        settingsPrivateKeyHint.style.display = 'none';
+                        settingsPrivateKeyHint.innerHTML = '';
+                    }
+
+                    const verificationStatus = document.getElementById('verificationStatus');
+                    if (verificationStatus) {
+                        verificationStatus.textContent = 'Add or generate keys to verify your Trustroots username.';
+                        verificationStatus.style.color = '#6c757d';
+                    }
+
+                    this.updateKeySetupPrompt();
+                    this.toggleKeyButtonsVisibility();
+                    this.highlightKeyInputs();
                 } catch (error) {
                     console.error('Failed to clear keys from localStorage:', error);
                 }
@@ -5003,11 +5064,13 @@
                 const content = document.getElementById('composeContent').value.trim();
                 const geohash = document.getElementById('geohashFilter').value.trim();
                 const privateKeyInput = localStorage.getItem('tripchat_nsec');
+                const publicKeyInput = localStorage.getItem('tripchat_npub');
 
                 console.log('📝 Post data:', { 
                     content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
                     geohash: geohash || 'none',
-                    hasPrivateKey: !!privateKeyInput
+                    hasPrivateKey: !!privateKeyInput,
+                    hasPublicKey: !!publicKeyInput
                 });
 
                 if (!content) {
@@ -5042,9 +5105,12 @@
                 //     return;
                 // }
 
-                if (!privateKeyInput) {
-                    console.log('❌ No private key found');
-                    alert('Please generate or enter a private key in Settings first.');
+                if (!privateKeyInput || !publicKeyInput) {
+                    console.log('❌ Missing keys for posting', {
+                        hasPrivateKey: !!privateKeyInput,
+                        hasPublicKey: !!publicKeyInput
+                    });
+                    this.openKeysDialog("Let's help you set up some keys before you post your note.");
                     return;
                 }
 
@@ -5461,9 +5527,11 @@
                         if (this.privateKey.startsWith('nsec')) {
                             privateKeyForSigning = this.nsecToHex(this.privateKey);
                         }
+                        const publicKeyHex = this.deriveHexPubkeyFromPrivateKey(privateKeyForSigning);
                         
                         const event = {
                             kind: 0, // Metadata event
+                            pubkey: publicKeyHex,
                             content: JSON.stringify(profileContent),
                             tags: [
                                 ['nip05', `${username}@trustroots.org`],
@@ -5474,9 +5542,12 @@
                         };
 
                         const signedEvent = window.nostrTools.finishEvent(event, privateKeyForSigning);
+                        signedEvent.pubkey = publicKeyHex;
+                        console.log('🧾 Prepared profile event (nostr-tools path):', signedEvent);
                         
                         // Post to all enabled relays
                         const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                        console.log('📨 Posting profile to relays:', postingRelays);
                         const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, signedEvent));
                         
                         const results = await Promise.allSettled(postPromises);
@@ -5493,6 +5564,7 @@
                         if (this.privateKey.startsWith('nsec')) {
                             privateKeyForFallback = this.nsecToHex(this.privateKey);
                         }
+                        const publicKeyHex = this.deriveHexPubkeyFromPrivateKey(privateKeyForFallback);
                         
                         const event = {
                             kind: 0,
@@ -5502,14 +5574,16 @@
                                 ['L', 'org.trustroots'],
                                 ['l', username, 'org.trustroots']
                             ],
-                            pubkey: this.generateFakePublicKey(privateKeyForFallback),
+                            pubkey: publicKeyHex,
                             created_at: Math.floor(Date.now() / 1000),
                             id: this.generateFakeEventId(JSON.stringify(profileContent), 'profile'),
                             sig: this.generateFakeSignature(privateKeyForFallback, JSON.stringify(profileContent))
                         };
-
+                        console.log('🧾 Prepared profile event (fallback path):', event);
+                        
                         // Post to all enabled relays
                         const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                        console.log('📨 Posting profile to relays (fallback):', postingRelays);
                         const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, event));
                         
                         const results = await Promise.allSettled(postPromises);
@@ -5962,23 +6036,8 @@
             }
         }
 
-        // Show welcome modal on first visit
-        function showWelcomeModal() {
-            const hasVisited = localStorage.getItem('tripchat_has_visited');
-            if (!hasVisited) {
-                setTimeout(() => {
-                    document.getElementById('welcomeModal').style.display = 'flex';
-                }, 1000); // Show after 1 second delay
-                localStorage.setItem('tripchat_has_visited', 'true');
-            }
-        }
-
         // Initialize the app when the page loads
         window.tripchatVisualizer = new TRipchatVisualizer();
-        
-        // Show welcome modal if first visit
-        showWelcomeModal();
     </script>
 </body>
 </html>
-
