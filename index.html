@@ -44,31 +44,6 @@
                 transform: none;
             }
         }
-
-        /* App footer */
-        .app-footer {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            padding: 8px 12px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            z-index: 1000;
-        }
-
-        .app-footer a {
-            font-size: 0.5rem;
-            color: var(--text-muted);
-            font-family: monospace;
-            text-decoration: none;
-            opacity: 0.7;
-            transition: opacity 0.2s ease;
-        }
-
-        .app-footer a:hover {
-            opacity: 1;
-            text-decoration: underline;
-        }
         
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -2205,23 +2180,12 @@
         </div>
     </div>
 
-    <!-- Footer with GitHub link and last modified time -->
-    <div class="app-footer">
-        <a href="https://github.com/guaka/TRipchat" target="_blank" rel="noopener noreferrer" id="githubLink">Updated: <span id="lastModified"></span></a>
-    </div>
-
     <script type="module">
         class TRipchatVisualizer {
             constructor() {
                 this.relays = [
                     'wss://relay.nomadwiki.org',
                     'wss://relay.trustroots.org'
-                ];
-                
-                // Whitelist of trusted domains for clickable links
-                this.trustedDomains = [
-                    'hitchwiki.org',
-                    'trustroots.org',
                 ];
                 this.relayEnabled = {}; // Track which relays are enabled for reading
                 this.postingRelays = {}; // Track which relays are enabled for posting
@@ -4027,9 +3991,8 @@
                 // Rendering note with profile data
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags and URLs to make them clickable
+                // Process hashtags to make them clickable
                 let contentHtml = this.processHashtags(processedContent);
-                contentHtml = this.formatContentWithLinks(contentHtml);
                 
                 // Get expiration info for combined timestamp
                 let expirationText = '';
@@ -4138,46 +4101,13 @@
                 });
             }
 
-            formatContentWithLinks(text) {
-                // First escape HTML to prevent XSS
-                const escapedText = this.escapeHtml(text);
-                
-                // URL regex pattern that matches http/https URLs
-                const urlRegex = /(https?:\/\/[^\s]+)/g;
-                
-                return escapedText.replace(urlRegex, (url) => {
-                    try {
-                        const urlObj = new URL(url);
-                        const domain = urlObj.hostname.toLowerCase();
-                        
-                        // Check if domain is in whitelist
-                        const isTrusted = this.trustedDomains.some(trustedDomain => 
-                            domain === trustedDomain || domain.endsWith('.' + trustedDomain)
-                        );
-                        
-                        if (isTrusted) {
-                            // Decode URL for display while keeping original for href
-                            const displayUrl = decodeURIComponent(url);
-                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: underline;">${displayUrl}</a>`;
-                        } else {
-                            // Return as plain text for untrusted domains
-                            return url;
-                        }
-                    } catch (e) {
-                        // If URL parsing fails, return as plain text
-                        return url;
-                    }
-                });
-            }
-
             renderFallbackNote(note, timeString, relativeTime) {
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags and URLs in fallback note content
+                // Process hashtags in fallback note content
                 const content = this.escapeHtml(note.content || 'No content');
-                let processedContent = this.processHashtags(content);
-                processedContent = this.formatContentWithLinks(processedContent);
+                const processedContent = this.processHashtags(content);
                 
                 return `
                     <div class="note-header">
@@ -4420,7 +4350,7 @@
                     const popupContent = `
                         <div class="map-popup">
                             <div class="note-title">@${username}</div>
-                            <div class="popup-content">${this.formatContentWithLinks(this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content')))}${note.content?.length > 100 ? '...' : ''}</div>
+                            <div class="popup-content">${this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
                             <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
                             ${geohashLink}
                         </div>
@@ -5942,7 +5872,7 @@
                     
                     <div class="modal-section">
                         <div class="modal-section-title">Content</div>
-                        <div class="modal-content-text">${this.formatContentWithLinks(this.processHashtags(this.escapeHtml(note.content || 'No content')))}</div>
+                        <div class="modal-content-text">${this.processHashtags(this.escapeHtml(note.content || 'No content'))}</div>
                     </div>
                     
                     <div class="modal-section">
@@ -6106,26 +6036,8 @@
             }
         }
 
-        // Display last modified time
-        function updateLastModified() {
-            const lastModifiedElement = document.getElementById('lastModified');
-            if (lastModifiedElement) {
-                const lastModified = new Date(document.lastModified);
-                const year = lastModified.getFullYear().toString();
-                const month = (lastModified.getMonth() + 1).toString().padStart(2, '0');
-                const day = lastModified.getDate().toString().padStart(2, '0');
-                const hours = lastModified.getHours().toString().padStart(2, '0');
-                const minutes = lastModified.getMinutes().toString().padStart(2, '0');
-                const timeString = `${year}-${month}-${day} ${hours}:${minutes}`;
-                lastModifiedElement.textContent = timeString;
-            }
-        }
-
         // Initialize the app when the page loads
         window.tripchatVisualizer = new TRipchatVisualizer();
-        
-        // Update last modified time on page load
-        updateLastModified();
     </script>
 </body>
 </html>
