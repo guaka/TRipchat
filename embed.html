@@ -66,12 +66,15 @@
             display: flex;
             height: 100vh;
             width: 100vw;
+            margin: 0;
+            padding: 0;
         }
 
         .embed-header {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
-            padding: 8px 12px;
+            padding: 8px 12px 8px 0;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -96,6 +99,8 @@
             display: flex;
             flex: 1;
             min-height: 0;
+            margin: 0;
+            padding: 0;
         }
 
 
@@ -117,38 +122,54 @@
             justify-content: flex-end;
         }
 
+        .embed-notes-footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px 8px 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-shrink: 0;
+        }
+
         .embed-notes-list {
             flex: 1;
             overflow-y: auto;
-            padding: 8px;
+            padding: 4px 4px 4px 0;
         }
 
         .embed-note-item {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 0;
-            padding: 8px;
-            margin-bottom: 6px;
-            font-size: 0.8rem;
-            line-height: 1.4;
+            padding: 4px 6px;
+            margin-bottom: 2px;
+            font-size: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .embed-note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
         }
 
         .embed-note-username {
             color: var(--accent-color);
             font-weight: 600;
-            font-size: 0.7rem;
-            margin-bottom: 2px;
+            font-size: 0.65rem;
         }
 
         .embed-note-content {
             color: var(--text-primary);
-            margin-bottom: 4px;
+            margin-bottom: 0;
         }
 
         .embed-note-time {
             color: var(--text-muted);
-            font-size: 0.6rem;
-            text-align: right;
+            font-size: 0.55rem;
         }
 
         .embed-loading {
@@ -190,11 +211,11 @@
         </div>
         <div class="embed-content">
             <div class="embed-notes">
-                <div class="embed-notes-header">
-                    <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat</a>
-                </div>
                 <div class="embed-notes-list" id="notesList">
                     <div class="embed-loading">Loading notes...</div>
+                </div>
+                <div class="embed-notes-footer">
+                    <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat</a>
                 </div>
             </div>
         </div>
@@ -381,6 +402,11 @@
                     this.notes = this.notes.slice(0, 100);
                 }
 
+                // Fetch profile for this user if we don't have it
+                if (!this.userProfiles[note.pubkey]) {
+                    this.fetchUserProfile(note.pubkey);
+                }
+
                 console.log(`Added note, total notes: ${this.notes.length}`);
                 this.displayNotes();
                 this.scrollToBottom();
@@ -497,12 +523,15 @@
                 const username = this.formatUsername(profile, note.pubkey);
                 const content = this.formatContentWithLinks(note.content || 'No content');
                 const timeString = new Date(note.created_at * 1000).toLocaleString();
+                const fullNpub = this.hexToNpub(note.pubkey);
                 
                 return `
                     <div class="embed-note-item">
-                        <div class="embed-note-username">${username}</div>
+                        <div class="embed-note-header">
+                            <span class="embed-note-username" title="${fullNpub}">${username}</span>
+                            <span class="embed-note-time">${timeString}</span>
+                        </div>
                         <div class="embed-note-content">${content}</div>
-                        <div class="embed-note-time">${timeString}</div>
                     </div>
                 `;
             }
@@ -586,6 +615,96 @@
                 if (notesList) {
                     notesList.scrollTop = notesList.scrollHeight;
                 }
+            }
+
+            async fetchUserProfile(pubkey) {
+                for (const relayUrl of this.relays) {
+                    try {
+                        const profile = await this.fetchProfileFromRelay(relayUrl, pubkey);
+                        if (profile) {
+                            this.userProfiles[pubkey] = profile;
+                            console.log(`Fetched profile for ${pubkey}:`, profile);
+                            // Re-render notes to show updated profile info
+                            this.displayNotes();
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to fetch profile from ${relayUrl}:`, error);
+                    }
+                }
+            }
+
+            async fetchProfileFromRelay(relayUrl, pubkey) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const ws = new WebSocket(relayUrl);
+                        const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
+                        
+                        const filters = {
+                            "kinds": [0],
+                            "authors": [pubkey],
+                            "limit": 1
+                        };
+                        
+                        const subscription = ["REQ", subscriptionId, filters];
+                        
+                        ws.onopen = () => {
+                            ws.send(JSON.stringify(subscription));
+                        };
+
+                        ws.onmessage = (event) => {
+                            try {
+                                const data = JSON.parse(event.data);
+                                if (Array.isArray(data)) {
+                                    const [messageType, subId, eventData] = data;
+                                    
+                                    if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
+                                        if (eventData.kind === 0) {
+                                            try {
+                                                const profile = JSON.parse(eventData.content);
+                                                profile.nip05 = this.extractNip05FromTags(eventData.tags);
+                                                ws.close();
+                                                resolve(profile);
+                                                return;
+                                            } catch (e) {
+                                                console.warn('Failed to parse profile content:', e);
+                                            }
+                                        }
+                                    } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                                        ws.close();
+                                        resolve(null);
+                                        return;
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Error parsing profile message:', e);
+                            }
+                        };
+
+                        ws.onerror = (error) => {
+                            ws.close();
+                            reject(error);
+                        };
+
+                        ws.onclose = () => {
+                            resolve(null);
+                        };
+
+                        // Timeout after 5 seconds
+                        setTimeout(() => {
+                            ws.close();
+                            resolve(null);
+                        }, 5000);
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+
+            extractNip05FromTags(tags) {
+                if (!tags) return null;
+                const nip05Tag = tags.find(tag => tag[0] === 'nip05');
+                return nip05Tag ? nip05Tag[1] : null;
             }
 
         }
