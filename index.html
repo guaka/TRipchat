@@ -506,10 +506,10 @@
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
             transition: all 0.3s ease;
             cursor: pointer;
+            z-index: 1000;
         }
         
         .map-marker:hover {
-            transform: scale(1.03);
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
         }
         
@@ -2569,9 +2569,9 @@
                     .tripchat-marker {
                         transition: all 0.3s ease;
                         animation: pulse 2s infinite;
+                        z-index: 1000;
                     }
                     .tripchat-marker:hover {
-                        transform: scale(1.05);
                         fillColor: 'var(--accent-hover)';
                         box-shadow: 0 2px 8px var(--shadow-hover);
                         animation: none;
@@ -2589,6 +2589,7 @@
                     }
                     .geohash-rectangle {
                         transition: all 0.3s ease;
+                        z-index: 100;
                     }
                     .geohash-highlight {
                         transition: all 0.3s ease;
