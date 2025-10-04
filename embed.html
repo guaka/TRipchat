@@ -216,6 +216,12 @@
                 this.showNotes = true;
                 this.theme = 'light';
                 
+                // Whitelist of trusted domains for clickable links
+                this.trustedDomains = [
+                    'hitchwiki.org',
+                    'trustroots.org',
+                ];
+                
                 this.init();
             }
 
@@ -489,7 +495,7 @@
             renderNote(note) {
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsername(profile, note.pubkey);
-                const content = this.escapeHtml(note.content || 'No content');
+                const content = this.formatContentWithLinks(note.content || 'No content');
                 const timeString = new Date(note.created_at * 1000).toLocaleString();
                 
                 return `
@@ -543,6 +549,36 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            formatContentWithLinks(text) {
+                // First escape HTML to prevent XSS
+                const escapedText = this.escapeHtml(text);
+                
+                // URL regex pattern that matches http/https URLs
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                
+                return escapedText.replace(urlRegex, (url) => {
+                    try {
+                        const urlObj = new URL(url);
+                        const domain = urlObj.hostname.toLowerCase();
+                        
+                        // Check if domain is in whitelist
+                        const isTrusted = this.trustedDomains.some(trustedDomain => 
+                            domain === trustedDomain || domain.endsWith('.' + trustedDomain)
+                        );
+                        
+                        if (isTrusted) {
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: underline;">${url}</a>`;
+                        } else {
+                            // Return as plain text for untrusted domains
+                            return url;
+                        }
+                    } catch (e) {
+                        // If URL parsing fails, return as plain text
+                        return url;
+                    }
+                });
             }
 
             scrollToBottom() {
