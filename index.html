@@ -221,6 +221,31 @@
             transform: scale(1.05);
         }
 
+        .note-delete-btn:disabled {
+            opacity: 0.6;
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .note-delete-btn.deleting {
+            background: #ffc107;
+            color: #000;
+            animation: pulse 1s infinite;
+        }
+
+        .note-delete-btn.deleted {
+            background: #22c55e;
+            color: #000;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -4146,7 +4171,7 @@
 
                 // Check if this note is by the current user
                 const isCurrentUser = this.isNoteByCurrentUser(note);
-                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
+                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" data-note-id="${note.id}" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
 
                 return `
                     <div class="note-header">
@@ -4244,7 +4269,7 @@
                 
                 // Check if this note is by the current user
                 const isCurrentUser = this.isNoteByCurrentUser(note);
-                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
+                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" data-note-id="${note.id}" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
                 
                 return `
                     <div class="note-header">
@@ -4972,6 +4997,15 @@
                     return;
                 }
 
+                // Find and update the delete button to show loading state
+                const deleteButton = document.querySelector(`[data-note-id="${noteId}"].note-delete-btn`);
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.classList.add('deleting');
+                    deleteButton.textContent = '⏳ DELETING...';
+                    deleteButton.title = 'Deleting note...';
+                }
+
                 try {
                     // Create a kind 5 deletion event
                     const deletionEvent = {
@@ -4992,9 +5026,20 @@
                     const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
                     console.log('Sending deletion to relays:', postingRelays);
                     
-                    const relayPromises = postingRelays.map(async (relayUrl) => {
+                    // Update button to show progress
+                    if (deleteButton) {
+                        deleteButton.textContent = `⏳ SENDING TO ${postingRelays.length} RELAYS...`;
+                    }
+                    
+                    const relayPromises = postingRelays.map(async (relayUrl, index) => {
                         try {
                             console.log(`Sending deletion to ${relayUrl}`);
+                            
+                            // Update progress
+                            if (deleteButton) {
+                                deleteButton.textContent = `⏳ SENDING TO RELAY ${index + 1}/${postingRelays.length}...`;
+                            }
+                            
                             const result = await this.postEventToRelay(relayUrl, signedEvent);
                             console.log(`Deletion sent successfully to ${relayUrl}`);
                             return result;
@@ -5012,22 +5057,41 @@
                     console.log('Deletion results:', results);
                     console.log('Success count:', successCount);
 
-                    // Always proceed with local deletion since the event was sent
-                    // Remove from local notes array
-                    this.notes = this.notes.filter(note => note.id !== noteId);
+                    // Update button to show completion
+                    if (deleteButton) {
+                        deleteButton.textContent = '✅ DELETED!';
+                        deleteButton.classList.remove('deleting');
+                        deleteButton.classList.add('deleted');
+                    }
                     
-                    // Remove from map immediately
-                    this.removeNoteFromMap(noteId);
-                    
-                    // Re-render the display
-                    this.displayActivities(this.notes);
-                    this.plotActivitiesOnMap(this.notes);
-                    
-                    // Show success message
-                    this.showDeletionSuccess(postingRelays.length);
+                    // Brief delay to show success state
+                    setTimeout(() => {
+                        // Always proceed with local deletion since the event was sent
+                        // Remove from local notes array
+                        this.notes = this.notes.filter(note => note.id !== noteId);
+                        
+                        // Remove from map immediately
+                        this.removeNoteFromMap(noteId);
+                        
+                        // Re-render the display
+                        this.displayActivities(this.notes);
+                        this.plotActivitiesOnMap(this.notes);
+                        
+                        // Show success message
+                        this.showDeletionSuccess(postingRelays.length);
+                    }, 500);
 
                 } catch (error) {
                     console.error('Error deleting note:', error);
+                    
+                    // Reset button state on error
+                    if (deleteButton) {
+                        deleteButton.disabled = false;
+                        deleteButton.classList.remove('deleting');
+                        deleteButton.textContent = '🗑️ DELETE';
+                        deleteButton.title = 'Delete this note';
+                    }
+                    
                     alert('Failed to delete note: ' + error.message);
                 }
             }
