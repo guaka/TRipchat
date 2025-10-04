@@ -172,6 +172,7 @@
             font-size: 0.55rem;
         }
 
+
         .embed-loading {
             display: flex;
             align-items: center;
@@ -522,7 +523,7 @@
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsername(profile, note.pubkey);
                 const content = this.formatContentWithLinks(note.content || 'No content');
-                const timeString = new Date(note.created_at * 1000).toLocaleString();
+                const timeString = this.formatTimestamp(note.created_at);
                 const fullNpub = this.hexToNpub(note.pubkey);
                 
                 return `
@@ -539,7 +540,8 @@
             formatUsername(profile, pubkey) {
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
-                    if (isTrustrootsVerified) {
+                    const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
+                    if (isTrustrootsVerified || isHitchwikiVerified) {
                         return `@${profile.nip05} 🟢`;
                     } else if (profile.nip05.includes('@')) {
                         return `@${profile.nip05} 🔵`;
@@ -618,26 +620,38 @@
             }
 
             async fetchUserProfile(pubkey) {
-                for (const relayUrl of this.relays) {
-                    try {
-                        const profile = await this.fetchProfileFromRelay(relayUrl, pubkey);
-                        if (profile) {
-                            this.userProfiles[pubkey] = profile;
-                            console.log(`Fetched profile for ${pubkey}:`, profile);
-                            // Re-render notes to show updated profile info
-                            this.displayNotes();
-                            break;
-                        }
-                    } catch (error) {
-                        console.warn(`Failed to fetch profile from ${relayUrl}:`, error);
+                console.log(`Fetching profile for pubkey: ${pubkey}`);
+                const promises = this.relays.map(relayUrl => 
+                    this.fetchProfileFromRelay(relayUrl, pubkey).catch(error => {
+                        console.warn(`Failed to fetch profile from ${relayUrl}:`, error.message);
+                        return null;
+                    })
+                );
+                
+                const results = await Promise.allSettled(promises);
+                
+                for (const result of results) {
+                    if (result.status === 'fulfilled' && result.value) {
+                        const profile = result.value;
+                        this.userProfiles[pubkey] = profile;
+                        console.log(`Fetched profile for ${pubkey}:`, profile);
+                        console.log(`NIP-05: ${profile.nip05}`);
+                        // Re-render notes to show updated profile info
+                        this.displayNotes();
+                        return;
                     }
                 }
+                
+                console.log(`No profile found for ${pubkey} on any relay`);
             }
 
             async fetchProfileFromRelay(relayUrl, pubkey) {
                 return new Promise((resolve, reject) => {
+                    let ws;
+                    let timeoutId;
+                    
                     try {
-                        const ws = new WebSocket(relayUrl);
+                        ws = new WebSocket(relayUrl);
                         const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
                         
                         const filters = {
@@ -647,6 +661,13 @@
                         };
                         
                         const subscription = ["REQ", subscriptionId, filters];
+                        
+                        const cleanup = () => {
+                            if (timeoutId) clearTimeout(timeoutId);
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                ws.close();
+                            }
+                        };
                         
                         ws.onopen = () => {
                             ws.send(JSON.stringify(subscription));
@@ -661,17 +682,21 @@
                                     if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
                                         if (eventData.kind === 0) {
                                             try {
+                                                console.log('Received profile event:', eventData);
                                                 const profile = JSON.parse(eventData.content);
                                                 profile.nip05 = this.extractNip05FromTags(eventData.tags);
-                                                ws.close();
+                                                console.log('Parsed profile:', profile);
+                                                console.log('Event tags:', eventData.tags);
+                                                cleanup();
                                                 resolve(profile);
                                                 return;
                                             } catch (e) {
                                                 console.warn('Failed to parse profile content:', e);
+                                                console.warn('Raw content:', eventData.content);
                                             }
                                         }
                                     } else if (messageType === 'EOSE' && subId === subscriptionId) {
-                                        ws.close();
+                                        cleanup();
                                         resolve(null);
                                         return;
                                     }
@@ -682,19 +707,20 @@
                         };
 
                         ws.onerror = (error) => {
-                            ws.close();
-                            reject(error);
+                            cleanup();
+                            reject(new Error(`WebSocket error: ${error.message || 'Connection failed'}`));
                         };
 
                         ws.onclose = () => {
+                            cleanup();
                             resolve(null);
                         };
 
-                        // Timeout after 5 seconds
-                        setTimeout(() => {
-                            ws.close();
+                        // Timeout after 3 seconds (reduced from 5)
+                        timeoutId = setTimeout(() => {
+                            cleanup();
                             resolve(null);
-                        }, 5000);
+                        }, 3000);
                     } catch (error) {
                         reject(error);
                     }
@@ -702,9 +728,25 @@
             }
 
             extractNip05FromTags(tags) {
-                if (!tags) return null;
+                if (!tags) {
+                    console.log('No tags provided to extractNip05FromTags');
+                    return null;
+                }
+                console.log('Looking for NIP-05 in tags:', tags);
                 const nip05Tag = tags.find(tag => tag[0] === 'nip05');
+                console.log('Found NIP-05 tag:', nip05Tag);
                 return nip05Tag ? nip05Tag[1] : null;
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp * 1000);
+                const year = date.getFullYear().toString(); // YYYY
+                const month = (date.getMonth() + 1).toString().padStart(2, '0'); // MM
+                const day = date.getDate().toString().padStart(2, '0'); // DD
+                const hours = date.getHours().toString().padStart(2, '0'); // HH
+                const minutes = date.getMinutes().toString().padStart(2, '0'); // MM
+                
+                return `${year}-${month}-${day} ${hours}:${minutes}`;
             }
 
         }
