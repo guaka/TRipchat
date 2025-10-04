@@ -4977,9 +4977,11 @@
                 // Priority 1: Use NIP-05 name if available (most trustworthy)
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
-                    if (isTrustrootsVerified) {
-                        // Show full NIP-05 name for Trustroots verified users
-                        username = `@${profile.nip05} 🟢`; // Green circle for Trustroots verified
+                    const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
+                    
+                    if (isTrustrootsVerified || isHitchwikiVerified) {
+                        // Show full NIP-05 name for trusted domain verified users
+                        username = `@${profile.nip05} 🟢`; // Green circle for trusted domain verified
                     } else if (profile.nip05.includes('@')) {
                         // Show full NIP-05 name for other verified users
                         username = `@${profile.nip05} 🔵`; // Blue circle for other NIP-05 verified

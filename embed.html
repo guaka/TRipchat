@@ -568,6 +568,20 @@
                     });
                 }
                 
+                // Only show NIP-05 verified users (🟢) - trusted domains only
+                filtered = filtered.filter(note => {
+                    const profile = this.userProfiles[note.pubkey];
+                    if (!profile || !profile.nip05) {
+                        return false;
+                    }
+                    
+                    // Check if it's a trusted domain (trustroots.org or hitchwiki.org)
+                    const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
+                    const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
+                    
+                    return isTrustrootsVerified || isHitchwikiVerified;
+                });
+                
                 return filtered;
             }
 
