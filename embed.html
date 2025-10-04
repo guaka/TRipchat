@@ -666,7 +666,9 @@
                         );
                         
                         if (isTrusted) {
-                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: underline;">${url}</a>`;
+                            // Decode URL for display while keeping original for href
+                            const displayUrl = decodeURIComponent(url);
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: underline;">${displayUrl}</a>`;
                         } else {
                             // Return as plain text for untrusted domains
                             return url;
