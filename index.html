@@ -648,31 +648,6 @@
             background: var(--bg-secondary);
         }
 
-        .clear-filter-btn {
-            padding: 10px 16px;
-            background: var(--bg-tertiary);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 0;
-            flex: 0 0 auto;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.8rem;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: var(--shadow);
-            white-space: nowrap;
-        }
-
-        .clear-filter-btn:hover {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border-color: var(--accent-color);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-hover);
-        }
 
 
         .filter-options {
@@ -1675,9 +1650,6 @@
                 overflow: hidden;
             }
 
-            .clear-filter-btn {
-                display: none;
-            }
             
             .map-container {
                 height: 5vh;
@@ -1838,11 +1810,6 @@
             }
 
 
-            .clear-filter-btn {
-                padding: 6px 10px;
-                font-size: 0.7rem;
-                flex-shrink: 0;
-            }
 
             /* Mobile compose - always visible at bottom */
             .compose-form {
@@ -1942,10 +1909,6 @@
             }
 
 
-            .clear-filter-btn {
-                padding: 5px 8px;
-                font-size: 0.65rem;
-            }
 
             .compose-form {
                 padding: 6px 10px;
@@ -2042,10 +2005,6 @@
             }
 
 
-            .clear-filter-btn {
-                padding: 4px 6px;
-                font-size: 0.6rem;
-            }
 
             .compose-form {
                 padding: 5px 8px;
@@ -2155,7 +2114,6 @@
                                         </span>
                                     </label>
                                 </div>
-                                <button id="clearFilter" class="clear-filter-btn">CLEAR</button>
                             </div>
                         </div>
                     </div>
@@ -2559,7 +2517,6 @@
             setupFilterHandlers() {
                 const searchFilter = document.getElementById('searchFilter');
                 const geohashFilter = document.getElementById('geohashFilter');
-                const clearFilter = document.getElementById('clearFilter');
                 const nip05Filter = document.getElementById('nip05Filter');
 
                 searchFilter.addEventListener('input', (e) => {
@@ -2581,18 +2538,6 @@
                     }
                 });
 
-                clearFilter.addEventListener('click', () => {
-                    searchFilter.value = '';
-                    this.searchFilter = '';
-                    geohashFilter.value = '';
-                    this.geohashFilter = '';
-                    nip05Filter.checked = false;
-                    this.nip05Filter = false;
-                    this.updateHash();
-                    this.displayActivities(this.notes);
-                    this.plotActivitiesOnMap(this.notes);
-                    this.zoomToGlobal();
-                });
 
                 nip05Filter.addEventListener('change', (e) => {
                     this.nip05Filter = e.target.checked;
