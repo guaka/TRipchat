@@ -748,7 +748,7 @@
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             border: none;
             border-radius: 20px;
-            padding: 32px;
+            padding: 20px;
             max-width: 600px;
             width: 100%;
             max-height: 80vh;
@@ -763,8 +763,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #e9ecef;
         }
 
@@ -1228,14 +1228,14 @@
         }
 
         .settings-section {
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
 
         .verification-info {
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             border: 1px solid #e9ecef;
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
         }
 
         .nip05-identifier {
@@ -1344,7 +1344,7 @@
             display: block;
             color: #2c3e50;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-family: 'Inter', sans-serif;
         }
 
@@ -2228,13 +2228,12 @@
                 <div id="settingsModalMessage" class="settings-modal-message"></div>
                 <div id="keySetupPrompt" class="key-setup-prompt">
                     <div id="keySetupQuestion" class="key-setup-question">
-                        Do you want to use an existing nsec or generate a new one?
+                        Generate a new nsec or paste an existing one below
                         <span style="display: block; font-weight: 400; font-size: 0.8rem; color: #3a5161; margin-top: 6px;">
-                            An <strong>nsec</strong> is your Nostr private key. Keep it secret—anyone who gets it can post as you. Use the options below to import an existing one or create a fresh keypair.
+                            An <strong>nsec</strong> is your Nostr private key. Keep it secret—anyone who gets it can post as you. Paste your existing nsec below or generate a new keypair.
                         </span>
                     </div>
                     <div class="key-setup-actions">
-                        <button id="settingsAddKeyBtn" class="key-btn key-choice">➕ Use Existing nsec</button>
                         <button id="settingsGenerateKeyBtn" class="key-btn key-choice">🔑 Generate New nsec</button>
                     </div>
                 </div>
@@ -2257,18 +2256,17 @@
                     <div class="key-input-group">
                         <input type="text" id="trustrootsUsername" placeholder="Enter your Trustroots username (e.g., john)" />
                 </div>
-                    <div id="usernameStatus" class="username-status" style="margin-top: 8px; font-size: 0.8rem; color: #6c757d; font-style: italic;"></div>
+                    <div id="usernameStatus" class="username-status" style="margin-top: 4px; font-size: 0.8rem; color: #6c757d; font-style: italic;"></div>
             </div>
                 <div class="settings-section">
                     <label>NIP-05 VERIFICATION:</label>
                     <div class="verification-info">
-                        <div id="nip05Identifier" class="nip05-identifier" style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #2c3e50;"></div>
-                        <div id="nip05Url" class="nip05-url" style="margin-bottom: 8px; padding: 8px; background: #f0f8ff; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #1976d2; word-break: break-all; border: 1px solid #bbdefb; display: none;"></div>
+                        <div id="nip05Identifier" class="nip05-identifier" style="margin-bottom: 6px; padding: 6px; background: #f8f9fa; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #2c3e50;"></div>
+                        <div id="nip05Url" class="nip05-url" style="margin-bottom: 6px; padding: 6px; background: #f0f8ff; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #1976d2; word-break: break-all; border: 1px solid #bbdefb; display: none;"></div>
                         <div class="verification-actions">
-                            <button id="verifyNip05Btn" class="key-btn">🔍 VERIFY</button>
                             <button id="retryProfilePostBtn" class="key-btn" style="display: none;">🔁 RETRY PROFILE POST</button>
                         </div>
-                        <div id="verificationStatus" class="verification-status" style="margin-top: 8px; font-size: 0.8rem; font-style: italic;"></div>
+                        <div id="verificationStatus" class="verification-status" style="margin-top: 6px; font-size: 0.8rem; font-style: italic;"></div>
                     </div>
                 </div>
             </div>
@@ -2762,7 +2760,6 @@
                 const usernameStatus = document.getElementById('usernameStatus');
                 const nip05Identifier = document.getElementById('nip05Identifier');
                 const nip05Url = document.getElementById('nip05Url');
-                const verifyNip05Btn = document.getElementById('verifyNip05Btn');
                 const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
                 const verificationStatus = document.getElementById('verificationStatus');
 
@@ -2771,7 +2768,7 @@
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
                     
                     if (savedUsername) {
-                        usernameStatus.textContent = `✓ Username saved: ${savedUsername}`;
+                        usernameStatus.textContent = `Press Enter to verify ${savedUsername}`;
                         usernameStatus.style.color = 'var(--accent-color)';
                     } else {
                         usernameStatus.textContent = 'No username saved yet';
@@ -2867,38 +2864,90 @@
                     }
                 });
 
-                settingsAddKeyBtn.addEventListener('click', async () => {
+                // Auto-validate and process nsec when pasted or typed
+                settingsPrivateKey.addEventListener('input', async () => {
                     const nsecInput = settingsPrivateKey.value.trim();
-                    if (!nsecInput) {
-                        alert('Please enter your nsec private key first.');
-                        return;
-                    }
                     
-                    try {
-                        // Convert nsec to hex and derive npub
-                        const privateKeyHex = this.nsecToHex(nsecInput);
-                        const npubKey = this.deriveNpubFromPrivateKey(privateKeyHex);
-                        
-                        // Update the public key field
-                        settingsPublicKey.value = npubKey;
-                        
-                        // Save to localStorage
-                        localStorage.setItem('tripchat_nsec', nsecInput);
-                        localStorage.setItem('tripchat_npub', npubKey);
-                        
-                        // Set class property for immediate use
-                        this.privateKey = nsecInput;
-                        
-                        alert('Private key added successfully! Public key has been derived and saved.');
+                    // Only process if it looks like an nsec (starts with 'nsec1')
+                    if (nsecInput.startsWith('nsec1') && nsecInput.length > 10) {
+                        try {
+                            // Validate the nsec format
+                            const privateKeyHex = this.nsecToHex(nsecInput);
+                            const npubKey = this.deriveNpubFromPrivateKey(privateKeyHex);
+                            
+                            // Update the public key field
+                            settingsPublicKey.value = npubKey;
+                            
+                            // Save to localStorage
+                            localStorage.setItem('tripchat_nsec', nsecInput);
+                            localStorage.setItem('tripchat_npub', npubKey);
+                            
+                            // Set class property for immediate use
+                            this.privateKey = nsecInput;
+                            
+                            // Show success feedback
+                            if (settingsPrivateKeyHint) {
+                                settingsPrivateKeyHint.innerHTML = '✅ Valid nsec key! Public key derived and saved.';
+                                settingsPrivateKeyHint.style.display = 'block';
+                                settingsPrivateKeyHint.style.color = '#22c55e';
+                            }
+                            
+                            // Hide the generate button since we have a valid key
+                            const generateBtn = document.getElementById('settingsGenerateKeyBtn');
+                            if (generateBtn) {
+                                generateBtn.style.display = 'none';
+                            }
+                            
+                            // Clear the setup message since we now have valid keys
+                            this.setSettingsModalMessage('');
+                            
+                            // Focus on Trustroots username field for next step
+                            setTimeout(() => {
+                                const trustrootsUsername = document.getElementById('trustrootsUsername');
+                                if (trustrootsUsername) {
+                                    trustrootsUsername.focus();
+                                    console.log('🎯 Focused on Trustroots username field');
+                                } else {
+                                    console.log('⚠️ Trustroots username field not found');
+                                }
+                            }, 100);
+                            
+                            this.highlightKeyInputs();
+                            this.toggleKeyButtonsVisibility();
+                            
+                            console.log('nsec key automatically processed and saved');
+                        } catch (error) {
+                            console.error('Error processing private key:', error);
+                            if (settingsPrivateKeyHint) {
+                                settingsPrivateKeyHint.innerHTML = '❌ Invalid nsec format. Please check your key.';
+                                settingsPrivateKeyHint.style.display = 'block';
+                                settingsPrivateKeyHint.style.color = '#dc3545';
+                            }
+                        }
+                    } else if (nsecInput.length > 0) {
+                        // Clear hint if input doesn't look like nsec
                         if (settingsPrivateKeyHint) {
                             settingsPrivateKeyHint.style.display = 'none';
                             settingsPrivateKeyHint.innerHTML = '';
                         }
-                        this.highlightKeyInputs();
-                        this.toggleKeyButtonsVisibility();
-                    } catch (error) {
-                        console.error('Error processing private key:', error);
-                        alert('Invalid private key format. Please check your nsec key.');
+                        
+                        // Show generate button if input doesn't look like nsec
+                        const generateBtn = document.getElementById('settingsGenerateKeyBtn');
+                        if (generateBtn) {
+                            generateBtn.style.display = '';
+                        }
+                    } else {
+                        // Clear hint if input is empty
+                        if (settingsPrivateKeyHint) {
+                            settingsPrivateKeyHint.style.display = 'none';
+                            settingsPrivateKeyHint.innerHTML = '';
+                        }
+                        
+                        // Show generate button if input is empty
+                        const generateBtn = document.getElementById('settingsGenerateKeyBtn');
+                        if (generateBtn) {
+                            generateBtn.style.display = '';
+                        }
                     }
                 });
 
@@ -2973,18 +3022,37 @@
                                     const profilePosted = await this.postProfileToNostr(savedUsername, npub);
                                     if (profilePosted) {
                                         console.log('🚀 Profile posted to at least one relay');
-                                        verificationStatus.textContent = '✓ NIP-05 verified & profile posted to Nostr!';
+                                        verificationStatus.innerHTML = '✓ NIP-05 verified<br/>✓ Profile posted to Nostr!';
                                         verificationStatus.style.color = 'var(--accent-color)';
+                                        
+                                        // Hide retry button on success
+                                        const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
+                                        if (retryProfilePostBtn) {
+                                            retryProfilePostBtn.style.display = 'none';
+                                        }
+                                        
                                         this.toggleKeyButtonsVisibility();
                                     } else {
                                         console.warn('⚠️ Profile post returned false');
-                                        verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
-                                        verificationStatus.style.color = '#f39c12';
+                                        verificationStatus.innerHTML = '<span style="color: var(--accent-color);">✓ NIP-05 verified</span><br/><span style="color: #f39c12;">❌ Failed to post profile to Nostr</span>';
+                                        verificationStatus.style.color = 'inherit';
+                                        
+                                        // Show retry button for profile posting
+                                        const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
+                                        if (retryProfilePostBtn) {
+                                            retryProfilePostBtn.style.display = 'inline-block';
+                                        }
                                     }
                                 } catch (error) {
                                     console.error('Error posting profile:', error);
-                                    verificationStatus.textContent = '✓ NIP-05 verified, but failed to post profile to Nostr';
-                                    verificationStatus.style.color = '#f39c12';
+                                    verificationStatus.innerHTML = '<span style="color: var(--accent-color);">✓ NIP-05 verified</span><br/><span style="color: #f39c12;">❌ Failed to post profile to Nostr</span>';
+                                    verificationStatus.style.color = 'inherit';
+                                    
+                                    // Show retry button for profile posting
+                                    const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
+                                    if (retryProfilePostBtn) {
+                                        retryProfilePostBtn.style.display = 'inline-block';
+                                    }
                                 }
                             } else {
                                 console.warn('❌ NIP-05 pubkey mismatch', { expectedNpub, npub });
@@ -3039,7 +3107,6 @@
                 });
 
                 // Event listeners
-                verifyNip05Btn.addEventListener('click', verifyNip05);
 
                 // Auto-save username when typing (with debounce)
                 let usernameTimeout;
@@ -3067,11 +3134,19 @@
                     }
                 };
 
-                // Allow saving with Enter key
+                // Allow NIP-05 verification with Enter key
                 trustrootsUsername.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        handleManualUsernameSave();
+                        // Save username first, then trigger verification
+                        const username = trustrootsUsername.value.trim();
+                        if (username) {
+                            localStorage.setItem('tripchat_trustroots_username', username);
+                            updateUsernameStatus();
+                            updateNip05Display();
+                            // Trigger NIP-05 verification
+                            verifyNip05();
+                        }
                     }
                 });
             }
@@ -3161,15 +3236,13 @@
 
             toggleKeyButtonsVisibility() {
                 const generateBtn = document.getElementById('settingsGenerateKeyBtn');
-                const addExistingBtn = document.getElementById('settingsAddKeyBtn');
                 const verificationStatus = document.getElementById('verificationStatus');
                 const prompt = document.getElementById('keySetupPrompt');
                 const updateProfileBtn = document.getElementById('updateProfileBtn');
                 const trustrootsUsername = document.getElementById('trustrootsUsername');
-                const verifyNip05Btn = document.getElementById('verifyNip05Btn');
                 const retryProfilePostBtn = document.getElementById('retryProfilePostBtn');
 
-                if (!generateBtn || !addExistingBtn || !verificationStatus) {
+                if (!generateBtn || !verificationStatus) {
                     return;
                 }
 
@@ -3179,7 +3252,6 @@
 
                 if (isVerified) {
                     generateBtn.style.display = 'none';
-                    addExistingBtn.style.display = 'none';
                     if (prompt) {
                         prompt.style.display = 'none';
                     }
@@ -3190,18 +3262,17 @@
                         trustrootsUsername.setAttribute('readonly', 'readonly');
                         trustrootsUsername.classList.add('readonly');
                     }
-                    if (verifyNip05Btn) {
-                    verifyNip05Btn.style.display = 'none';
-                }
-                if (retryProfilePostBtn) {
-                    retryProfilePostBtn.style.display = 'none';
-                }
                     if (retryProfilePostBtn) {
                         retryProfilePostBtn.style.display = 'none';
                     }
                 } else {
-                    generateBtn.style.display = '';
-                    addExistingBtn.style.display = '';
+                    // Check if we have a valid nsec key in the input
+                    const settingsPrivateKey = document.getElementById('settingsPrivateKey');
+                    const nsecInput = settingsPrivateKey?.value.trim() || '';
+                    const hasValidNsec = nsecInput.startsWith('nsec1') && nsecInput.length > 10;
+                    
+                    // Only show generate button if we don't have a valid nsec
+                    generateBtn.style.display = hasValidNsec ? 'none' : '';
                     if (prompt) {
                         prompt.style.display = 'flex';
                     }
@@ -3211,9 +3282,6 @@
                     if (trustrootsUsername) {
                         trustrootsUsername.removeAttribute('readonly');
                         trustrootsUsername.classList.remove('readonly');
-                    }
-                    if (verifyNip05Btn) {
-                        verifyNip05Btn.style.display = isVerificationAttempted ? 'none' : '';
                     }
                     if (retryProfilePostBtn) {
                         retryProfilePostBtn.style.display = isVerificationAttempted ? '' : 'none';
@@ -5605,6 +5673,16 @@
                     return;
                 }
 
+                // Check for private key exposure
+                const nsecPattern = /nsec[a-z0-9]+/gi;
+                const privateKeyPattern = /[a-f0-9]{32,}/gi;
+                
+                if (nsecPattern.test(content) || privateKeyPattern.test(content)) {
+                    console.log('🚨 Private key detected in content!');
+                    alert('🚨 SECURITY WARNING 🚨\n\nYou are about to post what appears to be a private key (nsec) or private key hex!\n\nNEVER post private keys publicly - anyone who sees this can use your account!\n\nPlease remove any private key information from your message before posting.');
+                    return;
+                }
+
                 // Extract hashtags from searchFilter and add them to content
                 let finalContent = content;
                 if (this.searchFilter) {
@@ -6069,17 +6147,57 @@
 
                         const signedEvent = window.nostrTools.finishEvent(event, privateKeyForSigning);
                         signedEvent.pubkey = publicKeyHex;
+                        
+                        // Ensure event has an ID (fallback if nostr-tools doesn't add it)
+                        if (!signedEvent.id) {
+                            console.log('⚠️ Event missing ID, generating fallback ID');
+                            signedEvent.id = this.generateFakeEventId(JSON.stringify(event), 'profile');
+                        }
+                        
                         console.log('🧾 Prepared profile event (nostr-tools path):', signedEvent);
+                        console.log('🔍 Event ID check:', { hasId: 'id' in signedEvent, id: signedEvent.id, idType: typeof signedEvent.id });
+                        
+                        // Store event ID for comparison
+                        const eventId = signedEvent.id;
+                        console.log('💾 Stored event ID for comparison:', eventId);
                         
                         // Post to all enabled relays
                         const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
                         console.log('📨 Posting profile to relays:', postingRelays);
-                        const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, signedEvent));
+                        
+                        // Check WebSocket connection status for each relay
+                        postingRelays.forEach(relayUrl => {
+                            const ws = this.websockets[relayUrl];
+                            console.log(`🔌 WebSocket status for ${relayUrl}:`, {
+                                exists: !!ws,
+                                readyState: ws?.readyState,
+                                stateName: ws ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState] : 'undefined'
+                            });
+                        });
+                        
+                        const postPromises = postingRelays.map(relayUrl => {
+                            console.log(`📤 About to post event with ID: ${eventId} to ${relayUrl}`);
+                            // Create a copy of the event to avoid reference issues
+                            const eventCopy = { ...signedEvent };
+                            return this.postEventToRelay(relayUrl, eventCopy, eventId);
+                        });
                         
                         const results = await Promise.allSettled(postPromises);
-                        const successful = results.filter(r => r.status === 'fulfilled').length;
+                        const successful = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
                         
-                        console.log(`Profile posted to ${successful}/${postingRelays.length} relays`);
+                        console.log(`📊 Profile posting results (nostr-tools):`, results);
+                        console.log(`✅ Profile posted to ${successful}/${postingRelays.length} relays`);
+                        
+                        // Log details for each relay attempt
+                        results.forEach((result, index) => {
+                            const relayUrl = postingRelays[index];
+                            if (result.status === 'fulfilled') {
+                                console.log(`✅ ${relayUrl}: Success`);
+                            } else {
+                                console.log(`❌ ${relayUrl}: ${result.reason?.message || 'Unknown error'}`);
+                            }
+                        });
+                        
                         return successful > 0;
                     } else {
                         // Fallback method
@@ -6113,9 +6231,21 @@
                         const postPromises = postingRelays.map(relayUrl => this.postEventToRelay(relayUrl, event));
                         
                         const results = await Promise.allSettled(postPromises);
-                        const successful = results.filter(r => r.status === 'fulfilled').length;
+                        const successful = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
                         
-                        console.log(`Profile posted to ${successful}/${postingRelays.length} relays`);
+                        console.log(`📊 Profile posting results (fallback):`, results);
+                        console.log(`✅ Profile posted to ${successful}/${postingRelays.length} relays`);
+                        
+                        // Log details for each relay attempt
+                        results.forEach((result, index) => {
+                            const relayUrl = postingRelays[index];
+                            if (result.status === 'fulfilled') {
+                                console.log(`✅ ${relayUrl}: Success`);
+                            } else {
+                                console.log(`❌ ${relayUrl}: ${result.reason?.message || 'Unknown error'}`);
+                            }
+                        });
+                        
                         return successful > 0;
                     }
                 } catch (error) {
@@ -6125,43 +6255,63 @@
             }
 
             // Post event to a specific relay
-            async postEventToRelay(relayUrl, event) {
+            async postEventToRelay(relayUrl, event, expectedEventId = null) {
                 return new Promise((resolve, reject) => {
+                    console.log(`🔗 Attempting to post to relay: ${relayUrl}`);
+                    console.log(`📊 WebSocket state:`, this.websockets[relayUrl] ? this.websockets[relayUrl].readyState : 'undefined');
+                    console.log(`🆔 Event ID in postEventToRelay:`, event.id, typeof event.id);
+                    console.log(`🎯 Expected event ID:`, expectedEventId, typeof expectedEventId);
+                    
                     if (!this.websockets[relayUrl] || this.websockets[relayUrl].readyState !== WebSocket.OPEN) {
+                        console.log(`❌ Relay ${relayUrl} not connected (state: ${this.websockets[relayUrl]?.readyState})`);
                         reject(new Error(`Relay ${relayUrl} not connected`));
                         return;
                     }
 
                     const message = JSON.stringify(["EVENT", event]);
+                    console.log(`📤 Sending message to ${relayUrl}:`, message.substring(0, 200) + '...');
                     
                     const handleMessage = (event) => {
                         try {
                             const data = JSON.parse(event.data);
+                            console.log(`📥 Received response from ${relayUrl}:`, data);
+                            
                             if (Array.isArray(data) && data.length >= 2) {
                                 const [messageType, eventId, success, message] = data;
                                 
-                                if (messageType === 'OK' && eventId === event.id) {
-                                    this.websockets[relayUrl].removeEventListener('message', handleMessage);
-                                    if (success) {
-                                        resolve(true);
-                                    } else {
-                                        reject(new Error(message || 'Event rejected by relay'));
+                                if (messageType === 'OK') {
+                                    const expectedId = expectedEventId || event.id;
+                                    console.log(`🔍 OK response from ${relayUrl}: eventId="${eventId}", expected="${expectedId}", match=${eventId === expectedId}`);
+                                    if (eventId === expectedId) {
+                                        console.log(`✅ OK response for event ${eventId} from ${relayUrl}: success=${success}, message="${message}"`);
+                                        this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                        if (success) {
+                                            console.log(`🎉 Successfully posted to ${relayUrl}`);
+                                            resolve(true);
+                                        } else {
+                                            console.log(`❌ Event rejected by ${relayUrl}: ${message}`);
+                                            reject(new Error(message || 'Event rejected by relay'));
+                                        }
+                                        return; // Important: return early to prevent further processing
                                     }
                                 }
                             }
                         } catch (error) {
+                            console.log(`⚠️ Error parsing message from ${relayUrl}:`, error.message);
                             // Ignore parsing errors for other messages
                         }
                     };
 
                     this.websockets[relayUrl].addEventListener('message', handleMessage);
                     this.websockets[relayUrl].send(message);
+                    console.log(`📡 Message sent to ${relayUrl}, waiting for response...`);
 
-                    // Timeout after 10 seconds
+                    // Timeout after 5 seconds for faster feedback
                     setTimeout(() => {
+                        console.log(`⏰ Timeout posting to ${relayUrl} after 5 seconds`);
                         this.websockets[relayUrl].removeEventListener('message', handleMessage);
                         reject(new Error('Timeout posting to relay'));
-                    }, 10000);
+                    }, 5000);
                 });
             }
 
@@ -6485,8 +6635,8 @@
                     };
                     this.relayEnabled[relayUrl] = true; // All relays enabled for reading by default
                     
-                    // Only hitchwiki and trustroots enabled for posting by default
-                    this.postingRelays[relayUrl] = relayUrl.includes('hitchwiki.org') || relayUrl.includes('trustroots.org');
+                    // Only hitchwiki, trustroots, and nomadwiki enabled for posting by default
+                    this.postingRelays[relayUrl] = relayUrl.includes('hitchwiki.org') || relayUrl.includes('trustroots.org') || relayUrl.includes('nomadwiki.org');
                 });
                 
                 // Load saved relay settings from localStorage
