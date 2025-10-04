@@ -487,6 +487,30 @@
             animation: pulse 2s infinite;
         }
 
+        .app-footer {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .app-footer a {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            text-decoration: none;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .app-footer a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
@@ -6040,6 +6064,27 @@
 
         // Initialize the app when the page loads
         window.tripchatVisualizer = new TRipchatVisualizer();
+        
+        // Update last modified time
+        function updateLastModified() {
+            const lastModifiedElement = document.getElementById('lastModified');
+            if (lastModifiedElement) {
+                const lastModified = new Date(document.lastModified);
+                const year = lastModified.getFullYear().toString();
+                const month = (lastModified.getMonth() + 1).toString().padStart(2, '0');
+                const day = lastModified.getDate().toString().padStart(2, '0');
+                const hours = lastModified.getHours().toString().padStart(2, '0');
+                const minutes = lastModified.getMinutes().toString().padStart(2, '0');
+                const timeString = `${year}-${month}-${day} ${hours}:${minutes}`;
+                lastModifiedElement.textContent = timeString;
+            }
+        }
+        updateLastModified();
     </script>
+
+    <!-- GitHub link with last modified time -->
+    <div class="app-footer">
+        <a href="https://github.com/guaka/TRipchat" target="_blank" rel="noopener noreferrer" id="githubLink">Updated: <span id="lastModified"></span></a>
+    </div>
 </body>
 </html>
