@@ -13,12 +13,7 @@ A web-based visualization tool for travel chat on Nostr. Displays location-based
 
 ## Quick Start
 
-1. **Serve the project** (required for ES modules):
-   ```bash
-   python3 -m http.server 5173
-   ```
-
-2. **Visit** `http://localhost:5173`
+**Just open `index.html` in your browser!** No server required.
 
 ## URL Parameters
 
