@@ -199,31 +199,32 @@
 
         .note-delete-btn {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 4px;
+            right: 4px;
             background: #dc3545;
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 0.6rem;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.5rem;
             cursor: pointer;
-            opacity: 0.7;
+            opacity: 0.4;
             transition: all 0.2s ease;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            z-index: 10;
         }
 
         .note-delete-btn:hover {
-            opacity: 1;
+            opacity: 0.9;
             background: #c82333;
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
 
         .note-delete-btn:disabled {
-            opacity: 0.6;
-            background: #6c757d;
+            opacity: 0.3;
+            background: #adb5bd;
             cursor: not-allowed;
             transform: none;
         }
@@ -2121,6 +2122,17 @@
         .note-item .note-username a:hover {
             color: #16a34a !important;
             text-decoration: underline !important;
+        }
+
+        /* URL link styles */
+        .external-link {
+            color: #22c55e;
+            text-decoration: underline;
+        }
+
+        .external-link:hover {
+            color: #16a34a;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -4124,17 +4136,35 @@
             }
 
             renderNote(note, timeString, relativeTime) {
-                const content = this.escapeHtml(note.content || '');
+                const content = note.content || '';
                 const processedContent = content.replace(/\n/g, '<br>');
                 
-                // Extract geohash tags
+                // Extract geohash tags (prioritize geohash over coordinates)
                 const geohashTags = [];
+                let hasGeohash = false;
+                
                 if (note.tags) {
-                    note.tags.forEach(tag => {
+                    // First pass: look for geohash tags
+                    for (const tag of note.tags) {
                         if (tag[0] === 'g' && tag[1]) {
-                            geohashTags.push(tag[1]);
+                            if (this.isGeohash(tag[1])) {
+                                geohashTags.push(tag[1]);
+                                hasGeohash = true;
+                            }
                         }
-                    });
+                    }
+                    
+                    // Second pass: look for coordinate tags only if no geohash was found
+                    if (!hasGeohash) {
+                        for (const tag of note.tags) {
+                            if (tag[0] === 'g' && tag[1]) {
+                                const coordMatch = tag[1].match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
+                                if (coordMatch) {
+                                    geohashTags.push(tag[1]);
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 const geohashHtml = geohashTags.length > 0 ? `
@@ -4150,8 +4180,8 @@
                 // Rendering note with profile data
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags to make them clickable
-                let contentHtml = this.processHashtags(processedContent);
+                // Process content to make URLs and hashtags clickable
+                let contentHtml = this.processContent(processedContent);
                 
                 // Get expiration info for combined timestamp
                 let expirationText = '';
@@ -4200,6 +4230,50 @@
             getNoteType(note) {
                 // All notes are Kind 1 (text notes)
                 return '';
+            }
+
+            processContent(content) {
+                // First escape HTML to prevent XSS
+                let escapedContent = this.escapeHtml(content);
+                
+                // Then process URLs on escaped content
+                let urlProcessedContent = this.processUrls(escapedContent);
+                
+                // Finally process hashtags
+                return this.processHashtags(urlProcessedContent);
+            }
+
+            processUrls(content) {
+                // URL regex pattern that matches http/https URLs but not inside existing HTML tags
+                const urlRegex = /(https?:\/\/[^\s<>]+)/g;
+                
+                return content.replace(urlRegex, (url) => {
+                    // Skip if this looks like it's already inside HTML
+                    if (url.includes('<') || url.includes('>') || url.includes('"')) {
+                        return url;
+                    }
+                    
+                    try {
+                        const urlObj = new URL(url);
+                        const domain = urlObj.hostname.toLowerCase();
+                        
+                        // Check if it's a trusted domain
+                        const isHitchwiki = domain === 'hitchwiki.org' || domain.endsWith('.hitchwiki.org');
+                        const isTrustroots = domain === 'trustroots.org' || domain.endsWith('.trustroots.org');
+                        
+                        if (isHitchwiki || isTrustroots) {
+                            // Decode URL for display while keeping original for href
+                            const displayUrl = decodeURIComponent(url);
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="external-link">${displayUrl}</a>`;
+                        } else {
+                            // Return as plain text for untrusted domains
+                            return url;
+                        }
+                    } catch (error) {
+                        // If URL parsing fails, return as plain text
+                        return url;
+                    }
+                });
             }
 
             processHashtags(content) {
@@ -4269,9 +4343,9 @@
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags in fallback note content
-                const content = this.escapeHtml(note.content || 'No content');
-                const processedContent = this.processHashtags(content);
+                // Process content in fallback note
+                const content = note.content || 'No content';
+                const processedContent = this.processContent(content);
                 
                 // Check if this note is by the current user
                 const isCurrentUser = this.isNoteByCurrentUser(note);
@@ -4321,24 +4395,36 @@
                 let lat = null;
                 let lng = null;
                 let location = null;
+                let hasGeohash = false;
+                let hasCoordinates = false;
                 
                 if (note.tags) {
+                    // First pass: look for geohash (prioritize geohash over coordinates)
                     for (const tag of note.tags) {
                         if (tag[0] === 'g' && tag[1]) {
-                            const coordMatch = tag[1].match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
-                            if (coordMatch) {
-                                lat = parseFloat(coordMatch[1]);
-                                lng = parseFloat(coordMatch[2]);
-                                location = `Coordinates: ${tag[1]}`;
-                                break;
-                            }
-                            
                             if (this.isGeohash(tag[1])) {
                                 const coords = this.geohashToLatLng(tag[1]);
                                 if (coords) {
                                     lat = coords.lat;
                                     lng = coords.lng;
                                     location = `Geohash: ${tag[1]}`;
+                                    hasGeohash = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Second pass: look for coordinates only if no geohash was found
+                    if (!hasGeohash) {
+                        for (const tag of note.tags) {
+                            if (tag[0] === 'g' && tag[1]) {
+                                const coordMatch = tag[1].match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
+                                if (coordMatch) {
+                                    lat = parseFloat(coordMatch[1]);
+                                    lng = parseFloat(coordMatch[2]);
+                                    location = `Coordinates: ${tag[1]}`;
+                                    hasCoordinates = true;
                                     break;
                                 }
                             }
@@ -4519,7 +4605,7 @@
                     const popupContent = `
                         <div class="map-popup">
                             <div class="note-title">@${username}</div>
-                            <div class="popup-content">${this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
+                            <div class="popup-content">${this.processContent(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
                             <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
                             ${geohashLink}
                         </div>
@@ -6311,7 +6397,7 @@
                     
                     <div class="modal-section">
                         <div class="modal-section-title">Content</div>
-                        <div class="modal-content-text">${this.processHashtags(this.escapeHtml(note.content || 'No content'))}</div>
+                        <div class="modal-content-text">${this.processContent(this.escapeHtml(note.content || 'No content'))}</div>
                     </div>
                     
                     <div class="modal-section">
