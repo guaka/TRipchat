@@ -268,6 +268,7 @@
                 this.nip05Filter = false;
                 this.showNotes = true;
                 this.theme = 'light';
+                this.noCache = false;
                 
                 // Whitelist of trusted domains for clickable links
                 this.trustedDomains = [
@@ -292,6 +293,7 @@
                 // Parse URL parameters
                 this.showNotes = urlParams.get('showNotes') !== 'false';
                 this.theme = urlParams.get('theme') || 'light';
+                this.noCache = urlParams.get('nocache') === 'true';
                 
                 // Parse hash parameters
                 if (hash && hash.startsWith('#')) {
@@ -387,7 +389,6 @@
                                 const [messageType, subId, eventData] = data;
                                 
                                 if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
-                                    console.log(`Received event from ${relayUrl}:`, eventData.id);
                                     if (this.isTRipchatNote(eventData)) {
                                         this.addNewNote(eventData);
                                     }
@@ -437,9 +438,16 @@
                 // Fetch profile for this user if we don't have it
                 if (!this.userProfiles[note.pubkey]) {
                     this.fetchUserProfile(note.pubkey);
+                } else {
+                    // Check if existing profile is missing NIP-05 and force refresh
+                    const existingProfile = this.userProfiles[note.pubkey];
+                    if (existingProfile && !existingProfile.nip05) {
+                        console.log(`Profile for ${note.pubkey} exists but missing NIP-05, forcing refresh`);
+                        this.clearUserCache(note.pubkey);
+                        this.fetchUserProfile(note.pubkey);
+                    }
                 }
 
-                console.log(`Added note, total notes: ${this.notes.length}`);
                 this.displayNotes();
                 this.scrollToBottom();
             }
@@ -447,8 +455,6 @@
             displayNotes() {
                 const notesList = document.getElementById('notesList');
                 const filteredNotes = this.getFilteredNotes();
-                
-                console.log(`Displaying notes: ${filteredNotes.length} filtered from ${this.notes.length} total`);
                 
                 if (filteredNotes.length === 0) {
                     notesList.innerHTML = '<div class="embed-loading">No notes found</div>';
@@ -576,18 +582,25 @@
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
+                    
                     if (isTrustrootsVerified) {
                         const username = profile.nip05.split('@')[0];
                         return `<a href="https://trustroots.org/profile/${username}" target="_blank" rel="noopener noreferrer" title="${fullNpub}">@${profile.nip05} 🟢</a>`;
                     } else if (isHitchwikiVerified) {
-                        return `<span title="${fullNpub}">@${profile.nip05} 🟢</span>`;
+                        const username = profile.nip05.split('@')[0];
+                        // Use the website field if available, otherwise fall back to user page
+                        const hitchwikiUrl = profile.website && profile.website.includes('hitchwiki.org') 
+                            ? profile.website 
+                            : `https://hitchwiki.org/en/User:${username}`;
+                        return `<a href="${hitchwikiUrl}" target="_blank" rel="noopener noreferrer" title="${fullNpub}">@${profile.nip05} 🟢</a>`;
                     } else if (profile.nip05.includes('@')) {
                         return `<span title="${fullNpub}">@${profile.nip05} 🔵</span>`;
                     }
                 }
                 
                 if (profile && profile.name) {
-                    return profile.name.includes('#') ? profile.name : `${profile.name}#${this.generateDiscriminator(pubkey)}`;
+                    const username = profile.name.includes('#') ? profile.name : `${profile.name}#${this.generateDiscriminator(pubkey)}`;
+                    return username;
                 }
                 
                 return pubkey ? fullNpub : 'Unknown';
@@ -658,27 +671,39 @@
             }
 
             async fetchUserProfile(pubkey) {
-                // Check in-memory cache first
-                if (this.profileCache.has(pubkey)) {
-                    const cachedProfile = this.profileCache.get(pubkey);
-                    this.userProfiles[pubkey] = cachedProfile;
-                    console.log(`Using in-memory cached profile for ${pubkey}:`, cachedProfile);
-                    this.displayNotes();
-                    return;
-                }
+                // Always check if we have a profile but it's missing NIP-05
+                const existingProfile = this.userProfiles[pubkey];
+                const shouldForceRefresh = existingProfile && !existingProfile.nip05;
+                
+                // Skip cache if nocache parameter is set OR if we need to force refresh for NIP-05
+                if (!this.noCache && !shouldForceRefresh) {
+                    // Check in-memory cache first
+                    if (this.profileCache.has(pubkey)) {
+                        const cachedProfile = this.profileCache.get(pubkey);
+                        this.userProfiles[pubkey] = cachedProfile;
+                        this.displayNotes();
+                        return;
+                    }
 
-                // Check localStorage cache
-                const cachedProfile = this.getCachedProfile(pubkey);
-                if (cachedProfile) {
-                    this.userProfiles[pubkey] = cachedProfile;
-                    // Also add to in-memory cache for faster access
-                    this.profileCache.set(pubkey, cachedProfile);
-                    console.log(`Using localStorage cached profile for ${pubkey}:`, cachedProfile);
-                    this.displayNotes();
-                    return;
+                    // Check localStorage cache
+                    const cachedProfile = this.getCachedProfile(pubkey);
+                    if (cachedProfile) {
+                        this.userProfiles[pubkey] = cachedProfile;
+                        // Also add to in-memory cache for faster access
+                        this.profileCache.set(pubkey, cachedProfile);
+                        this.displayNotes();
+                        return;
+                    }
+                } else {
+                    if (this.noCache) {
+                        console.log(`Skipping cache for ${pubkey} (nocache=true)`);
+                    } else if (shouldForceRefresh) {
+                        console.log(`Force refreshing profile for ${pubkey} (missing NIP-05)`);
+                    }
                 }
 
                 console.log(`Fetching profile for pubkey: ${pubkey}`);
+                
                 const promises = this.relays.map(relayUrl => 
                     this.fetchProfileFromRelay(relayUrl, pubkey).catch(error => {
                         console.warn(`Failed to fetch profile from ${relayUrl}:`, error.message);
@@ -697,8 +722,8 @@
                         this.profileCache.set(pubkey, profile);
                         this.setCachedProfile(pubkey, profile);
                         
-                        console.log(`Fetched profile for ${pubkey}:`, profile);
-                        console.log(`NIP-05: ${profile.nip05}`);
+                        console.log(`Fetched profile for ${pubkey}: ${profile.name || 'Unknown'}, NIP-05: ${profile.nip05 || 'none'}`);
+                        
                         // Re-render notes to show updated profile info
                         this.displayNotes();
                         return;
@@ -745,11 +770,18 @@
                                     if (messageType === 'EVENT' && eventData && subId === subscriptionId) {
                                         if (eventData.kind === 0) {
                                             try {
-                                                console.log('Received profile event:', eventData);
-                                                const profile = JSON.parse(eventData.content);
-                                                profile.nip05 = this.extractNip05FromTags(eventData.tags);
-                                                console.log('Parsed profile:', profile);
+                                                console.log('=== PROFILE EVENT RECEIVED ===');
+                                                console.log('Event ID:', eventData.id);
                                                 console.log('Event tags:', eventData.tags);
+                                                console.log('Event content:', eventData.content);
+                                                
+                                                const profile = JSON.parse(eventData.content);
+                                                console.log('Parsed profile content:', profile);
+                                                
+                                                profile.nip05 = this.extractNip05FromTags(eventData.tags);
+                                                console.log('Final profile with NIP-05:', profile);
+                                                console.log('=== END PROFILE EVENT ===');
+                                                
                                                 cleanup();
                                                 resolve(profile);
                                                 return;
@@ -798,7 +830,9 @@
                 console.log('Looking for NIP-05 in tags:', tags);
                 const nip05Tag = tags.find(tag => tag[0] === 'nip05');
                 console.log('Found NIP-05 tag:', nip05Tag);
-                return nip05Tag ? nip05Tag[1] : null;
+                const nip05 = nip05Tag ? nip05Tag[1] : null;
+                console.log('Extracted NIP-05:', nip05);
+                return nip05;
             }
 
             formatTimestamp(timestamp) {
@@ -928,22 +962,62 @@
                     const cached = localStorage.getItem('tripchat_profiles');
                     const profiles = cached ? JSON.parse(cached) : {};
                     
-                    // Store profile with 24-hour expiration
+                    // Store profile with 1-hour expiration (reduced for faster updates)
                     profiles[pubkey] = {
                         profile: profile,
-                        expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                        expires: Date.now() + (60 * 60 * 1000) // 1 hour
                     };
                     
                     localStorage.setItem('tripchat_profiles', JSON.stringify(profiles));
+                    console.log(`Cached profile for ${pubkey} with NIP-05: ${profile.nip05 || 'none'}`);
                 } catch (error) {
                     console.warn('Failed to cache profile:', error);
                 }
             }
 
+            clearUserCache(pubkey) {
+                // Clear from in-memory cache
+                this.profileCache.delete(pubkey);
+                
+                // Clear from localStorage cache
+                try {
+                    const cached = localStorage.getItem('tripchat_profiles');
+                    if (cached) {
+                        const profiles = JSON.parse(cached);
+                        delete profiles[pubkey];
+                        localStorage.setItem('tripchat_profiles', JSON.stringify(profiles));
+                        console.log(`Cleared cache for ${pubkey}`);
+                    }
+                } catch (error) {
+                    console.warn('Failed to clear user cache:', error);
+                }
+            }
+
+            forceRefreshMissingNip05() {
+                console.log('Force refreshing all profiles missing NIP-05...');
+                let refreshCount = 0;
+                
+                for (const [pubkey, profile] of Object.entries(this.userProfiles)) {
+                    if (profile && !profile.nip05) {
+                        console.log(`Force refreshing profile for ${pubkey} (missing NIP-05)`);
+                        this.clearUserCache(pubkey);
+                        this.fetchUserProfile(pubkey);
+                        refreshCount++;
+                    }
+                }
+                
+                console.log(`Force refreshed ${refreshCount} profiles missing NIP-05`);
+            }
+
         }
 
         // Initialize the embed
-        new TRipchatEmbed();
+        const embed = new TRipchatEmbed();
+        
+        // Expose force refresh method globally for debugging
+        window.forceRefreshNip05 = () => {
+            embed.forceRefreshMissingNip05();
+        };
     </script>
 </body>
 </html>
