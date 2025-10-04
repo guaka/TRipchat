@@ -2280,6 +2280,7 @@
                 this.completedRelays = new Set(); // Track which relays have completed initial load
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
+                this.profileCache = new Map(); // In-memory cache for profiles
                 this.privateKey = null; // User's private key for posting
                 this.shouldPreserveSettingsMessage = false; // Control modal message resets
                 
@@ -3380,9 +3381,65 @@
 
 
 
+            // NIP-05 Profile Caching Methods
+            getCachedProfile(pubkey) {
+                try {
+                    const cached = localStorage.getItem(`tripchat_profile_${pubkey}`);
+                    if (cached) {
+                        const profile = JSON.parse(cached);
+                        const now = Date.now();
+                        // Cache for 1 hour
+                        if (now - profile.cachedAt < 3600000) {
+                            return profile.data;
+                        } else {
+                            localStorage.removeItem(`tripchat_profile_${pubkey}`);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error reading cached profile:', e);
+                }
+                return null;
+            }
+
+            setCachedProfile(pubkey, profile) {
+                try {
+                    const cacheData = {
+                        data: profile,
+                        cachedAt: Date.now()
+                    };
+                    localStorage.setItem(`tripchat_profile_${pubkey}`, JSON.stringify(cacheData));
+                } catch (e) {
+                    console.warn('Error caching profile:', e);
+                }
+            }
+
+            // Preload profiles for visible notes to show green links faster
+            async preloadVisibleProfiles() {
+                const visibleNotes = this.notes.slice(0, 20); // Only preload first 20 notes
+                const profilePromises = visibleNotes.map(note => {
+                    if (note.pubkey && !this.userProfiles[note.pubkey]) {
+                        return this.fetchUserProfile(note.pubkey);
+                    }
+                    return Promise.resolve();
+                });
+                
+                await Promise.allSettled(profilePromises);
+                // Re-render to show any newly loaded profiles
+                this.displayActivities(this.notes);
+            }
+
             async fetchUserProfile(pubkey) {
+                // Check in-memory cache first
                 if (this.userProfiles[pubkey]) {
                     return this.userProfiles[pubkey];
+                }
+
+                // Check localStorage cache
+                const cachedProfile = this.getCachedProfile(pubkey);
+                if (cachedProfile) {
+                    this.userProfiles[pubkey] = cachedProfile;
+                    this.profileCache.set(pubkey, cachedProfile);
+                    return cachedProfile;
                 }
 
                 try {
@@ -3391,8 +3448,10 @@
                     if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
-                                // Profile cached successfully
+                                // Cache profile in both memory and localStorage
                                 this.userProfiles[pubkey] = profile;
+                                this.profileCache.set(pubkey, profile);
+                                this.setCachedProfile(pubkey, profile);
                                 // Re-render notes to show the new username
                                 this.displayActivities(this.notes);
                                 return profile;
@@ -3405,8 +3464,11 @@
 
                 // Fallback: create a basic profile with shortened pubkey
                 const shortPubkey = pubkey.substring(0, 8) + '...';
-                this.userProfiles[pubkey] = { name: shortPubkey, pubkey: pubkey };
-                return this.userProfiles[pubkey];
+                const fallbackProfile = { name: shortPubkey, pubkey: pubkey };
+                this.userProfiles[pubkey] = fallbackProfile;
+                this.profileCache.set(pubkey, fallbackProfile);
+                // Don't cache fallback profiles in localStorage
+                return fallbackProfile;
             }
 
             // Request queue management methods
@@ -3754,6 +3816,8 @@
                 // If we have notes, display them
                 if (this.notes.length > 0) {
                     this.displayActivities(this.notes);
+                    // Preload profiles for faster green link display
+                    this.preloadVisibleProfiles();
                 }
             }
 
