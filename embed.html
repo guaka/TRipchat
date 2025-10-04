@@ -129,8 +129,22 @@
             margin: 0;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between; /* Space between title and last modified */
             flex-shrink: 0;
+        }
+
+        .embed-last-modified {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            opacity: 0.7;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .embed-last-modified:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
 
         .embed-notes-list {
@@ -244,9 +258,10 @@
                 <div class="embed-notes-list" id="notesList">
                     <div class="embed-loading">Loading notes...</div>
                 </div>
-                <div class="embed-notes-footer">
-                    <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat: join the conversation on nostr</a>
-                </div>
+        <div class="embed-notes-footer">
+            <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat: join the conversation on nostr</a>
+            <a href="https://github.com/guaka/TRipchat" class="embed-last-modified" id="lastModified" target="_blank" rel="noopener noreferrer"></a>
+        </div>
             </div>
         </div>
     </div>
@@ -1018,6 +1033,26 @@
         window.forceRefreshNip05 = () => {
             embed.forceRefreshMissingNip05();
         };
+
+        // Display last modified time
+        function updateLastModified() {
+            const lastModifiedElement = document.getElementById('lastModified');
+            if (lastModifiedElement) {
+                const lastModified = new Date(document.lastModified);
+                const timeString = lastModified.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                lastModifiedElement.textContent = `Updated: ${timeString}`;
+            }
+        }
+
+        // Update last modified time on page load
+        updateLastModified();
     </script>
 </body>
 </html>
