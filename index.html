@@ -1764,6 +1764,21 @@
             .note-username {
                 font-size: 0.8rem;
                 font-weight: 600;
+                color: var(--accent-color); /* Default color for non-linked usernames */
+            }
+
+            .note-username a {
+                color: #22c55e !important; /* Green for NIP-05 links */
+                text-decoration: none !important;
+            }
+
+            .note-username a:hover {
+                color: #16a34a !important; /* Darker green on hover */
+                text-decoration: underline !important;
+            }
+
+            .note-username a:visited {
+                color: #22c55e !important; /* Keep green even after visiting */
             }
 
             .note-time {
@@ -2040,6 +2055,34 @@
                 padding: 5px 10px;
                 font-size: 0.7rem;
             }
+        }
+
+        /* Force green for NIP-05 links - highest specificity */
+        body .main-container .note-item .note-username a,
+        body .main-container .note-item .note-username a:link,
+        body .main-container .note-item .note-username a:visited,
+        body .main-container .note-item .note-username a:active {
+            color: #22c55e !important;
+            text-decoration: none !important;
+        }
+
+        body .main-container .note-item .note-username a:hover {
+            color: #16a34a !important;
+            text-decoration: underline !important;
+        }
+
+        /* Additional specificity for all link states */
+        .note-item .note-username a,
+        .note-item .note-username a:link,
+        .note-item .note-username a:visited,
+        .note-item .note-username a:active {
+            color: #22c55e !important;
+            text-decoration: none !important;
+        }
+
+        .note-item .note-username a:hover {
+            color: #16a34a !important;
+            text-decoration: underline !important;
         }
     </style>
 </head>
@@ -4042,7 +4085,7 @@
 
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
+                        <span class="note-username" style="font-weight: 600; font-size: 0.75rem;">${username}</span>
                     </div>
                     <div class="note-time" title="Click to view raw Nostr data: ${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; line-height: 1.2; margin-bottom: 4px;">
                         <div>${relativeTime}</div>
@@ -4135,7 +4178,7 @@
                 
                 return `
                     <div class="note-header">
-                        <span class="note-username" style="color: var(--accent-color); font-weight: 600; font-size: 0.75rem;">${username}</span>
+                        <span class="note-username" style="font-weight: 600; font-size: 0.75rem;">${username}</span>
                     </div>
                     <div class="note-time" title="Click to view raw Nostr data: ${timeString}" data-note-id="${note.id}" style="font-size: 0.5rem; color: var(--text-muted); text-align: right; margin-bottom: 4px;">${relativeTime}</div>
                     <div class="note-content">${processedContent}</div>
@@ -5002,13 +5045,19 @@
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
+                    const fullNpub = this.hexToNpub(pubkey);
                     
-                    if (isTrustrootsVerified || isHitchwikiVerified) {
-                        // Show full NIP-05 name for trusted domain verified users
-                        username = `@${profile.nip05} 🟢`; // Green circle for trusted domain verified
+                    if (isTrustrootsVerified) {
+                        const usernamePart = profile.nip05.split('@')[0];
+                        username = `<a href="https://trustroots.org/profile/${usernamePart}" target="_blank" rel="noopener noreferrer" title="${fullNpub}">@${profile.nip05} 🟢</a>`;
+                    } else if (isHitchwikiVerified) {
+                        const usernamePart = profile.nip05.split('@')[0];
+                        const hitchwikiUrl = profile.website && profile.website.includes('hitchwiki.org') 
+                            ? profile.website 
+                            : `https://hitchwiki.org/en/User:${usernamePart}`;
+                        username = `<a href="${hitchwikiUrl}" target="_blank" rel="noopener noreferrer" title="${fullNpub}">@${profile.nip05} 🟢</a>`;
                     } else if (profile.nip05.includes('@')) {
-                        // Show full NIP-05 name for other verified users
-                        username = `@${profile.nip05} 🔵`; // Blue circle for other NIP-05 verified
+                        username = `<span title="${fullNpub}">@${profile.nip05} 🔵</span>`;
                     } else {
                         // Fallback to profile name if NIP-05 exists but is malformed
                         username = profile.name || 'Unknown';
