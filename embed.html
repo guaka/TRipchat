@@ -162,6 +162,17 @@
             font-size: 0.65rem;
         }
 
+        .embed-note-username a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .embed-note-username a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
         .embed-note-content {
             color: var(--text-primary);
             margin-bottom: 0;
@@ -170,6 +181,24 @@
         .embed-note-time {
             color: var(--text-muted);
             font-size: 0.55rem;
+        }
+
+        .embed-note-geohash {
+            margin-top: 2px;
+            text-align: right;
+        }
+
+        .embed-note-geohash a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.6rem;
+            font-family: monospace;
+            transition: color 0.2s ease;
+        }
+
+        .embed-note-geohash a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
         }
 
 
@@ -216,7 +245,7 @@
                     <div class="embed-loading">Loading notes...</div>
                 </div>
                 <div class="embed-notes-footer">
-                    <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat</a>
+                    <a href="#" class="embed-title" id="fullViewLink" target="_blank">TRipchat: join the conversation on nostr</a>
                 </div>
             </div>
         </div>
@@ -525,6 +554,7 @@
                 const content = this.formatContentWithLinks(note.content || 'No content');
                 const timeString = this.formatTimestamp(note.created_at);
                 const fullNpub = this.hexToNpub(note.pubkey);
+                const geohash = this.extractGeohash(note);
                 
                 return `
                     <div class="embed-note-item">
@@ -533,6 +563,7 @@
                             <span class="embed-note-time">${timeString}</span>
                         </div>
                         <div class="embed-note-content">${content}</div>
+                        ${geohash ? `<div class="embed-note-geohash"><a href="./index.html#geohash=${geohash}" target="_blank">#${geohash}</a></div>` : ''}
                     </div>
                 `;
             }
@@ -541,7 +572,10 @@
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
-                    if (isTrustrootsVerified || isHitchwikiVerified) {
+                    if (isTrustrootsVerified) {
+                        const username = profile.nip05.split('@')[0];
+                        return `<a href="https://trustroots.org/profile/${username}" target="_blank" rel="noopener noreferrer">@${profile.nip05} 🟢</a>`;
+                    } else if (isHitchwikiVerified) {
                         return `@${profile.nip05} 🟢`;
                     } else if (profile.nip05.includes('@')) {
                         return `@${profile.nip05} 🔵`;
@@ -747,6 +781,79 @@
                 const minutes = date.getMinutes().toString().padStart(2, '0'); // MM
                 
                 return `${year}-${month}-${day} ${hours}:${minutes}`;
+            }
+
+            extractGeohash(note) {
+                if (!note.tags) return null;
+                
+                const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1]);
+                if (geohashTag && geohashTag[1]) {
+                    const value = geohashTag[1];
+                    
+                    // Check if it's already a geohash (alphanumeric string)
+                    if (/^[0-9b-hjkmnp-z]+$/i.test(value)) {
+                        return value.substring(0, 4); // Max 4 characters
+                    }
+                    
+                    // Check if it's lat,lng format and convert to geohash
+                    if (value.includes(',')) {
+                        const parts = value.split(',');
+                        if (parts.length === 2) {
+                            const lat = parseFloat(parts[0]);
+                            const lng = parseFloat(parts[1]);
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                // Convert lat/lng to geohash and limit to 4 chars
+                                return this.latLngToGeohash(lat, lng).substring(0, 4);
+                            }
+                        }
+                    }
+                }
+                
+                return null;
+            }
+
+            latLngToGeohash(lat, lng) {
+                // Simple geohash implementation (base32)
+                const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+                let bits = 0;
+                let bit = 0;
+                let ch = 0;
+                let even = true;
+                let geohash = '';
+                
+                let latMin = -90, latMax = 90;
+                let lngMin = -180, lngMax = 180;
+                
+                while (geohash.length < 12) {
+                    if (even) {
+                        const lngMid = (lngMin + lngMax) / 2;
+                        if (lng >= lngMid) {
+                            ch |= (1 << (4 - bit));
+                            lngMin = lngMid;
+                        } else {
+                            lngMax = lngMid;
+                        }
+                    } else {
+                        const latMid = (latMin + latMax) / 2;
+                        if (lat >= latMid) {
+                            ch |= (1 << (4 - bit));
+                            latMin = latMid;
+                        } else {
+                            latMax = latMid;
+                        }
+                    }
+                    
+                    even = !even;
+                    bit++;
+                    
+                    if (bit === 5) {
+                        geohash += base32[ch];
+                        bit = 0;
+                        ch = 0;
+                    }
+                }
+                
+                return geohash;
             }
 
         }
