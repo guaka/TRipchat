@@ -2187,6 +2187,12 @@
                     'wss://relay.nomadwiki.org',
                     'wss://relay.trustroots.org'
                 ];
+                
+                // Whitelist of trusted domains for clickable links
+                this.trustedDomains = [
+                    'hitchwiki.org',
+                    'trustroots.org',
+                ];
                 this.relayEnabled = {}; // Track which relays are enabled for reading
                 this.postingRelays = {}; // Track which relays are enabled for posting
                 
@@ -3991,8 +3997,9 @@
                 // Rendering note with profile data
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags to make them clickable
+                // Process hashtags and URLs to make them clickable
                 let contentHtml = this.processHashtags(processedContent);
+                contentHtml = this.formatContentWithLinks(contentHtml);
                 
                 // Get expiration info for combined timestamp
                 let expirationText = '';
@@ -4101,13 +4108,46 @@
                 });
             }
 
+            formatContentWithLinks(text) {
+                // First escape HTML to prevent XSS
+                const escapedText = this.escapeHtml(text);
+                
+                // URL regex pattern that matches http/https URLs
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                
+                return escapedText.replace(urlRegex, (url) => {
+                    try {
+                        const urlObj = new URL(url);
+                        const domain = urlObj.hostname.toLowerCase();
+                        
+                        // Check if domain is in whitelist
+                        const isTrusted = this.trustedDomains.some(trustedDomain => 
+                            domain === trustedDomain || domain.endsWith('.' + trustedDomain)
+                        );
+                        
+                        if (isTrusted) {
+                            // Decode URL for display while keeping original for href
+                            const displayUrl = decodeURIComponent(url);
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: underline;">${displayUrl}</a>`;
+                        } else {
+                            // Return as plain text for untrusted domains
+                            return url;
+                        }
+                    } catch (e) {
+                        // If URL parsing fails, return as plain text
+                        return url;
+                    }
+                });
+            }
+
             renderFallbackNote(note, timeString, relativeTime) {
                 const profile = this.userProfiles[note.pubkey];
                 const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
                 
-                // Process hashtags in fallback note content
+                // Process hashtags and URLs in fallback note content
                 const content = this.escapeHtml(note.content || 'No content');
-                const processedContent = this.processHashtags(content);
+                let processedContent = this.processHashtags(content);
+                processedContent = this.formatContentWithLinks(processedContent);
                 
                 return `
                     <div class="note-header">
@@ -4350,7 +4390,7 @@
                     const popupContent = `
                         <div class="map-popup">
                             <div class="note-title">@${username}</div>
-                            <div class="popup-content">${this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
+                            <div class="popup-content">${this.formatContentWithLinks(this.processHashtags(this.escapeHtml(note.content?.substring(0, 100) || 'No content')))}${note.content?.length > 100 ? '...' : ''}</div>
                             <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
                             ${geohashLink}
                         </div>
@@ -5872,7 +5912,7 @@
                     
                     <div class="modal-section">
                         <div class="modal-section-title">Content</div>
-                        <div class="modal-content-text">${this.processHashtags(this.escapeHtml(note.content || 'No content'))}</div>
+                        <div class="modal-content-text">${this.formatContentWithLinks(this.processHashtags(this.escapeHtml(note.content || 'No content')))}</div>
                     </div>
                     
                     <div class="modal-section">
