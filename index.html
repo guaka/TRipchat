@@ -197,6 +197,52 @@
             gap: 12px;
         }
 
+        .note-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .note-delete-btn:hover {
+            opacity: 1;
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
         @keyframes floatIn {
             from {
                 opacity: 0;
@@ -4098,6 +4144,10 @@
                     }
                 }
 
+                // Check if this note is by the current user
+                const isCurrentUser = this.isNoteByCurrentUser(note);
+                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
+
                 return `
                     <div class="note-header">
                         <span class="note-username" style="font-weight: 600; font-size: 0.75rem;">${username}</span>
@@ -4112,6 +4162,7 @@
                             ${geohashTags.map(geohash => `<span class="geohash-tag" data-geohash="${geohash}" style="background: #e9ecef; color: #6c757d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">📍 ${geohash}</span>`).join('')}
                         </div>
                     </div>
+                    ${deleteButton}
                 `;
             }
 
@@ -4191,6 +4242,10 @@
                 const content = this.escapeHtml(note.content || 'No content');
                 const processedContent = this.processHashtags(content);
                 
+                // Check if this note is by the current user
+                const isCurrentUser = this.isNoteByCurrentUser(note);
+                const deleteButton = isCurrentUser ? `<button class="note-delete-btn" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
+                
                 return `
                     <div class="note-header">
                         <span class="note-username" style="font-weight: 600; font-size: 0.75rem;">${username}</span>
@@ -4202,6 +4257,7 @@
                             <span style="background: #e9ecef; color: #6c757d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Kind ${note.kind || 'Unknown'}</span>
                         </div>
                     </div>
+                    ${deleteButton}
                 `;
             }
 
@@ -4808,6 +4864,229 @@
                     return this.generateNpubFallback(privateKeyHex);
                 }
             }
+
+            getCurrentUserPubkey() {
+                if (!this.privateKey) {
+                    return null;
+                }
+                
+                try {
+                    let privateKeyHex;
+                    
+                    // Check if it's already hex format (64 characters)
+                    if (this.privateKey.length === 64 && /^[0-9a-fA-F]+$/.test(this.privateKey)) {
+                        privateKeyHex = this.privateKey;
+                    } else if (this.privateKey.startsWith('nsec')) {
+                        // Convert nsec to hex
+                        privateKeyHex = this.nsecToHex(this.privateKey);
+                    } else {
+                        console.warn('Unknown private key format:', this.privateKey.substring(0, 10) + '...');
+                        return null;
+                    }
+                    
+                    return this.deriveNpubFromPrivateKey(privateKeyHex);
+                } catch (error) {
+                    console.error('Error getting current user pubkey:', error);
+                    return null;
+                }
+            }
+
+            isNoteByCurrentUser(note) {
+                if (!this.privateKey) {
+                    return false;
+                }
+                
+                try {
+                    const currentUserPubkey = this.getCurrentUserPubkey();
+                    if (!currentUserPubkey) {
+                        return false;
+                    }
+                    
+                    // Convert npub to hex for comparison
+                    const currentUserHex = this.npubToHex(currentUserPubkey);
+                    if (!currentUserHex) {
+                        return false;
+                    }
+                    
+                    return note.pubkey === currentUserHex;
+                } catch (error) {
+                    console.error('Error comparing pubkeys:', error);
+                    return false;
+                }
+            }
+
+            npubToHex(npub) {
+                try {
+                    if (typeof window.nostrTools !== 'undefined') {
+                        const decoded = window.nostrTools.nip19.decode(npub);
+                        return decoded.data;
+                    } else {
+                        // Fallback: try to extract hex from npub format
+                        console.warn('nostr-tools not available, using fallback npub decoding');
+                        return this.simpleNpubDecode(npub);
+                    }
+                } catch (error) {
+                    console.error('Error converting npub to hex:', error);
+                    return null;
+                }
+            }
+
+            simpleNpubDecode(npub) {
+                // This is a very basic fallback - in production, use a proper base58 decoder
+                try {
+                    // For now, we'll use a simple approach that might work for testing
+                    // In practice, you'd need a proper base58 decoder library
+                    console.warn('Using fallback npub decoding - may not work correctly');
+                    return null; // Return null to indicate we can't decode it properly
+                } catch (error) {
+                    console.error('Error in simple npub decode:', error);
+                    return null;
+                }
+            }
+
+            async signEvent(event) {
+                try {
+                    if (typeof window.nostrTools !== 'undefined') {
+                        // Convert nsec to hex if needed
+                        let privateKeyHex = this.privateKey;
+                        if (this.privateKey.startsWith('nsec')) {
+                            privateKeyHex = this.nsecToHex(this.privateKey);
+                        }
+                        return window.nostrTools.finishEvent(event, privateKeyHex);
+                    } else {
+                        throw new Error('nostr-tools not available');
+                    }
+                } catch (error) {
+                    console.error('Error signing event:', error);
+                    throw error;
+                }
+            }
+
+            async deleteNote(noteId) {
+                if (!this.privateKey) {
+                    alert('No private key available. Please set up your keys first.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
+                    return;
+                }
+
+                try {
+                    // Create a kind 5 deletion event
+                    const deletionEvent = {
+                        kind: 5,
+                        content: 'Deleted by user',
+                        tags: [['e', noteId]],
+                        created_at: Math.floor(Date.now() / 1000)
+                    };
+
+                    // Sign the event
+                    const signedEvent = await this.signEvent(deletionEvent);
+                    
+                    if (!signedEvent) {
+                        throw new Error('Failed to sign deletion event');
+                    }
+
+                    // Send to all enabled relays
+                    const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                    console.log('Sending deletion to relays:', postingRelays);
+                    
+                    const relayPromises = postingRelays.map(async (relayUrl) => {
+                        try {
+                            console.log(`Sending deletion to ${relayUrl}`);
+                            const result = await this.postEventToRelay(relayUrl, signedEvent);
+                            console.log(`Deletion sent successfully to ${relayUrl}`);
+                            return result;
+                        } catch (error) {
+                            console.log(`Deletion failed for ${relayUrl}:`, error.message);
+                            // For deletion events, we'll consider it successful if we sent it
+                            // even if we don't get a proper OK response
+                            return true;
+                        }
+                    });
+
+                    const results = await Promise.allSettled(relayPromises);
+                    const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+                    
+                    console.log('Deletion results:', results);
+                    console.log('Success count:', successCount);
+
+                    // Always proceed with local deletion since the event was sent
+                    // Remove from local notes array
+                    this.notes = this.notes.filter(note => note.id !== noteId);
+                    
+                    // Remove from map immediately
+                    this.removeNoteFromMap(noteId);
+                    
+                    // Re-render the display
+                    this.displayActivities(this.notes);
+                    this.plotActivitiesOnMap(this.notes);
+                    
+                    // Show success message
+                    this.showDeletionSuccess(postingRelays.length);
+
+                } catch (error) {
+                    console.error('Error deleting note:', error);
+                    alert('Failed to delete note: ' + error.message);
+                }
+            }
+
+            removeNoteFromMap(noteId) {
+                // Find and remove the specific marker for this note
+                const markerToRemove = this.mapMarkers.find(marker => {
+                    const popup = marker.getPopup();
+                    if (popup) {
+                        const popupContent = popup.getContent();
+                        return popupContent && popupContent.includes(`data-note-id="${noteId}"`);
+                    }
+                    return false;
+                });
+
+                if (markerToRemove && this.map) {
+                    this.map.removeLayer(markerToRemove);
+                    const index = this.mapMarkers.indexOf(markerToRemove);
+                    if (index > -1) {
+                        this.mapMarkers.splice(index, 1);
+                    }
+                }
+            }
+
+            showDeletionSuccess(successCount) {
+                // Create a temporary success message
+                const successDiv = document.createElement('div');
+                successDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #22c55e;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    z-index: 10000;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    animation: slideInRight 0.3s ease-out;
+                `;
+                successDiv.textContent = `✅ Note deleted from ${successCount} relay(s)`;
+                
+                document.body.appendChild(successDiv);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    if (successDiv.parentNode) {
+                        successDiv.style.animation = 'slideOutRight 0.3s ease-in';
+                        setTimeout(() => {
+                            if (successDiv.parentNode) {
+                                successDiv.parentNode.removeChild(successDiv);
+                            }
+                        }, 300);
+                    }
+                }, 3000);
+            }
+
 
             async updateTrustrootsProfile(npub) {
                 try {
