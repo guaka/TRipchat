@@ -1039,14 +1039,12 @@
             const lastModifiedElement = document.getElementById('lastModified');
             if (lastModifiedElement) {
                 const lastModified = new Date(document.lastModified);
-                const timeString = lastModified.toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                });
+                const year = lastModified.getFullYear().toString();
+                const month = (lastModified.getMonth() + 1).toString().padStart(2, '0');
+                const day = lastModified.getDate().toString().padStart(2, '0');
+                const hours = lastModified.getHours().toString().padStart(2, '0');
+                const minutes = lastModified.getMinutes().toString().padStart(2, '0');
+                const timeString = `${year}-${month}-${day} ${hours}:${minutes}`;
                 lastModifiedElement.textContent = `Updated: ${timeString}`;
             }
         }
