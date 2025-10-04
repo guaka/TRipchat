@@ -261,6 +261,8 @@
                 this.notes = [];
                 this.websockets = {};
                 this.userProfiles = {};
+                this.profileCache = new Map(); // In-memory cache for current session
+                this.loadProfileCache(); // Load persistent cache from localStorage
                 this.searchFilter = '';
                 this.geohashFilter = '';
                 this.nip05Filter = false;
@@ -368,7 +370,7 @@
                     const subscriptionId = "embed-" + Math.random().toString(36).substr(2, 9);
                     const filters = {
                         "kinds": [1],
-                        "limit": 50
+                        "limit": 20
                     };
                     
                     const subscription = ["REQ", subscriptionId, filters];
@@ -428,8 +430,8 @@
                 this.notes.push(note);
                 this.notes.sort((a, b) => b.created_at - a.created_at);
                 
-                if (this.notes.length > 100) {
-                    this.notes = this.notes.slice(0, 100);
+                if (this.notes.length > 50) {
+                    this.notes = this.notes.slice(0, 50);
                 }
 
                 // Fetch profile for this user if we don't have it
@@ -453,7 +455,7 @@
                     return;
                 }
 
-                const limitedNotes = filteredNotes.slice(0, 20);
+                const limitedNotes = filteredNotes.slice(0, 15);
                 notesList.innerHTML = limitedNotes.reverse().map(note => this.renderNote(note)).join('');
                 
                 // Auto-scroll to bottom after rendering
@@ -569,16 +571,18 @@
             }
 
             formatUsername(profile, pubkey) {
+                const fullNpub = this.hexToNpub(pubkey);
+                
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
                     const isHitchwikiVerified = profile.nip05.endsWith('@hitchwiki.org');
                     if (isTrustrootsVerified) {
                         const username = profile.nip05.split('@')[0];
-                        return `<a href="https://trustroots.org/profile/${username}" target="_blank" rel="noopener noreferrer">@${profile.nip05} 🟢</a>`;
+                        return `<a href="https://trustroots.org/profile/${username}" target="_blank" rel="noopener noreferrer" title="${fullNpub}">@${profile.nip05} 🟢</a>`;
                     } else if (isHitchwikiVerified) {
-                        return `@${profile.nip05} 🟢`;
+                        return `<span title="${fullNpub}">@${profile.nip05} 🟢</span>`;
                     } else if (profile.nip05.includes('@')) {
-                        return `@${profile.nip05} 🔵`;
+                        return `<span title="${fullNpub}">@${profile.nip05} 🔵</span>`;
                     }
                 }
                 
@@ -586,7 +590,7 @@
                     return profile.name.includes('#') ? profile.name : `${profile.name}#${this.generateDiscriminator(pubkey)}`;
                 }
                 
-                return pubkey ? this.hexToNpub(pubkey).substring(0, 10) : 'Unknown';
+                return pubkey ? fullNpub : 'Unknown';
             }
 
             generateDiscriminator(pubkey) {
@@ -654,6 +658,26 @@
             }
 
             async fetchUserProfile(pubkey) {
+                // Check in-memory cache first
+                if (this.profileCache.has(pubkey)) {
+                    const cachedProfile = this.profileCache.get(pubkey);
+                    this.userProfiles[pubkey] = cachedProfile;
+                    console.log(`Using in-memory cached profile for ${pubkey}:`, cachedProfile);
+                    this.displayNotes();
+                    return;
+                }
+
+                // Check localStorage cache
+                const cachedProfile = this.getCachedProfile(pubkey);
+                if (cachedProfile) {
+                    this.userProfiles[pubkey] = cachedProfile;
+                    // Also add to in-memory cache for faster access
+                    this.profileCache.set(pubkey, cachedProfile);
+                    console.log(`Using localStorage cached profile for ${pubkey}:`, cachedProfile);
+                    this.displayNotes();
+                    return;
+                }
+
                 console.log(`Fetching profile for pubkey: ${pubkey}`);
                 const promises = this.relays.map(relayUrl => 
                     this.fetchProfileFromRelay(relayUrl, pubkey).catch(error => {
@@ -668,6 +692,11 @@
                     if (result.status === 'fulfilled' && result.value) {
                         const profile = result.value;
                         this.userProfiles[pubkey] = profile;
+                        
+                        // Cache in both in-memory and localStorage
+                        this.profileCache.set(pubkey, profile);
+                        this.setCachedProfile(pubkey, profile);
+                        
                         console.log(`Fetched profile for ${pubkey}:`, profile);
                         console.log(`NIP-05: ${profile.nip05}`);
                         // Re-render notes to show updated profile info
@@ -750,11 +779,11 @@
                             resolve(null);
                         };
 
-                        // Timeout after 3 seconds (reduced from 5)
+                        // Timeout after 2 seconds
                         timeoutId = setTimeout(() => {
                             cleanup();
                             resolve(null);
-                        }, 3000);
+                        }, 2000);
                     } catch (error) {
                         reject(error);
                     }
@@ -854,6 +883,61 @@
                 }
                 
                 return geohash;
+            }
+
+            // localStorage cache methods
+            loadProfileCache() {
+                try {
+                    const cached = localStorage.getItem('tripchat_profiles');
+                    if (cached) {
+                        const profiles = JSON.parse(cached);
+                        const now = Date.now();
+                        
+                        // Load profiles and check expiration
+                        for (const [pubkey, data] of Object.entries(profiles)) {
+                            if (data.expires > now) {
+                                this.profileCache.set(pubkey, data.profile);
+                            }
+                        }
+                        
+                        console.log(`Loaded ${this.profileCache.size} profiles from localStorage`);
+                    }
+                } catch (error) {
+                    console.warn('Failed to load profile cache:', error);
+                }
+            }
+
+            getCachedProfile(pubkey) {
+                try {
+                    const cached = localStorage.getItem('tripchat_profiles');
+                    if (cached) {
+                        const profiles = JSON.parse(cached);
+                        const data = profiles[pubkey];
+                        if (data && data.expires > Date.now()) {
+                            return data.profile;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to get cached profile:', error);
+                }
+                return null;
+            }
+
+            setCachedProfile(pubkey, profile) {
+                try {
+                    const cached = localStorage.getItem('tripchat_profiles');
+                    const profiles = cached ? JSON.parse(cached) : {};
+                    
+                    // Store profile with 24-hour expiration
+                    profiles[pubkey] = {
+                        profile: profile,
+                        expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                    };
+                    
+                    localStorage.setItem('tripchat_profiles', JSON.stringify(profiles));
+                } catch (error) {
+                    console.warn('Failed to cache profile:', error);
+                }
             }
 
         }
