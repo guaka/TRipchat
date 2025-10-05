@@ -7,6 +7,7 @@
     <title>TRipchat Embed</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" href="favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <script type="module">
         import * as nostrTools from 'https://cdn.skypack.dev/nostr-tools@1.7.0';
         window.nostrTools = nostrTools;
@@ -662,14 +663,30 @@
                 return div.innerHTML;
             }
 
+            sanitizeHtml(text) {
+                // Use DOMPurify to sanitize HTML content
+                if (typeof DOMPurify !== 'undefined') {
+                    return DOMPurify.sanitize(text, {
+                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'data-hashtag', 'data-circle'],
+                        ALLOW_DATA_ATTR: true
+                    });
+                } else {
+                    // Fallback to basic HTML escaping if DOMPurify is not available
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+            }
+
             formatContentWithLinks(text) {
-                // First escape HTML to prevent XSS
-                const escapedText = this.escapeHtml(text);
+                // First sanitize HTML to prevent XSS attacks
+                const sanitizedText = this.sanitizeHtml(text);
                 
                 // URL regex pattern that matches http/https URLs
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 
-                return escapedText.replace(urlRegex, (url) => {
+                return sanitizedText.replace(urlRegex, (url) => {
                     try {
                         const urlObj = new URL(url);
                         const domain = urlObj.hostname.toLowerCase();
