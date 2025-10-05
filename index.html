@@ -390,16 +390,16 @@
         
         .loading {
             text-align: center;
-            color: #6c757d;
+            color: #bdc3c7;
             font-style: italic;
             font-size: 1rem;
             padding: 40px 20px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             border-radius: 16px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #34495e;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -746,18 +746,19 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border: none;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border: 1px solid #34495e;
             border-radius: 20px;
             padding: 20px;
             max-width: 600px;
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             position: relative;
             font-family: 'Inter', sans-serif;
             backdrop-filter: blur(20px);
+            color: #ecf0f1;
         }
 
         .modal-header {
@@ -766,22 +767,22 @@
             align-items: center;
             margin-bottom: 16px;
             padding-bottom: 12px;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 2px solid #34495e;
         }
 
         .modal-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: #ecf0f1;
             margin: 0;
             font-family: 'Inter', sans-serif;
         }
 
         .modal-close {
-            background: #e9ecef;
-            border: none;
+            background: #34495e;
+            border: 1px solid #2c3e50;
             font-size: 1.5rem;
-            color: #6c757d;
+            color: #ecf0f1;
             cursor: pointer;
             padding: 8px 12px;
             border-radius: 8px;
@@ -818,7 +819,7 @@
         .modal-field-label {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: #ecf0f1;
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -828,18 +829,18 @@
         .modal-field-value {
             font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
-            background: #f8f9fa;
+            background: #34495e;
             padding: 12px 16px;
             border-radius: 8px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #2c3e50;
             word-break: break-all;
-            color: #2c3e50;
+            color: #ecf0f1;
         }
 
         .modal-content-text {
             font-size: 0.95rem;
             line-height: 1.6;
-            color: #2c3e50;
+            color: #ecf0f1;
             white-space: pre-wrap;
             word-wrap: break-word;
             font-family: 'Courier New', monospace;
@@ -852,14 +853,14 @@
         }
 
         .modal-tag {
-            background: #e9ecef;
-            color: #2c3e50;
+            background: #34495e;
+            color: #ecf0f1;
             padding: 6px 12px;
             border-radius: 12px;
             font-size: 0.8rem;
             font-weight: 600;
             font-family: 'Inter', sans-serif;
-            border: 1px solid #dee2e6;
+            border: 1px solid #2c3e50;
         }
 
         .header-top-row {
@@ -1428,7 +1429,7 @@
         }
 
         .key-input-group input.readonly {
-            background: rgba(240, 244, 248, 0.85);
+            background: rgba(52, 73, 94, 0.85);
             border: 1px dashed rgba(39, 174, 96, 0.4);
             cursor: not-allowed;
         }
@@ -1563,12 +1564,12 @@
         .add-relay-group input {
             flex: 1;
             padding: 12px 16px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #34495e;
             border-radius: 8px;
-            background: #ffffff;
-            color: #2c3e50;
+            background: #34495e;
+            color: #ecf0f1;
             font-family: 'Inter', sans-serif;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .add-btn {
@@ -2473,6 +2474,79 @@
                 // Add keyboard input for geohash filtering
                 this.setupMapKeyboardInput();
                 
+                // Show geohash grid overlay
+                this.showGeohashGrid();
+                
+                // Add zoom event listener to show/hide grid and adjust geohash filter
+                this.map.on('zoomend', () => {
+                    const currentZoom = this.map.getZoom();
+                    
+                    // Only adjust geohash filter if user is actively filtering by geohash
+                    // Don't interfere with normal map navigation
+                    if (this.geohashFilter && this.geohashFilter.length > 0) {
+                        let targetLength = 0;
+                        
+                        // Determine target geohash length based on zoom level
+                        if (currentZoom <= 2) {
+                            targetLength = 0; // Global view - no geohash
+                        } else if (currentZoom <= 4) {
+                            targetLength = 1; // Single character level
+                        } else if (currentZoom <= 6) {
+                            targetLength = 2; // Two character level
+                        } else if (currentZoom <= 8) {
+                            targetLength = 3; // Three character level
+                        } else if (currentZoom <= 10) {
+                            targetLength = 4; // Four character level
+                        } else if (currentZoom <= 12) {
+                            targetLength = 5; // Five character level
+                        } else {
+                            targetLength = 6; // Six character level (final)
+                        }
+                        
+                        // Only adjust if the current geohash is longer than target
+                        if (this.geohashFilter.length > targetLength) {
+                            if (targetLength === 0) {
+                                // Clear geohash filter for global view
+                                this.geohashFilter = '';
+                                const geohashFilterInput = document.getElementById('geohashFilter');
+                                if (geohashFilterInput) {
+                                    geohashFilterInput.value = '';
+                                }
+                                this.updateHash();
+                                this.showGeohashGrid();
+                            } else {
+                                // Truncate geohash to match zoom level
+                                const newGeohash = this.geohashFilter.substring(0, targetLength);
+                                this.geohashFilter = newGeohash;
+                                const geohashFilterInput = document.getElementById('geohashFilter');
+                                if (geohashFilterInput) {
+                                    geohashFilterInput.value = newGeohash;
+                                }
+                                this.updateHash();
+                                
+                                // Show appropriate grid for the new geohash length
+                                if (newGeohash.length < 6) {
+                                    this.showNextLevelGeohashGrid(newGeohash);
+                                } else {
+                                    this.highlightGeohashArea(newGeohash);
+                                }
+                            }
+                        } else {
+                            // Show appropriate grid for current geohash
+                            if (this.geohashFilter.length < 6) {
+                                this.showNextLevelGeohashGrid(this.geohashFilter);
+                            } else {
+                                this.highlightGeohashArea(this.geohashFilter);
+                            }
+                        }
+                    } else {
+                        // No geohash filter - show global grid when zoomed out
+                        if (currentZoom <= 3) {
+                            this.showGeohashGrid();
+                        }
+                    }
+                });
+                
                 // Map initialized
             }
 
@@ -2583,6 +2657,8 @@
                 // Reset map view to show the whole world
                 if (this.map) {
                     this.map.setView([20, 0], 2);
+                    // Show geohash grid when showing whole world
+                    this.showGeohashGrid();
                 }
             }
 
@@ -2596,9 +2672,9 @@
                         background: #f8f9fa;
                     }
                     .leaflet-control-zoom a {
-                        background: #ffffff;
-                        color: #2c3e50;
-                        border: 1px solid #e9ecef;
+                        background: #2c3e50;
+                        color: #ffffff;
+                        border: 1px solid #34495e;
                         font-family: 'Inter', sans-serif;
                         font-weight: 600;
                         width: 32px;
@@ -2606,7 +2682,7 @@
                         line-height: 32px;
                         text-align: center;
                         font-size: 16px;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                         transition: all 0.3s ease;
                     }
                     .leaflet-control-zoom a:hover {
@@ -2617,18 +2693,39 @@
                         box-shadow: 0 4px 12px var(--shadow-hover);
                     }
                     .leaflet-control-zoom {
-                        border: 1px solid #e9ecef;
+                        border: 1px solid #34495e;
                         border-radius: 8px;
-                        background: #ffffff;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        background: #2c3e50;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                     }
                     .leaflet-control-zoom a:first-child {
-                        border-bottom: 1px solid #e9ecef;
+                        border-bottom: 1px solid #34495e;
                         border-radius: 8px 8px 0 0;
                     }
-                    .leaflet-control-zoom a:last-child {
-                        border-radius: 0 0 8px 8px;
-                    }
+            .leaflet-control-zoom a:last-child {
+                border-radius: 0 0 8px 8px;
+            }
+            
+            /* Dark mode attribution styling */
+            .leaflet-control-attribution {
+                background: rgba(44, 62, 80, 0.9) !important;
+                color: #bdc3c7 !important;
+                border: 1px solid #34495e !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+                font-size: 11px !important;
+                padding: 4px 8px !important;
+                border-radius: 4px !important;
+            }
+            
+            .leaflet-control-attribution a {
+                color: #3498db !important;
+                text-decoration: none !important;
+            }
+            
+            .leaflet-control-attribution a:hover {
+                color: #5dade2 !important;
+                text-decoration: underline !important;
+            }
                     .leaflet-popup-content-wrapper {
                         background: #ffffff;
                         border-radius: 12px;
@@ -2706,6 +2803,21 @@
                         transition: all 0.3s ease;
                         animation: pulse 2s infinite;
                     }
+                    .geohash-grid-cell {
+                        transition: all 0.3s ease;
+                    }
+                    .geohash-grid-cell:hover {
+                        opacity: 0.7 !important;
+                        fill-opacity: 0.08 !important;
+                        stroke-width: 2px !important;
+                    }
+                    .geohash-grid-label {
+                        transition: all 0.2s ease;
+                    }
+                    .geohash-grid-label:hover {
+                        transform: scale(1.05);
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+                    }
                     @keyframes pulse {
                         0% { opacity: 0.8; }
                         50% { opacity: 0.4; }
@@ -2761,11 +2873,6 @@
                     if (!this.updatingHash) {
                         this.loadFilterFromHash();
                         this.plotActivitiesOnMap(this.notes);
-                        
-                        // If filtering by a specific geohash, show its rectangle
-                        if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
-                            this.highlightGeohashArea(this.geohashFilter);
-                        }
                     }
                 });
             }
@@ -3950,6 +4057,20 @@
                     }
                 }
                 
+                // Handle geohash zoom and grid display
+                if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                    // Show appropriate grid level based on geohash length
+                    if (this.geohashFilter.length < 6) {
+                        this.showNextLevelGeohashGrid(this.geohashFilter);
+                    } else {
+                        // For 6-character geohashes, just highlight the area
+                        this.highlightGeohashArea(this.geohashFilter);
+                    }
+                } else {
+                    // No geohash filter - show global grid
+                    this.showGeohashGrid();
+                }
+                
                 // Update display after loading filters
                 this.displayActivities();
                 // Filter state loaded from hash
@@ -4649,6 +4770,291 @@
                 return /^[0-9b-hj-km-np-z]+$/.test(str) && str.length >= 1 && str.length <= 12;
             }
 
+            // Generate single-character geohash codes and their bounds
+            generateSingleCharGeohashes() {
+                const base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+                const geohashes = [];
+                
+                for (let i = 0; i < base32.length; i++) {
+                    const char = base32[i];
+                    const bounds = this.geohashToBounds(char);
+                    if (bounds) {
+                        geohashes.push({
+                            code: char,
+                            bounds: bounds
+                        });
+                    }
+                }
+                
+                return geohashes;
+            }
+
+            // Show geohash grid overlay on map
+            showGeohashGrid() {
+                // Clear existing grid
+                this.clearGeohashGrid();
+                
+                // Only show global grid when zoomed out (zoom level 3 or less) and no specific geohash is selected
+                if (this.map.getZoom() > 3 || this.geohashFilter) {
+                    return;
+                }
+                
+                const geohashes = this.generateSingleCharGeohashes();
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                
+                geohashes.forEach(({ code, bounds }) => {
+                    // Create rectangle for the geohash area
+                    const rectangle = L.rectangle([
+                        [bounds.south, bounds.west],
+                        [bounds.north, bounds.east]
+                    ], {
+                        color: isDark ? '#58a6ff' : '#3498db',
+                        fillColor: isDark ? '#58a6ff' : '#3498db',
+                        fillOpacity: 0.01,
+                        weight: 0.8,
+                        opacity: 0.1,
+                        className: 'geohash-grid-cell'
+                    });
+                    
+                    // Add click handler to filter by this geohash
+                    rectangle.on('click', () => {
+                        this.filterByGeohash(code);
+                    });
+                    
+                    // Create text label for the geohash code
+                    const centerLat = (bounds.south + bounds.north) / 2;
+                    const centerLng = (bounds.west + bounds.east) / 2;
+                    
+                    const label = L.marker([centerLat, centerLng], {
+                        icon: L.divIcon({
+                            className: 'geohash-grid-label',
+                            html: `<div style="
+                                background: ${isDark ? 'rgba(88, 166, 255, 0.4)' : 'rgba(52, 152, 219, 0.4)'};
+                                color: white;
+                                font-weight: bold;
+                                font-size: 20px;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                text-align: center;
+                                min-width: 32px;
+                                box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+                                cursor: pointer;
+                                user-select: none;
+                                border: 2px solid ${isDark ? 'rgba(88, 166, 255, 0.5)' : 'rgba(52, 152, 219, 0.5)'};
+                            ">${code.toLowerCase()}</div>`,
+                            iconSize: [44, 32],
+                            iconAnchor: [22, 16]
+                        })
+                    });
+                    
+                    // Add click handler to label
+                    label.on('click', () => {
+                        this.filterByGeohash(code);
+                    });
+                    
+                    // Add to map
+                    rectangle.addTo(this.map);
+                    label.addTo(this.map);
+                    
+                    // Store references for cleanup
+                    this.geohashGridRectangles = this.geohashGridRectangles || [];
+                    this.geohashGridLabels = this.geohashGridLabels || [];
+                    this.geohashGridRectangles.push(rectangle);
+                    this.geohashGridLabels.push(label);
+                });
+            }
+
+            // Clear geohash grid overlay
+            clearGeohashGrid() {
+                if (this.geohashGridRectangles) {
+                    this.geohashGridRectangles.forEach(rect => this.map.removeLayer(rect));
+                    this.geohashGridRectangles = [];
+                }
+                if (this.geohashGridLabels) {
+                    this.geohashGridLabels.forEach(label => this.map.removeLayer(label));
+                    this.geohashGridLabels = [];
+                }
+            }
+
+            // Show next level geohash grid within a parent geohash area
+            showNextLevelGeohashGrid(parentGeohash) {
+                // Clear existing grid
+                this.clearGeohashGrid();
+                
+                // Get the bounds of the parent geohash
+                const parentBounds = this.geohashToBounds(parentGeohash);
+                if (!parentBounds) return;
+                
+                // Generate all possible next-level geohashes
+                const base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                
+                // Determine styling based on geohash length
+                const level = parentGeohash.length;
+                const isGlobal = level === 0;
+                const isFirstLevel = level === 1;
+                const isSecondLevel = level === 2;
+                const isThirdLevel = level === 3;
+                const isFourthLevel = level === 4;
+                const isFifthLevel = level === 5;
+                
+                // Style configuration for each level
+                const getLevelStyle = (level) => {
+                    switch (level) {
+                        case 1: // Single character -> 2 character
+                            return {
+                                fontSize: '18px',
+                                padding: '6px 10px',
+                                minWidth: '32px',
+                                iconSize: [40, 28],
+                                iconAnchor: [20, 14],
+                                fillOpacity: 0.015,
+                                opacity: 0.12,
+                                weight: 0.8
+                            };
+                        case 2: // 2 character -> 3 character
+                            return {
+                                fontSize: '16px',
+                                padding: '5px 8px',
+                                minWidth: '28px',
+                                iconSize: [36, 24],
+                                iconAnchor: [18, 12],
+                                fillOpacity: 0.02,
+                                opacity: 0.15,
+                                weight: 0.6
+                            };
+                        case 3: // 3 character -> 4 character
+                            return {
+                                fontSize: '14px',
+                                padding: '4px 6px',
+                                minWidth: '24px',
+                                iconSize: [32, 20],
+                                iconAnchor: [16, 10],
+                                fillOpacity: 0.025,
+                                opacity: 0.18,
+                                weight: 0.5
+                            };
+                        case 4: // 4 character -> 5 character
+                            return {
+                                fontSize: '12px',
+                                padding: '3px 5px',
+                                minWidth: '20px',
+                                iconSize: [28, 18],
+                                iconAnchor: [14, 9],
+                                fillOpacity: 0.03,
+                                opacity: 0.2,
+                                weight: 0.4
+                            };
+                        case 5: // 5 character -> 6 character
+                            return {
+                                fontSize: '10px',
+                                padding: '2px 4px',
+                                minWidth: '18px',
+                                iconSize: [24, 16],
+                                iconAnchor: [12, 8],
+                                fillOpacity: 0.035,
+                                opacity: 0.22,
+                                weight: 0.3
+                            };
+                        default:
+                            return {
+                                fontSize: '14px',
+                                padding: '4px 8px',
+                                minWidth: '28px',
+                                iconSize: [36, 24],
+                                iconAnchor: [18, 12],
+                                fillOpacity: 0.04,
+                                opacity: 0.25,
+                                weight: 1
+                            };
+                    }
+                };
+                
+                const style = getLevelStyle(level);
+                
+                // Generate subdivisions
+                for (let i = 0; i < base32.length; i++) {
+                    const char = base32[i];
+                    const nextLevelGeohash = parentGeohash + char;
+                    
+                    // Calculate bounds for this subdivision
+                    const subBounds = this.geohashToBounds(nextLevelGeohash);
+                    if (!subBounds) continue;
+                    
+                    // Create rectangle for the subdivision
+                    const rectangle = L.rectangle([
+                        [subBounds.south, subBounds.west],
+                        [subBounds.north, subBounds.east]
+                    ], {
+                        color: isDark ? '#58a6ff' : '#3498db',
+                        fillColor: isDark ? '#58a6ff' : '#3498db',
+                        fillOpacity: style.fillOpacity,
+                        weight: style.weight,
+                        opacity: style.opacity,
+                        className: 'geohash-grid-cell'
+                    });
+                    
+                    // Add click handler to filter by this geohash
+                    rectangle.on('click', () => {
+                        this.filterByGeohash(nextLevelGeohash);
+                    });
+                    
+                    // Create text label for the geohash code
+                    const centerLat = (subBounds.south + subBounds.north) / 2;
+                    const centerLng = (subBounds.west + subBounds.east) / 2;
+                    
+                    // Show only the single character for this subdivision
+                    const displayText = char.toLowerCase();
+                    
+                    const label = L.marker([centerLat, centerLng], {
+                        icon: L.divIcon({
+                            className: 'geohash-grid-label',
+                            html: `<div style="
+                                background: ${isDark ? 'rgba(88, 166, 255, 0.4)' : 'rgba(52, 152, 219, 0.4)'};
+                                color: white;
+                                font-weight: bold;
+                                font-size: ${style.fontSize};
+                                padding: ${style.padding};
+                                border-radius: 6px;
+                                text-align: center;
+                                min-width: ${style.minWidth};
+                                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                                cursor: pointer;
+                                user-select: none;
+                                border: 1px solid ${isDark ? 'rgba(88, 166, 255, 0.5)' : 'rgba(52, 152, 219, 0.5)'};
+                            ">${displayText}</div>`,
+                            iconSize: style.iconSize,
+                            iconAnchor: style.iconAnchor
+                        })
+                    });
+                    
+                    // Add click handler to label
+                    label.on('click', () => {
+                        this.filterByGeohash(nextLevelGeohash);
+                    });
+                    
+                    // Add to map
+                    rectangle.addTo(this.map);
+                    label.addTo(this.map);
+                    
+                    // Store references for cleanup
+                    this.geohashGridRectangles = this.geohashGridRectangles || [];
+                    this.geohashGridLabels = this.geohashGridLabels || [];
+                    this.geohashGridRectangles.push(rectangle);
+                    this.geohashGridLabels.push(label);
+                }
+                
+                // Zoom to the parent geohash area with appropriate zoom level
+                const maxZoom = Math.min(6 + level, 12); // Increase max zoom for deeper levels
+                this.map.fitBounds([
+                    [parentBounds.south, parentBounds.west],
+                    [parentBounds.north, parentBounds.east]
+                ], {
+                    padding: [20, 20],
+                    maxZoom: maxZoom
+                });
+            }
+
             geohashToLatLng(geohash) {
                 try {
                     const base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
@@ -4867,6 +5273,9 @@
                 this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
                 this.geohashRectangles = [];
                 
+                // Clear geohash grid when showing specific area
+                this.clearGeohashGrid();
+                
                 const bounds = this.geohashToBounds(geohash);
                 if (bounds) {
                     const rectangle = L.rectangle([
@@ -4959,11 +5368,11 @@
             }
 
             filterByGeohash(geohash) {
-                // Set the filter
-                this.searchFilter = geohash.toLowerCase();
-                const searchFilterInput = document.getElementById('searchFilter');
-                if (searchFilterInput) {
-                    searchFilterInput.value = geohash;
+                // Set the geohash filter
+                this.geohashFilter = geohash.toLowerCase();
+                const geohashFilterInput = document.getElementById('geohashFilter');
+                if (geohashFilterInput) {
+                    geohashFilterInput.value = geohash;
                 }
                 
                 // Update URL hash
@@ -4973,11 +5382,15 @@
                 this.displayActivities(this.notes);
                 this.plotActivitiesOnMap(this.notes);
                 
-                // Highlight the geohash area on map
-                if (this.isGeohash(this.geohashFilter)) {
-                    this.highlightGeohashArea(this.geohashFilter);
+                // Show next level if geohash is less than 6 characters
+                if (geohash.length < 6) {
+                    this.showNextLevelGeohashGrid(geohash);
+                } else {
+                    // For 6-character geohashes, just highlight the area
+                    if (this.isGeohash(this.geohashFilter)) {
+                        this.highlightGeohashArea(this.geohashFilter);
+                    }
                 }
-                
                 
                 console.log(`Filtered by geohash: ${geohash}`);
             }
