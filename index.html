@@ -9,6 +9,7 @@
     <link rel="alternate icon" href="favicon.ico">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <script type="module">
         import * as nostrTools from 'https://cdn.skypack.dev/nostr-tools@1.7.0';
         window.nostrTools = nostrTools;
@@ -1544,12 +1545,12 @@
         }
 
         .relay-section {
-            margin-bottom: 25px;
+            margin-bottom: 12px;
         }
 
         .relay-section h4 {
             color: var(--accent-color);
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
         }
 
@@ -1599,8 +1600,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
             background: #ffffff;
             border: 1px solid #e9ecef;
             border-radius: 8px;
@@ -2285,7 +2286,6 @@
                     <h4>Add New Relay:</h4>
                     <div class="add-relay-group">
                         <input type="text" id="newRelayUrl" placeholder="wss://relay.example.com" />
-                        <button id="addRelayBtn" class="add-btn">➕ ADD</button>
                     </div>
                 </div>
                 <div class="relay-section">
@@ -3322,22 +3322,33 @@
             setupRelayManagerHandlers() {
                 const relayManagerBtn = document.getElementById('relayManagerBtn');
                 const relayManagerModal = document.getElementById('relayManagerModal');
-                const addRelayBtn = document.getElementById('addRelayBtn');
                 const newRelayUrl = document.getElementById('newRelayUrl');
 
                 relayManagerBtn.addEventListener('click', () => {
                     relayManagerModal.style.display = 'flex';
                     this.updateRelayList();
+                    // Focus on the input field when modal opens
+                    setTimeout(() => newRelayUrl.focus(), 100);
                 });
 
-                addRelayBtn.addEventListener('click', () => {
-                    const url = newRelayUrl.value.trim();
-                    if (url && url.startsWith('wss://')) {
-                        this.addRelay(url);
-                        newRelayUrl.value = '';
-                        this.updateRelayList();
-                    } else {
-                        alert('Please enter a valid WebSocket URL (wss://...)');
+                // Handle Enter key for adding relays
+                newRelayUrl.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const url = newRelayUrl.value.trim();
+                        if (url && url.startsWith('wss://')) {
+                            this.addRelay(url);
+                            newRelayUrl.value = '';
+                            this.updateRelayList();
+                        } else {
+                            alert('Please enter a valid WebSocket URL (wss://...)');
+                        }
+                    }
+                });
+
+                // Handle ESC key to close modal
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && relayManagerModal.style.display === 'flex') {
+                        relayManagerModal.style.display = 'none';
                     }
                 });
 
@@ -4302,11 +4313,11 @@
             }
 
             processContent(content) {
-                // First escape HTML to prevent XSS
-                let escapedContent = this.escapeHtml(content);
+                // First sanitize HTML to prevent XSS attacks
+                let sanitizedContent = this.sanitizeHtml(content);
                 
-                // Then process URLs on escaped content
-                let urlProcessedContent = this.processUrls(escapedContent);
+                // Then process URLs on sanitized content
+                let urlProcessedContent = this.processUrls(sanitizedContent);
                 
                 // Finally process hashtags
                 return this.processHashtags(urlProcessedContent);
@@ -6623,6 +6634,22 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            sanitizeHtml(text) {
+                // Use DOMPurify to sanitize HTML content
+                if (typeof DOMPurify !== 'undefined') {
+                    return DOMPurify.sanitize(text, {
+                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'data-hashtag', 'data-circle'],
+                        ALLOW_DATA_ATTR: true
+                    });
+                } else {
+                    // Fallback to basic HTML escaping if DOMPurify is not available
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
             }
 
             initializeRelayStatus() {
