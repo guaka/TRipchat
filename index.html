@@ -2470,7 +2470,120 @@
                 
                 this.styleMap();
                 
+                // Add keyboard input for geohash filtering
+                this.setupMapKeyboardInput();
+                
                 // Map initialized
+            }
+
+            setupMapKeyboardInput() {
+                // Add keyboard event listener to the map container
+                const mapContainer = document.getElementById('map');
+                if (!mapContainer) return;
+
+                mapContainer.addEventListener('keydown', (e) => {
+                    // Only handle input if the map is focused and no other input is focused
+                    if (document.activeElement === mapContainer || 
+                        (document.activeElement && document.activeElement.tagName === 'BODY')) {
+                        
+                        // Don't interfere with special keys
+                        if (e.ctrlKey || e.metaKey || e.altKey) return;
+                        
+                        // Handle special keys
+                        if (e.key === 'Backspace') {
+                            // Remove last character from geohash filter
+                            const geohashFilter = document.getElementById('geohashFilter');
+                            if (geohashFilter) {
+                                geohashFilter.value = geohashFilter.value.slice(0, -1);
+                                this.geohashFilter = geohashFilter.value.trim().toLowerCase();
+                                this.updateHash();
+                                this.displayActivities(this.notes);
+                                this.plotActivitiesOnMap(this.notes);
+                                
+                                // If still filtering by a specific geohash, show its rectangle and move map
+                                if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                                    this.highlightGeohashArea(this.geohashFilter);
+                                } else {
+                                    // Clear geohash rectangles and show whole world if no valid geohash
+                                    this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                                    this.geohashRectangles = [];
+                                    this.showWholeWorld();
+                                }
+                            }
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        if (e.key === 'Enter') {
+                            // Clear geohash filter
+                            const geohashFilter = document.getElementById('geohashFilter');
+                            if (geohashFilter) {
+                                geohashFilter.value = '';
+                                this.geohashFilter = '';
+                                this.updateHash();
+                                this.displayActivities(this.notes);
+                                this.plotActivitiesOnMap(this.notes);
+                                
+                                // Clear geohash rectangles and show whole world
+                                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                                this.geohashRectangles = [];
+                                this.showWholeWorld();
+                            }
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        if (e.key === 'Escape') {
+                            // Clear geohash filter
+                            const geohashFilter = document.getElementById('geohashFilter');
+                            if (geohashFilter) {
+                                geohashFilter.value = '';
+                                this.geohashFilter = '';
+                                this.updateHash();
+                                this.displayActivities(this.notes);
+                                this.plotActivitiesOnMap(this.notes);
+                                
+                                // Clear geohash rectangles and show whole world
+                                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                                this.geohashRectangles = [];
+                                this.showWholeWorld();
+                            }
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        // Only allow geohash characters (base32: 0-9, a-z, A-Z excluding i, l, o)
+                        const geohashChars = /^[0-9bcdefghjkmnpqrstuvwxyz]$/i;
+                        if (geohashChars.test(e.key)) {
+                            // Add character to geohash filter
+                            const geohashFilter = document.getElementById('geohashFilter');
+                            if (geohashFilter) {
+                                geohashFilter.value += e.key.toLowerCase();
+                                this.geohashFilter = geohashFilter.value.trim().toLowerCase();
+                                this.updateHash();
+                                this.displayActivities(this.notes);
+                                this.plotActivitiesOnMap(this.notes);
+                                
+                                // If filtering by a specific geohash, show its rectangle and move map
+                                if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
+                                    this.highlightGeohashArea(this.geohashFilter);
+                                }
+                            }
+                            e.preventDefault();
+                        }
+                    }
+                });
+
+                // Make the map focusable
+                mapContainer.setAttribute('tabindex', '0');
+                mapContainer.style.outline = 'none'; // Remove focus outline
+            }
+
+            showWholeWorld() {
+                // Reset map view to show the whole world
+                if (this.map) {
+                    this.map.setView([20, 0], 2);
+                }
             }
 
             styleMap() {
@@ -2623,6 +2736,11 @@
                     // If filtering by a specific geohash, show its rectangle
                     if (this.geohashFilter && this.isGeohash(this.geohashFilter)) {
                         this.highlightGeohashArea(this.geohashFilter);
+                    } else {
+                        // Clear geohash rectangles and show whole world if no valid geohash
+                        this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
+                        this.geohashRectangles = [];
+                        this.showWholeWorld();
                     }
                 });
 
@@ -2834,6 +2952,14 @@
                 // Close modal when clicking outside
                 settingsModal.addEventListener('click', (e) => {
                     if (e.target === settingsModal) {
+                        settingsModal.style.display = 'none';
+                        this.setSettingsModalMessage('');
+                    }
+                });
+
+                // Close modal when pressing ESC
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && settingsModal.style.display === 'flex') {
                         settingsModal.style.display = 'none';
                         this.setSettingsModalMessage('');
                     }
