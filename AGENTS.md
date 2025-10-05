@@ -3,11 +3,6 @@
 ## Project Structure & Module Organization
 TRipchat is a static single-page application. All HTML, styling, and scripted behavior live in `index.html`, with inline ES module imports for Leaflet and `nostr-tools`. Keep related features grouped with clear comment blocks, and favor dedicated helper functions within the same script block for map, relay, and UI logic. Add new assets under `assets/` if you introduce images or fonts, and reference them with relative paths.
 
-## Local Development & Build
-Run a lightweight server so browser security policies allow module imports:
-- `python3 -m http.server 5173` – serve the site for manual testing.
-- `npx serve .` – alternative static server with caching headers. Update the Content Security Policy (CSP) meta tag if you add new CDNs or websocket targets.
-
 ## Coding Style & Naming
 Use four-space indentation and trailing semicolons in JavaScript for consistency with the existing file. Prefer `const`/`let` over `var`, camelCase for variables and functions, and kebab-case for CSS classes. Group CSS by component (map, notes, stats) and keep selectors scoped. When adding modules, load them via `<script type="module">` and document any globals attached to `window`.
 
