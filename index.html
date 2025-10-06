@@ -242,6 +242,23 @@
             animation: none;
         }
 
+        .note-reply-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .note-reply-btn:hover {
+            opacity: 0.9;
+            background: #2980b9;
+            transform: scale(1.02);
+        }
+
         @keyframes pulse {
             0% { opacity: 0.6; }
             50% { opacity: 1; }
@@ -4535,6 +4552,9 @@
                 // Check if this note is by the current user
                 const isCurrentUser = this.isNoteByCurrentUser(note);
                 const deleteButton = isCurrentUser ? `<button class="note-delete-btn" data-note-id="${note.id}" onclick="window.tripchatVisualizer.deleteNote('${note.id}')" title="Delete this note">🗑️ DELETE</button>` : '';
+                
+                // Add reply button for all notes
+                const replyButton = `<button class="note-reply-btn" data-note-id="${note.id}" data-npub="${note.pubkey}" onclick="window.tripchatVisualizer.replyToNote('${note.id}', '${note.pubkey}')" title="Reply to this note">💬 Reply</button>`;
 
                 return `
                     <div class="note-header">
@@ -4549,8 +4569,11 @@
                         <div style="display: flex; gap: 8px;">
                             ${geohashTags.map(geohash => `<span class="geohash-tag" data-geohash="${geohash}" style="background: #e9ecef; color: #6c757d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">📍 ${geohash}</span>`).join('')}
                         </div>
+                        <div style="display: flex; gap: 8px;">
+                            ${replyButton}
+                            ${deleteButton}
+                        </div>
                     </div>
-                    ${deleteButton}
                 `;
             }
 
@@ -5807,6 +5830,52 @@
                 }
             }
 
+            replyToNote(noteId, npub) {
+                // Check if user has keys set up
+                if (!this.privateKey) {
+                    alert('No private key available. Please set up your keys first.');
+                    return;
+                }
+
+                // Find the original note to get its content and tags
+                const originalNote = this.notes.find(note => note.id === noteId);
+                if (!originalNote) {
+                    alert('Original note not found.');
+                    return;
+                }
+
+                // Get the username for the mention
+                const profile = this.userProfiles[npub];
+                const username = this.formatUsernameWithDiscriminator(profile, npub);
+                
+                // Create the reply content with NIP-27 mention format
+                const mention = `nostr:${npub}`;
+                const replyContent = `${mention} `;
+                
+                // Pre-fill the compose form
+                const composeTextarea = document.getElementById('composeText');
+                if (composeTextarea) {
+                    composeTextarea.value = replyContent;
+                    composeTextarea.focus();
+                    
+                    // Position cursor after the mention
+                    const cursorPosition = replyContent.length;
+                    composeTextarea.setSelectionRange(cursorPosition, cursorPosition);
+                    
+                    // Scroll to compose section
+                    composeTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                // Store reply context for when the note is posted
+                this.replyContext = {
+                    originalNoteId: noteId,
+                    originalNpub: npub,
+                    originalRelay: originalNote.relay || 'wss://relay.damus.io' // Default relay
+                };
+
+                console.log('Reply context set:', this.replyContext);
+            }
+
             removeNoteFromMap(noteId) {
                 // Find and remove the specific marker for this note
                 const markerToRemove = this.mapMarkers.find(marker => {
@@ -6557,6 +6626,17 @@
                             created_at: Math.floor(Date.now() / 1000)
                         };
                         
+                        // Add NIP-10 reply tags if this is a reply
+                        if (this.replyContext) {
+                            console.log('Adding NIP-10 reply tags:', this.replyContext);
+                            // Add 'e' tag for the original event (NIP-10)
+                            event.tags.push(['e', this.replyContext.originalNoteId, this.replyContext.originalRelay, 'reply']);
+                            // Add 'p' tag for the original author (NIP-10)
+                            event.tags.push(['p', this.replyContext.originalNpub]);
+                            // Clear reply context after use
+                            this.replyContext = null;
+                        }
+                        
                         console.log('Creating Kind 1 event:', event);
                         
                         // Add geohash tag only if geohash is provided
@@ -6578,6 +6658,19 @@
                         if (nip05Verified) {
                             event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
                         }
+                        
+                        // Parse and add hashtags from content as 't' tags
+                        const hashtagRegex = /#(\w+)/g;
+                        const hashtags = [...content.matchAll(hashtagRegex)];
+                        const uniqueHashtags = [...new Set(hashtags.map(match => match[1].toLowerCase()))];
+                        
+                        uniqueHashtags.forEach(hashtag => {
+                            event.tags.push(['t', hashtag]);
+                        });
+                        
+                        if (uniqueHashtags.length > 0) {
+                            console.log('Added hashtag tags:', uniqueHashtags);
+                        }
 
                         // Sign the event using nostr-tools
                         const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
@@ -6597,6 +6690,17 @@
                         id: this.generateFakeEventId(content, geohash || 'global'),
                         sig: this.generateFakeSignature(this.privateKey, content)
                     };
+                    
+                    // Add NIP-10 reply tags if this is a reply (fallback)
+                    if (this.replyContext) {
+                        console.log('Adding NIP-10 reply tags (fallback):', this.replyContext);
+                        // Add 'e' tag for the original event (NIP-10)
+                        event.tags.push(['e', this.replyContext.originalNoteId, this.replyContext.originalRelay, 'reply']);
+                        // Add 'p' tag for the original author (NIP-10)
+                        event.tags.push(['p', this.replyContext.originalNpub]);
+                        // Clear reply context after use
+                        this.replyContext = null;
+                    }
                     
                     console.log('Creating Kind 1 event (fallback):', event);
                     
@@ -6618,6 +6722,19 @@
                     // Add NIP-05 verification tag if verified
                     if (nip05Verified) {
                         event.tags.push(['nip05', `${savedUsername}@trustroots.org`]);
+                    }
+                    
+                    // Parse and add hashtags from content as 't' tags (fallback)
+                    const hashtagRegex = /#(\w+)/g;
+                    const hashtags = [...content.matchAll(hashtagRegex)];
+                    const uniqueHashtags = [...new Set(hashtags.map(match => match[1].toLowerCase()))];
+                    
+                    uniqueHashtags.forEach(hashtag => {
+                        event.tags.push(['t', hashtag]);
+                    });
+                    
+                    if (uniqueHashtags.length > 0) {
+                        console.log('Added hashtag tags (fallback):', uniqueHashtags);
                     }
 
                     console.log('🏷️ Event tags (persistent):', event.tags);
