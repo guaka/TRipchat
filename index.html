@@ -1451,6 +1451,23 @@
             cursor: not-allowed;
         }
 
+        .key-visibility-btn {
+            background: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #2c3e50;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+        }
+
+        .key-visibility-btn:hover {
+            background: #2c3e50;
+            transform: scale(1.05);
+        }
+
         .location-btn, .key-btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -2257,9 +2274,10 @@
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label>PRIVATE KEY:</label>
+                    <label>PRIVATE KEY, nsec:</label>
                     <div class="key-input-group">
-                        <input type="text" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
+                        <input type="password" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
+                        <button type="button" id="togglePrivateKeyVisibility" class="key-visibility-btn" title="Show/Hide private key">👁️</button>
                     </div>
                     <div id="settingsPrivateKeyHint" class="key-hint"></div>
                 </div>
@@ -3045,6 +3063,30 @@
                     
                     if (nsecKey) {
                         settingsPrivateKey.value = nsecKey;
+                        // Only hide the field if there's an existing nsec key
+                        settingsPrivateKey.type = 'password';
+                        // Update toggle button state
+                        const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                        if (toggleBtn) {
+                            toggleBtn.textContent = '👁️';
+                            toggleBtn.title = 'Show private key';
+                        }
+                        
+                        // Show security reminder for existing keys
+                        this.shouldPreserveSettingsMessage = true; // Preserve the message
+                        this.setSettingsModalMessage('🔐 <strong>Security Reminder:</strong> Did you already safely store your nsec in your password manager? We recommend <a href="https://bitwarden.com/" target="_blank" rel="noopener noreferrer">Bitwarden</a> if you don\'t have one yet.');
+                    } else {
+                        // No existing key - keep field visible for typing
+                        settingsPrivateKey.type = 'text';
+                        // Update toggle button state
+                        const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                        if (toggleBtn) {
+                            toggleBtn.textContent = '🙈';
+                            toggleBtn.title = 'Hide private key';
+                        }
+                        
+                        // Clear any existing message for new users
+                        this.setSettingsModalMessage('');
                     }
                     if (npubKey) {
                         settingsPublicKey.value = npubKey;
@@ -3106,6 +3148,14 @@
                             settingsPrivateKeyHint.innerHTML = 'Store this nsec safely in your password manager. We recommend <a href="https://bitwarden.com/" target="_blank" rel="noopener noreferrer">Bitwarden</a> if you don\'t have one yet.';
                             settingsPrivateKeyHint.style.display = 'block';
                         }
+                        // Keep generated key visible so user can copy it
+                        settingsPrivateKey.type = 'text';
+                        // Update toggle button state for generated key
+                        const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                        if (toggleBtn) {
+                            toggleBtn.textContent = '🙈';
+                            toggleBtn.title = 'Hide private key';
+                        }
                         this.highlightKeyInputs();
                         this.toggleKeyButtonsVisibility();
                     } catch (error) {
@@ -3113,6 +3163,17 @@
                         alert('Error generating keys. Please try again.');
                     }
                 });
+
+                // Toggle private key visibility
+                const togglePrivateKeyVisibility = document.getElementById('togglePrivateKeyVisibility');
+                if (togglePrivateKeyVisibility) {
+                    togglePrivateKeyVisibility.addEventListener('click', () => {
+                        const isPassword = settingsPrivateKey.type === 'password';
+                        settingsPrivateKey.type = isPassword ? 'text' : 'password';
+                        togglePrivateKeyVisibility.textContent = isPassword ? '🙈' : '👁️';
+                        togglePrivateKeyVisibility.title = isPassword ? 'Hide private key' : 'Show private key';
+                    });
+                }
 
                 // Auto-validate and process nsec when pasted or typed
                 settingsPrivateKey.addEventListener('input', async () => {
@@ -3134,6 +3195,16 @@
                             
                             // Set class property for immediate use
                             this.privateKey = nsecInput;
+                            
+                            // Hide the field now that we have a valid key
+                            settingsPrivateKey.type = 'password';
+                            
+                            // Update toggle button state
+                            const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                            if (toggleBtn) {
+                                toggleBtn.textContent = '👁️';
+                                toggleBtn.title = 'Show private key';
+                            }
                             
                             // Show success feedback
                             if (settingsPrivateKeyHint) {
@@ -3191,6 +3262,17 @@
                         if (settingsPrivateKeyHint) {
                             settingsPrivateKeyHint.style.display = 'none';
                             settingsPrivateKeyHint.innerHTML = '';
+                        }
+                        
+                        // Show the field again if it's empty (no existing key)
+                        const existingNsec = localStorage.getItem('tripchat_nsec');
+                        if (!existingNsec) {
+                            settingsPrivateKey.type = 'text';
+                            const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                            if (toggleBtn) {
+                                toggleBtn.textContent = '🙈';
+                                toggleBtn.title = 'Hide private key';
+                            }
                         }
                         
                         // Show generate button if input is empty
@@ -3409,10 +3491,10 @@
                 }
 
                 if (message) {
-                    messageElement.textContent = message;
+                    messageElement.innerHTML = message;
                     messageElement.style.display = 'block';
                 } else {
-                    messageElement.textContent = '';
+                    messageElement.innerHTML = '';
                     messageElement.style.display = 'none';
                 }
             }
