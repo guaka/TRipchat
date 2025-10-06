@@ -7277,6 +7277,15 @@
                 modalOverlay.appendChild(modalContent);
                 document.body.appendChild(modalOverlay);
                 
+                // Add ESC key handling to close modal
+                const handleEscKey = (e) => {
+                    if (e.key === 'Escape' && document.body.contains(modalOverlay)) {
+                        document.body.removeChild(modalOverlay);
+                        document.removeEventListener('keydown', handleEscKey);
+                    }
+                };
+                document.addEventListener('keydown', handleEscKey);
+                
                 // Set up hashtag click handlers for the modal content
                 this.setupHashtagClickHandlers();
             }
