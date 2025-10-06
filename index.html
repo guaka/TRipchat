@@ -1468,6 +1468,16 @@
             transform: scale(1.05);
         }
 
+        .reply-context-display a {
+            color: #27ae60 !important;
+            text-decoration: none;
+        }
+
+        .reply-context-display a:hover {
+            color: #2ecc71 !important;
+            text-decoration: underline;
+        }
+
         .location-btn, .key-btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -2209,6 +2219,14 @@
                                     <span style="color: #e74c3c;">⚠️</span>
                                     <span>Your message will be public on the Nostr network. Deletion doesn't always work.</span>
                                 </label>
+                                <div id="replyContextDisplay" class="reply-context-display" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 6px; font-size: 0.8rem;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="color: #3498db;">💬</span>
+                                        <span style="color: var(--text-muted);">Replying to:</span>
+                                        <span id="replyTargetUsername" style="color: #2c3e50; font-weight: 600;"></span>
+                                        <button type="button" id="clearReplyContext" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.7rem; margin-left: auto;" title="Cancel reply">✕</button>
+                                    </div>
+                                </div>
                                 <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                             </div>
                             <div class="compose-section" style="display: flex; align-items: center; gap: 8px;">
@@ -5930,6 +5948,14 @@
                 const profile = this.userProfiles[npub];
                 const username = this.formatUsernameWithDiscriminator(profile, npub);
                 
+                // Show reply context display
+                const replyContextDisplay = document.getElementById('replyContextDisplay');
+                const replyTargetUsername = document.getElementById('replyTargetUsername');
+                if (replyContextDisplay && replyTargetUsername) {
+                    replyTargetUsername.innerHTML = username;
+                    replyContextDisplay.style.display = 'block';
+                }
+                
                 // Create the reply content with NIP-27 mention format
                 const mention = `nostr:${npub}`;
                 const replyContent = `${mention} `;
@@ -5956,6 +5982,33 @@
                 };
 
                 console.log('Reply context set:', this.replyContext);
+                
+                // Add clear reply context button handler
+                const clearReplyContextBtn = document.getElementById('clearReplyContext');
+                if (clearReplyContextBtn) {
+                    clearReplyContextBtn.addEventListener('click', () => {
+                        this.clearReplyContext();
+                    });
+                }
+            }
+            
+            clearReplyContext() {
+                // Clear reply context
+                this.replyContext = null;
+                
+                // Hide reply context display
+                const replyContextDisplay = document.getElementById('replyContextDisplay');
+                if (replyContextDisplay) {
+                    replyContextDisplay.style.display = 'none';
+                }
+                
+                // Clear the compose textarea
+                const composeTextarea = document.getElementById('composeText');
+                if (composeTextarea) {
+                    composeTextarea.value = '';
+                }
+                
+                console.log('Reply context cleared');
             }
 
             removeNoteFromMap(noteId) {
@@ -6716,7 +6769,7 @@
                             // Add 'p' tag for the original author (NIP-10)
                             event.tags.push(['p', this.replyContext.originalNpub]);
                             // Clear reply context after use
-                            this.replyContext = null;
+                            this.clearReplyContext();
                         }
                         
                         console.log('Creating Kind 1 event:', event);
@@ -6781,7 +6834,7 @@
                         // Add 'p' tag for the original author (NIP-10)
                         event.tags.push(['p', this.replyContext.originalNpub]);
                         // Clear reply context after use
-                        this.replyContext = null;
+                        this.clearReplyContext();
                     }
                     
                     console.log('Creating Kind 1 event (fallback):', event);
