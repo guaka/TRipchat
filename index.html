@@ -1478,6 +1478,23 @@
             text-decoration: underline;
         }
 
+        .modal-copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .modal-copy-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
         .location-btn, .key-btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -5978,7 +5995,7 @@
                 this.replyContext = {
                     originalNoteId: noteId,
                     originalNpub: npub,
-                    originalRelay: originalNote.relay || 'wss://relay.damus.io' // Default relay
+                    originalRelay: originalNote.relay || 'wss://relay.trustroots.org' // Default relay
                 };
 
                 console.log('Reply context set:', this.replyContext);
@@ -7345,7 +7362,10 @@
                 modalContent.innerHTML = `
                     <div class="modal-header">
                         <h2 class="modal-title">Nostr Note Details</h2>
-                        <button class="modal-close" onclick="document.body.removeChild(this.closest('.modal-overlay'))">&times;</button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="modal-copy-btn" onclick="window.tripchatVisualizer.copyNoteData('${note.id}')" title="Copy note data">📋 Copy</button>
+                            <button class="modal-close" onclick="document.body.removeChild(this.closest('.modal-overlay'))">&times;</button>
+                        </div>
                     </div>
                     
                     <div class="modal-section">
@@ -7423,6 +7443,36 @@
                 
                 // Set up hashtag click handlers for the modal content
                 this.setupHashtagClickHandlers();
+            }
+
+            copyNoteData(noteId) {
+                // Find the note by ID
+                const note = this.notes.find(n => n.id === noteId);
+                if (!note) {
+                    alert('Note not found');
+                    return;
+                }
+
+                // Copy the complete raw note data as JSON
+                const rawNoteData = JSON.stringify(note, null, 2);
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(rawNoteData).then(() => {
+                    // Show success feedback
+                    const copyBtn = document.querySelector('.modal-copy-btn');
+                    if (copyBtn) {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '✅ Copied!';
+                        copyBtn.style.background = '#27ae60';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.background = '#3498db';
+                        }, 2000);
+                    }
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy to clipboard');
+                });
             }
 
             displayError(message) {
