@@ -5480,19 +5480,22 @@
 
             isGeohash(str) {
                 // Geohash uses base32 encoding: 0-9, b-h, j-k, m-n, p-z (excludes a, i, l, o)
-                // But we need to be more restrictive to avoid treating common words as geohashes
+                // For tripch.at, we only want actual geohashes, not common words
                 const hasValidChars = /^[0-9bcdefghjkmnpqrstuvwxyz]+$/.test(str);
                 const hasValidLength = str.length >= 1 && str.length <= 12;
                 
-                // Additional checks to avoid treating common words as geohashes:
-                // 1. Must contain at least one number OR be 6+ characters (typical geohash length)
+                // Strict requirements for geohashes:
+                // 1. Must contain at least one number (real geohashes always have numbers)
                 // 2. Must not be a common English word
                 const hasNumber = /[0-9]/.test(str);
-                const isLongEnough = str.length >= 6;
-                const isCommonWord = ['buskers', 'musicians', 'travelers', 'hitchhikers', 'nomads', 'artists', 'writers', 'photographers'].includes(str.toLowerCase());
+                const isCommonWord = [
+                    'buskers', 'musicians', 'travelers', 'hitchhikers', 'nomads', 'artists', 'writers', 'photographers',
+                    'cypherpunk', 'cypherpunks', 'bitcoin', 'crypto', 'blockchain', 'privacy', 'freedom', 'liberty',
+                    'anarchist', 'anarchists', 'hacker', 'hackers', 'developer', 'developers', 'programmer', 'programmers'
+                ].includes(str.toLowerCase());
                 
-                const result = hasValidChars && hasValidLength && (hasNumber || isLongEnough) && !isCommonWord;
-                console.log('isGeohash test:', str, 'hasValidChars:', hasValidChars, 'hasValidLength:', hasValidLength, 'hasNumber:', hasNumber, 'isLongEnough:', isLongEnough, 'isCommonWord:', isCommonWord, 'result:', result);
+                const result = hasValidChars && hasValidLength && hasNumber && !isCommonWord;
+                console.log('isGeohash test:', str, 'hasValidChars:', hasValidChars, 'hasValidLength:', hasValidLength, 'hasNumber:', hasNumber, 'isCommonWord:', isCommonWord, 'result:', result);
                 return result;
             }
 
