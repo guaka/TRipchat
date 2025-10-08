@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <script type="module">
-        import * as nostrTools from 'https://cdn.skypack.dev/nostr-tools@1.7.0';
+        import * as nostrTools from 'https://unpkg.com/nostr-tools@2.17.0/lib/esm/index.js';
         window.nostrTools = nostrTools;
     </script>
     <style>
@@ -1177,7 +1177,7 @@
 
 
 
-        .settings-btn, .relay-manager-btn, .messages-btn {
+        .header-btn {
             background: var(--accent-color);
             color: white;
             border: none;
@@ -1200,6 +1200,7 @@
             white-space: nowrap;
         }
 
+
         .settings-btn::before, .relay-manager-btn::before {
             content: '';
             position: absolute;
@@ -1215,7 +1216,7 @@
             left: 100%;
         }
 
-        .settings-btn:hover, .relay-manager-btn:hover, .messages-btn:hover {
+        .header-btn:hover {
             background: var(--accent-hover);
             transform: translateY(-3px);
             box-shadow: 0 8px 25px var(--shadow-hover);
@@ -1236,30 +1237,10 @@
             animation: blink 1s infinite;
         }
 
-        .map-toggle-btn {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .map-toggle-btn:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent);
-        }
 
         .map-toggle-btn.active {
-            background: var(--accent);
+            background: var(--accent-color);
             color: white;
-            border-color: var(--accent);
         }
 
         @keyframes blink {
@@ -2874,10 +2855,10 @@
                     
                     <!-- TRipchat Links -->
                     <div class="tripchat-links">
-                        <button id="mapToggleBtn" class="map-toggle-btn" title="Toggle Map">🗺️ MAP</button>
-                        <button id="messagesBtn" class="messages-btn" title="Private Messages">✉️ MESSAGES</button>
-                        <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
-                        <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
+                        <button id="mapToggleBtn" class="header-btn map-toggle-btn" title="Toggle Map">🗺️ MAP</button>
+                        <button id="messagesBtn" class="header-btn messages-btn" title="Private Messages">✉️ MESSAGES</button>
+                        <button id="settingsBtn" class="header-btn settings-btn">🔑 KEYS</button>
+                        <button id="relayManagerBtn" class="header-btn relay-manager-btn">⚙️ RELAYS</button>
                         <button id="darkModeToggle" class="dark-mode-toggle" title="Toggle dark mode">🌙</button>
                     </div>
                 </div>
