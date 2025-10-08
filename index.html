@@ -499,7 +499,7 @@
         }
 
         .relay-disconnected {
-            background: #EF4444;
+            background: #22c55e;
         }
 
         .relay-name {
@@ -729,6 +729,74 @@
             transition: all 0.3s ease;
         }
 
+        .circles-button {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid #22c55e;
+            border-radius: 6px;
+            background: #22c55e;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+            box-sizing: border-box;
+        }
+
+        .circles-button:hover {
+            background: #16a34a;
+            color: white;
+            border-color: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        .circles-button:active {
+            transform: scale(0.95);
+        }
+
+        .circles-modal {
+            max-width: 500px;
+            max-height: 80vh;
+        }
+
+        .circles-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .circle-item {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .circle-item:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .circle-item:active {
+            transform: translateY(0);
+        }
+
         .geohash-input:focus,
         .search-input:focus {
             outline: none;
@@ -741,6 +809,10 @@
 
         .filter-options {
             margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
         }
 
 
@@ -809,7 +881,7 @@
         }
 
         .modal-close:hover {
-            background: #dc3545;
+            background: #22c55e;
             color: #ffffff;
             transform: scale(1.1);
         }
@@ -1125,7 +1197,7 @@
 
         /* Note Persistence Styles */
         .note-item.ephemeral {
-            border-left: 3px solid #ff6b6b; /* Red for ephemeral */
+            border-left: 3px solid #22c55e; /* Green for ephemeral */
         }
 
         .note-item.persistent {
@@ -1296,6 +1368,10 @@
         .filter-options {
             white-space: nowrap;
             flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
         }
 
         .filter-toggle-label {
@@ -1317,14 +1393,15 @@
         .filter-toggle-slider {
             position: relative;
             width: 40px;
-            height: 20px;
+            height: 40px;
             background: #e9ecef;
-            border-radius: 10px;
+            border-radius: 20px;
             transition: all 0.2s ease;
             border: 1px solid #dee2e6;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
         }
 
         .filter-toggle-slider::before {
@@ -1332,8 +1409,8 @@
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 14px;
-            height: 14px;
+            width: 34px;
+            height: 34px;
             background: #ffffff;
             border-radius: 50%;
             transition: all 0.2s ease;
@@ -1346,7 +1423,12 @@
         }
 
         .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
-            transform: translateX(20px);
+            transform: translateX(2px);
+        }
+
+        .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider .filter-toggle-text {
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .filter-toggle-text {
@@ -1702,13 +1784,13 @@
             cursor: pointer;
             font-size: 0.8rem;
             font-family: 'Courier New', monospace;
-            color: #ff6666;
-            border-color: #ff6666;
-            background: rgba(255, 102, 102, 0.1);
+            color: #22c55e;
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
         }
 
         .relay-delete:hover {
-            background: rgba(255, 102, 102, 0.2);
+            background: rgba(34, 197, 94, 0.2);
         }
 
         .post-toggle-label {
@@ -1902,15 +1984,19 @@
 
             .filter-row {
                 flex-direction: row;
-                gap: 12px;
+                gap: 8px;
                 align-items: center;
                 flex-wrap: nowrap;
+                overflow: hidden;
             }
 
             .filter-input-group {
                 flex: 1;
-                min-width: 150px;
-                max-width: 300px;
+                min-width: 120px;
+                max-width: 250px;
+                display: flex;
+                gap: 6px;
+                align-items: center;
             }
 
             .geohash-input {
@@ -1926,6 +2012,42 @@
                 padding: 8px 10px;
             }
 
+            .circles-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                background: #22c55e;
+                border-color: #22c55e;
+                color: white;
+                border-radius: 6px;
+                box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+                flex-shrink: 0;
+            }
+
+            .circles-button:hover {
+                background: #16a34a;
+                border-color: #16a34a;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+            }
+
+            .circles-modal {
+                max-width: 90vw;
+                max-height: 85vh;
+            }
+
+            .circles-list {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 6px;
+                max-height: 70vh;
+            }
+
+            .circle-item {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
             .filter-options {
                 display: flex;
                 align-items: center;
@@ -1936,6 +2058,25 @@
             .filter-toggle-label {
                 font-size: 0.7rem;
                 gap: 4px;
+            }
+
+            .filter-toggle-slider {
+                height: 40px;
+                border-radius: 20px;
+            }
+
+            .filter-toggle-slider::before {
+                width: 34px;
+                height: 34px;
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
+                transform: translateX(2px);
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider .filter-toggle-text {
+                color: white;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             }
 
             .filter-toggle-text {
@@ -2017,8 +2158,11 @@
             }
 
             .filter-input-group {
-                min-width: 120px;
-                max-width: 250px;
+                min-width: 100px;
+                max-width: 200px;
+                display: flex;
+                gap: 4px;
+                align-items: center;
             }
 
             .geohash-input {
@@ -2034,8 +2178,47 @@
                 padding: 6px 8px;
             }
 
+            .circles-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                font-weight: 600;
+                background: #22c55e;
+                border-color: #22c55e;
+                color: white;
+                border-radius: 6px;
+                box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+                flex-shrink: 0;
+            }
+
+            .circles-button:hover {
+                background: #16a34a;
+                border-color: #16a34a;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+            }
+
             .filter-toggle-label {
                 font-size: 0.65rem;
+            }
+
+            .filter-toggle-slider {
+                height: 40px;
+                border-radius: 20px;
+            }
+
+            .filter-toggle-slider::before {
+                width: 34px;
+                height: 34px;
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
+                transform: translateX(2px);
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider .filter-toggle-text {
+                color: white;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             }
 
             .filter-toggle-text {
@@ -2114,8 +2297,11 @@
             }
 
             .filter-input-group {
-                min-width: 100px;
-                max-width: 200px;
+                min-width: 80px;
+                max-width: 150px;
+                display: flex;
+                gap: 3px;
+                align-items: center;
             }
 
             .geohash-input {
@@ -2131,8 +2317,47 @@
                 padding: 5px 6px;
             }
 
+            .circles-button {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                background: #22c55e;
+                border-color: #22c55e;
+                color: white;
+                border-radius: 6px;
+                box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+                flex-shrink: 0;
+            }
+
+            .circles-button:hover {
+                background: #16a34a;
+                border-color: #16a34a;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+            }
+
             .filter-toggle-label {
                 font-size: 0.6rem;
+            }
+
+            .filter-toggle-slider {
+                height: 40px;
+                border-radius: 20px;
+            }
+
+            .filter-toggle-slider::before {
+                width: 34px;
+                height: 34px;
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider::before {
+                transform: translateX(2px);
+            }
+
+            .filter-toggle-label input[type="checkbox"]:checked + .filter-toggle-slider .filter-toggle-text {
+                color: white;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             }
 
             .filter-toggle-text {
@@ -2233,7 +2458,7 @@
                         <div class="compose-form-body">
                             <div class="compose-section">
                                 <label for="composeContent" style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-size: 0.75rem; color: var(--text-muted);">
-                                    <span style="color: #e74c3c;">⚠️</span>
+                                    <span style="color: #22c55e;">⚠️</span>
                                     <span>Your message will be public on the Nostr network. Deletion doesn't always work.</span>
                                 </label>
                                 <div id="replyContextDisplay" class="reply-context-display" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 6px; font-size: 0.8rem;">
@@ -2267,6 +2492,7 @@
                                     <input type="text" id="searchFilter" placeholder="search filter e.g. #hashtags" class="search-input" />
                                 </div>
                                 <div class="filter-options">
+                                    <button id="circlesButton" class="circles-button" title="Select Trustroots Circle">∞</button>
                                     <label class="filter-toggle-label">
                                         <input type="checkbox" id="nip05Filter" />
                                         <span class="filter-toggle-slider">
@@ -2369,6 +2595,24 @@
         </div>
     </div>
 
+    <!-- Circles Modal -->
+    <div id="circlesModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content circles-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">∞ Trustroots Circles</h3>
+                <button class="modal-close" onclick="window.tripchatVisualizer.hideCirclesModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="circles-section">
+                    <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 0.9rem;">Select a circle to filter messages by community interest:</p>
+                    <div id="circlesList" class="circles-list">
+                        <!-- Circles will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         class TRipchatVisualizer {
             constructor() {
@@ -2414,6 +2658,7 @@
                 this.updatingHash = false; // Flag to prevent circular hash updates
                 this.userHasScrolled = false; // Track if user has manually scrolled
                 this.datetimeClickHandlerSetup = false; // Flag to prevent duplicate click handlers
+                this.highlightEventId = null; // Event ID to highlight and scroll to
                 this.init();
             }
 
@@ -2476,59 +2721,62 @@
             }
 
             // Get Trustroots circles data (fetched from actual Trustroots database)
-            // Data source: MongoDB query: db.tribes.find({}, { name: 1, slug: 1, description: 1, category: 1, _id: 0 }).sort({ name: 1 })
+            // Data source: MongoDB query: db.tribes.find({}, {slug: 1, _id: 0})
             // Collection: trust-roots.tribes
             // Last updated: 2024-12-19
             getTrustrootsCircles() {
                 return [
-                    { slug: 'hitchhikers', name: 'Hitchhikers', description: 'Trustroots was started by hitchhikers for hitchhikers. Many people found out about Trustroots through Hitchwiki. Meet new friends while you are heading in the same direction.' },
-                    { slug: 'dumpster-divers', name: 'Dumpster Divers', description: 'Love turning trash into treasure? This circle is for you! A circle for those finding value hidden in our waste bins.' },
-                    { slug: 'families', name: 'Families', description: 'It\'s great to share hospitality with kids. If you\'re a small or bigger family, please join this circle.' },
-                    { slug: 'musicians', name: 'Musicians', description: 'Love jamming with other musicians? This circle can be good way to find them.' },
-                    { slug: 'buskers', name: 'Buskers', description: 'Whether its music, art, theatre or any other kind of performance, find other buskers and street performers in this circle.' },
-                    { slug: 'veg', name: 'Veg', description: 'For health, for the animals or for the earth. Join this tribe if you\'re vegan or vegetarian.' },
-                    { slug: 'hackers', name: 'Hackers', description: 'Not afraid of :(){ :|:& };: - join fellow hackers at this circle for ubergeeks.' },
-                    { slug: 'lgbtq', name: 'LGBTQ', description: 'A circle for lesbian, gay, bi, trans, queer people and their allies.' },
-                    { slug: 'ecoliving', name: 'Eco Living', description: 'Are you interested in living with less impact on our planet? Maybe you are already doing so and want to share and connect.' },
-                    { slug: 'lindyhoppers', name: 'Lindy Hoppers', description: 'The Lindy hop swing dance community. Hey daddy-o! Dance on over and join your fellow lovers of Lindy Hop and Swing!' },
-                    { slug: 'nomads', name: 'Nomads', description: 'Whether you find yourself in a place for a day, week, month or year, this is the circle for the vagabonds and wanderers who find home wherever their head may lie.' },
-                    { slug: 'punks', name: 'Punks', description: 'This circle is so punk, we don´t even have a definition. Are you punk? Join us!' },
-                    { slug: 'cyclists', name: 'Cyclists', description: 'Legs of steel or maybe just some grand tour ambitions? Cyclists connect with this circle, before, during and after you hit the road.' },
-                    { slug: 'foodsharing', name: 'Food Sharing', description: 'Foodsharing.de activists and members.' },
-                    { slug: 'yoga', name: 'Yoga', description: 'For practitioners of yoga: meet your fellows in this circle for yogis and yoginis.' },
-                    { slug: 'climbers', name: 'Climbers', description: 'Climbers & mountain lovers: come meet fellow climbers and share your favorite spots to climb in this circle for climbers.' },
-                    { slug: 'hikers', name: 'Hikers', description: 'For outdoorsy people who love hiking in nature. Would you like to find hosts who can recomend the best local hikes?' },
-                    { slug: 'sailors', name: 'Sailors', description: 'For sailors and seafarers. Landlubbers beware! These waters are for sailors and seafarers...' },
-                    { slug: 'artists', name: 'Artists', description: 'Creators & Creatives: love to talk about your latest project? Want a host or guest who can connect with you creatively?' },
-                    { slug: 'rainbow-gathering', name: 'Rainbow Gathering', description: 'Join this circle if you feel part of the Rainbow Family. It\'s great to camp in nature with hippies. Food circle, now!' },
-                    { slug: 'slackline', name: 'Slackline', description: 'Joining this circle is as easy as falling off a 4cm piece of rope...' },
-                    { slug: 'spirituals', name: 'Spirituals', description: 'Ever spend time wondering if there is something more to life? This circle is for you no matter what you believe.' },
-                    { slug: 'dancers', name: 'Dancers', description: 'Dancing for fun, dancing as a release, dancing as a connection with others... whatever gets your booty shaking is fine with us.' },
-                    { slug: 'acroyoga', name: 'Acro Yoga', description: 'Practitioners of acroyoga: like your yoga with a partner or two? Or maybe even upside down?' },
-                    { slug: 'jugglers', name: 'Jugglers', description: 'Juggling community: bring your juggling balls, bowling pins, swords and torches! If you are a juggler or have an interest in juggling this is the community for you.' },
-                    { slug: 'vanlife', name: 'Van Life', description: 'For folks hitting the nomadic road in their vans, camper vans, motorhomes, buses or what have you!' },
-                    { slug: 'trustroots-volunteers', name: 'Trustroots Volunteers', description: 'Join this circle if you want to help grow Trustroots — or if you are already helping.' },
-                    { slug: 'winemakers', name: 'Winemakers', description: 'The soil, the sun, the grape, the casting, it all influences the taste when creating wine.' },
-                    { slug: 'squatters', name: 'Squatters', description: 'The land belongs to those who work it, and a house to those who live in it. N\'est-ce pas?' },
-                    { slug: 'surfers', name: 'Surfers', description: 'Vitamin SEA is all we need. Do you feel at home in the water with a board: this is the place for you.' },
-                    { slug: 'skateboarders', name: 'Skateboarders', description: 'The streets are your playground. Whether you prefer a skateboard, a longboard or cruiser, join this rolling community.' },
-                    { slug: 'pilgrims', name: 'Pilgrims', description: 'For those on spiritual journeys and pilgrimages.' },
-                    { slug: 'photographers', name: 'Photographers', description: 'Worth more than a thousand words in a Circle description.' },
-                    { slug: 'naturists', name: 'Naturists', description: 'Feel better in your birthday suit? A circle for those practising, advocating and defending personal and social nudity.' },
-                    { slug: 'motorcyclists', name: 'Motorcyclists', description: 'For motorcycle enthusiasts and riders.' },
-                    { slug: 'feminists', name: 'Feminists', description: 'A feminist is anyone who recognizes the equality and full humanity of women and men.' },
-                    { slug: 'circus', name: 'Circus', description: 'Are you rolling through life on one wheel regularly? Do you love swinging on a trapeze? Is walking on a thin rope as normal to you as walking on flat surfaces?' },
-                    { slug: 'cooking', name: 'Cooking', description: 'From bon vivant to utter gluttony, as long as you make it yourself or together it\'s all good!' },
-                    { slug: 'burners', name: 'Burners', description: 'Burning man community.' },
-                    { slug: 'beer-brewers', name: 'Beer Brewers', description: 'No need to be a monk these days, just an enthusiast for this craft. Find you fellow brewers here to exchange recipes.' },
-                    { slug: 'anarchists', name: 'Anarchists', description: 'In an anarchist society people wouldn\'t feel as though there was power because everyone would have equal footing.' },
-                    { slug: 'gardeners-farmers', name: 'Gardeners & Farmers', description: 'Regardless of whether you have a small urban balcony garden or enough land to live completely off-grid, this is the place for you!' },
-                    { slug: 'scuba-divers', name: 'Scuba Divers', description: 'If you love spending more time underwater than above land exploring amazing worlds, then this circle may be good for you.' },
-                    { slug: 'ravers', name: 'Ravers', description: 'Love dancing your ass off to beats in underground and secret locations? Come join and find out where the party is at around the world.' },
-                    { slug: 'zero-wasters', name: 'Zero Wasters', description: 'Interested in reducing the waste going to landfill and incineration? Connect here with people acting individually and collectively towards a waste free world.' },
-                    { slug: 'activists', name: 'Activists', description: 'Power to the people! No oceans, no life! Make love not war! Join this circle to find your fellow activists.' },
-                    { slug: 'runners', name: 'Runners', description: 'Anywhere you travel, your running shoes come with? The more miles the better? You even travel for big competitions?' },
-                    { slug: 'filmmakers', name: 'Filmmakers', description: 'Aaaand action! Holding a camera, being in front of it, working on the tech side of things, traveling to find the best settings.' }
+                    { slug: 'hitchhikers' },
+                    { slug: 'dumpsterdivers' },
+                    { slug: 'families' },
+                    { slug: 'musicians' },
+                    { slug: 'buskers' },
+                    { slug: 'veg' },
+                    { slug: 'hackers' },
+                    { slug: 'lgbtq' },
+                    { slug: 'ecoliving' },
+                    { slug: 'lindyhoppers' },
+                    { slug: 'nomads' },
+                    { slug: 'punks' },
+                    { slug: 'cyclists' },
+                    { slug: 'foodsharing' },
+                    { slug: 'yoga' },
+                    { slug: 'climbers' },
+                    { slug: 'hikers' },
+                    { slug: 'sailors' },
+                    { slug: 'artists' },
+                    { slug: 'rainbowgathering' },
+                    { slug: 'slackline' },
+                    { slug: 'spirituals' },
+                    { slug: 'dancers' },
+                    { slug: 'acroyoga' },
+                    { slug: 'jugglers' },
+                    { slug: 'vanlife' },
+                    { slug: 'volunteers' },
+                    { slug: 'winemakers' },
+                    { slug: 'squatters' },
+                    { slug: 'surfers' },
+                    { slug: 'skateboarders' },
+                    { slug: 'pilgrims' },
+                    { slug: 'photographers' },
+                    { slug: 'naturists' },
+                    { slug: 'motorcyclists' },
+                    { slug: 'feminists' },
+                    { slug: 'circus' },
+                    { slug: 'cooking' },
+                    { slug: 'burners' },
+                    { slug: 'beerbrewers' },
+                    { slug: 'anarchists' },
+                    { slug: 'gardeners-farmers' },
+                    { slug: 'scubadivers' },
+                    { slug: 'ravers' },
+                    { slug: 'zero-wasters' },
+                    { slug: 'activists' },
+                    { slug: 'runners' },
+                    { slug: 'filmmakers' },
+                    { slug: 'books' },
+                    { slug: 'cypherpunks' },
+                    { slug: 'lightfoot' }
                 ];
             }
 
@@ -2901,12 +3149,17 @@
                 const searchFilter = document.getElementById('searchFilter');
                 const geohashFilter = document.getElementById('geohashFilter');
                 const nip05Filter = document.getElementById('nip05Filter');
+                const circlesButton = document.getElementById('circlesButton');
 
                 searchFilter.addEventListener('input', (e) => {
                     this.searchFilter = e.target.value.trim().toLowerCase();
                     this.updateHash();
                     this.displayActivities(this.notes);
                     this.plotActivitiesOnMap(this.notes);
+                });
+
+                circlesButton.addEventListener('click', () => {
+                    this.showCirclesModal();
                 });
 
                 geohashFilter.addEventListener('input', (e) => {
@@ -2947,6 +3200,67 @@
                 });
             }
 
+            showCirclesModal() {
+                const modal = document.getElementById('circlesModal');
+                const circlesList = document.getElementById('circlesList');
+                
+                // Clear existing circles
+                circlesList.innerHTML = '';
+                
+                // Get Trustroots circles
+                const circles = this.getTrustrootsCircles();
+                
+                // Create circle items
+                circles.forEach(circle => {
+                    const circleItem = document.createElement('div');
+                    circleItem.className = 'circle-item';
+                    circleItem.textContent = `#${circle.slug}`;
+                    circleItem.title = `#${circle.slug}`;
+                    
+                    circleItem.addEventListener('click', () => {
+                        // Set the circle hashtag in the search filter
+                        const hashtag = `#${circle.slug}`;
+                        this.searchFilter = hashtag;
+                        
+                        const searchFilterInput = document.getElementById('searchFilter');
+                        if (searchFilterInput) {
+                            searchFilterInput.value = hashtag;
+                        }
+                        
+                        // Update display and hash
+                        this.updateHash();
+                        this.displayActivities(this.notes);
+                        this.plotActivitiesOnMap(this.notes);
+                        
+                        // Close modal
+                        this.hideCirclesModal();
+                    });
+                    
+                    circlesList.appendChild(circleItem);
+                });
+                
+                // Show modal
+                modal.style.display = 'flex';
+                
+                // Add ESC key listener
+                this.escKeyHandler = (e) => {
+                    if (e.key === 'Escape') {
+                        this.hideCirclesModal();
+                    }
+                };
+                document.addEventListener('keydown', this.escKeyHandler);
+            }
+
+            hideCirclesModal() {
+                const modal = document.getElementById('circlesModal');
+                modal.style.display = 'none';
+                
+                // Remove ESC key listener
+                if (this.escKeyHandler) {
+                    document.removeEventListener('keydown', this.escKeyHandler);
+                    this.escKeyHandler = null;
+                }
+            }
 
             setTheme(theme) {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -4109,11 +4423,13 @@
                 if (hash && hash.startsWith('#')) {
                     const hashContent = hash.substring(1); // Remove the # symbol
                     
-                    // Check if it's a simple hashtag or hashtag with parameters
-                    if (!hashContent.includes('=')) {
-                        // Direct hashtag format: hitchhiking or hitchhiking&geohash=u1&nip05=true
-                        const parts = hashContent.split('&');
-                        const hashtag = parts[0]; // hitchhiking
+                    // Check if it starts with a hashtag (no = in the first part)
+                    const parts = hashContent.split('&');
+                    const firstPart = parts[0];
+                    
+                    if (!firstPart.includes('=')) {
+                        // Direct hashtag format: testing or testing&geohash=u1&nip05=true&eventid=abc123
+                        const hashtag = firstPart; // testing
                         
                         // Set the hashtag as search filter (add # prefix)
                         this.searchFilter = '#' + hashtag.toLowerCase();
@@ -4139,6 +4455,9 @@
                                 if (nip05FilterInput) {
                                     nip05FilterInput.checked = true;
                                 }
+                            } else if (key === 'eventid') {
+                                this.highlightEventId = value;
+                                console.log('Event ID to highlight:', value);
                             }
                         }
                     } else {
@@ -4148,6 +4467,7 @@
                             const search = params.get('search');
                             const geohash = params.get('geohash');
                             const nip05 = params.get('nip05');
+                            const eventid = params.get('eventid');
                             
                             if (search) {
                                 this.searchFilter = search.toLowerCase();
@@ -4178,6 +4498,11 @@
                                     nip05FilterInput.checked = false;
                                 }
                             }
+                            
+                            if (eventid) {
+                                this.highlightEventId = eventid;
+                                console.log('Event ID to highlight:', eventid);
+                            }
                         } catch (e) {
                             // Invalid hash format - ignore
                         }
@@ -4207,7 +4532,59 @@
                 
                 // Update display after loading filters
                 this.displayActivities();
+                
+                // If there's an event ID to highlight, do it after a short delay
+                if (this.highlightEventId) {
+                    setTimeout(() => {
+                        this.highlightAndScrollToNote(this.highlightEventId);
+                    }, 1000); // Wait 1 second for notes to load
+                }
                 // Filter state loaded from hash
+            }
+
+            highlightAndScrollToNote(eventId) {
+                console.log('Attempting to highlight note with event ID:', eventId);
+                
+                // Find the note with the matching event ID
+                const note = this.notes.find(n => n.id === eventId);
+                if (!note) {
+                    console.log('Note not found with event ID:', eventId);
+                    return;
+                }
+                
+                console.log('Found note to highlight:', note);
+                
+                // Find the note element in the DOM
+                const noteElement = document.querySelector(`[data-note-id="${eventId}"]`);
+                if (!noteElement) {
+                    console.log('Note element not found in DOM for event ID:', eventId);
+                    return;
+                }
+                
+                // Add highlight styling
+                noteElement.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+                noteElement.style.border = '2px solid #3498db';
+                noteElement.style.borderRadius = '8px';
+                noteElement.style.padding = '8px';
+                noteElement.style.margin = '4px 0';
+                
+                // Scroll to the note
+                noteElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+                
+                // Remove highlight after 5 seconds
+                setTimeout(() => {
+                    noteElement.style.backgroundColor = '';
+                    noteElement.style.border = '';
+                    noteElement.style.borderRadius = '';
+                    noteElement.style.padding = '';
+                    noteElement.style.margin = '';
+                }, 5000);
+                
+                console.log('Note highlighted and scrolled to');
             }
 
             getFilteredActivities() {
@@ -5973,9 +6350,14 @@
                     replyContextDisplay.style.display = 'block';
                 }
                 
-                // Create the reply content with NIP-27 mention format
+                // Create the reply content with both npub and NIP-27 mention format
                 const mention = `nostr:${npub}`;
-                const replyContent = `${mention} `;
+                const npubFormatted = this.hexToNpub(npub);
+                const replyContent = `${npubFormatted} ${mention} `;
+                
+                console.log('Reply content:', replyContent);
+                console.log('NPUB formatted:', npubFormatted);
+                console.log('Original npub (hex):', npub);
                 
                 // Pre-fill the compose form
                 const composeTextarea = document.getElementById('composeText');
