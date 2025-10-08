@@ -12,9 +12,75 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
-    <script type="module">
-        import * as nostrTools from 'https://unpkg.com/nostr-tools@2.17.0/lib/esm/index.js';
-        window.nostrTools = nostrTools;
+    <script src="nostr-tools-bundle.js"></script>
+    <script>
+        async function loadNostrTools() {
+            try {
+                console.log('🔄 Loading nostr-tools from local bundle...');
+                
+                // Wait a bit for the script to initialize
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Check if nostr-tools is available globally
+                if (typeof NostrTools === 'undefined') {
+                    throw new Error('NostrTools not found on global object');
+                }
+                
+                // Make it available on window with the expected name
+                window.nostrTools = NostrTools;
+                
+                // Test that key functions are available
+                const requiredFunctions = [
+                    'generateSecretKey',  // Instead of generatePrivateKey
+                    'getPublicKey', 
+                    'nip19',
+                    'finalizeEvent'  // Instead of sign
+                ];
+                
+                // Check for getSharedSecret in utils if available
+                if (NostrTools.utils && typeof NostrTools.utils.getSharedSecret === 'function') {
+                    window.nostrTools.getSharedSecret = NostrTools.utils.getSharedSecret;
+                } else {
+                    // getSharedSecret might not be directly available, we'll use our fallback implementation
+                    console.log('⚠️ getSharedSecret not found in nostr-tools, will use fallback implementation');
+                }
+                
+                const missingFunctions = requiredFunctions.filter(func => {
+                    if (func === 'nip19') {
+                        return !NostrTools.nip19 || !NostrTools.nip19.npubEncode || !NostrTools.nip19.nsecEncode;
+                    }
+                    return typeof NostrTools[func] !== 'function';
+                });
+                
+                if (missingFunctions.length > 0) {
+                    throw new Error(`Missing required functions: ${missingFunctions.join(', ')}`);
+                }
+                
+                console.log('✅ nostr-tools loaded successfully from local bundle');
+                console.log('Available functions:', Object.keys(NostrTools));
+                
+                
+                // Dispatch a custom event to notify the app
+                window.dispatchEvent(new CustomEvent('nostrToolsLoaded', { 
+                    detail: { nostrTools: NostrTools, source: 'local bundle' } 
+                }));
+                
+            } catch (error) {
+                console.error('❌ Failed to load nostr-tools from local bundle:', error);
+                
+                
+                // Show alert to user
+                alert(`Failed to load nostr-tools library from local bundle!\n\nError: ${error.message}\n\nThis will affect private messaging and key generation functionality.`);
+                
+                // Dispatch error event
+                window.dispatchEvent(new CustomEvent('nostrToolsError', { 
+                    detail: { error: error.message } 
+                }));
+            }
+        }
+        
+        // Load nostr-tools when the page loads
+        loadNostrTools();
     </script>
     <style>
         * {
@@ -1168,6 +1234,7 @@
         .trustroots-logo:hover {
             opacity: 1;
         }
+
 
 
         .tripchat-links {
@@ -3121,6 +3188,41 @@
                 return localStorage.getItem('tripchat_note_persistence') || '1h';
             }
 
+            // Save kind 4 notes to localStorage
+            saveKind4Notes() {
+                try {
+                    const kind4Notes = this.notes.filter(note => note.kind === 4);
+                    localStorage.setItem('tripchat_kind4_notes', JSON.stringify(kind4Notes));
+                    console.log('💾 Saved kind 4 notes to localStorage:', kind4Notes.length);
+                } catch (error) {
+                    console.warn('Error saving kind 4 notes:', error);
+                }
+            }
+
+            // Load kind 4 notes from localStorage
+            loadKind4Notes() {
+                try {
+                    const saved = localStorage.getItem('tripchat_kind4_notes');
+                    if (saved) {
+                        const kind4Notes = JSON.parse(saved);
+                        console.log('📂 Loading kind 4 notes from localStorage:', kind4Notes.length);
+                        
+                        // Add them to the notes array if they don't already exist
+                        for (const note of kind4Notes) {
+                            if (!this.notes.find(n => n.id === note.id)) {
+                                this.notes.push(note);
+                            }
+                        }
+                        
+                        console.log('📂 Total notes after loading kind 4:', this.notes.length);
+                        return kind4Notes;
+                    }
+                } catch (error) {
+                    console.warn('Error loading kind 4 notes:', error);
+                }
+                return [];
+            }
+
             // Add expiration filtering
             filterExpiredNotes(notes) {
                 const now = Math.floor(Date.now() / 1000);
@@ -3184,13 +3286,25 @@
                     this.setupScrollHandlers();
                     this.setupDatetimeClickHandlers(); // Set up click handlers early
                     this.loadFilterFromHash();
+                    
+                    // Load saved keys from localStorage first
+                    this.loadKeysFromStorage();
+                    
+                    // Load kind 4 notes from localStorage
+                    this.loadKind4Notes();
+                    
                     await this.connectToRelays();
+                    
+                    // Subscribe to DMs after connecting to relays (in case keys were loaded)
+                    this.subscribeToDMs();
                     
                     // Clean up any profile notes that might have been loaded
                     this.cleanupProfileNotes();
                     
-                    // Load saved keys from localStorage
-                    this.loadKeysFromStorage();
+                    // Set up periodic saving of kind 4 notes
+                    setInterval(() => {
+                        this.saveKind4Notes();
+                    }, 30000); // Save every 30 seconds
                 } catch (error) {
                     this.displayError('Failed to connect to relays: ' + error.message);
                 }
@@ -4605,7 +4719,9 @@
 
             subscribeToDMs() {
                 const currentUserPubkey = this.getCurrentUserPubkey();
-                if (!currentUserPubkey) return;
+                if (!currentUserPubkey) {
+                    return;
+                }
                 
                 const currentUserHex = this.npubToHex(currentUserPubkey);
                 
@@ -4997,24 +5113,31 @@
                         throw new Error('No private key available');
                     }
 
-                    // Convert hex keys to Uint8Array
-                    const privateKeyBytes = new Uint8Array(privateKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                    const recipientPubkeyBytes = new Uint8Array(recipientPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                    console.log('🔍 PM Debug - Keys converted to bytes:', { privateKeyLength: privateKeyBytes.length, recipientLength: recipientPubkeyBytes.length });
-
-                    // Derive shared secret using ECDH
-                    console.log('🔍 PM Debug - Key order for encryption:', { 
-                        privateKey: Array.from(privateKeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(''),
-                        recipientPubkey: Array.from(recipientPubkeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('')
-                    });
-                    const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, recipientPubkeyBytes);
-                    console.log('🔍 PM Debug - Shared secret derived:', !!sharedSecret);
-                    console.log('🔍 PM Debug - Shared secret length:', sharedSecret.length);
-                    console.log('🔍 PM Debug - Shared secret first 8 bytes:', Array.from(sharedSecret.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(''));
-                    
-                    // Encrypt the content
-                    const encryptedContent = await this.encryptAES(new TextEncoder().encode(content), sharedSecret);
-                    console.log('🔍 PM Debug - Content encrypted:', { encryptedLength: encryptedContent.length });
+                    // Use nostr-tools NIP-4 encryption if available
+                    let encryptedContent;
+                    if (typeof window.nostrTools !== 'undefined' && window.nostrTools.nip04 && window.nostrTools.nip04.encrypt) {
+                        console.log('🔍 PM Debug - Using nostr-tools NIP-4 encryption');
+                        encryptedContent = window.nostrTools.nip04.encrypt(privateKey, recipientPubkey, content);
+                        console.log('🔍 PM Debug - Content encrypted with nostr-tools:', { encryptedLength: encryptedContent.length });
+                    } else {
+                        console.log('🔍 PM Debug - Using fallback encryption');
+                        // Fallback to custom implementation
+                        
+                        // Handle both string and Uint8Array private keys
+                        let privateKeyBytes;
+                        if (typeof privateKey === 'string') {
+                            privateKeyBytes = new Uint8Array(privateKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        } else if (privateKey instanceof Uint8Array) {
+                            privateKeyBytes = privateKey;
+                        } else {
+                            throw new Error('Invalid private key format');
+                        }
+                        
+                        const recipientPubkeyBytes = new Uint8Array(recipientPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, recipientPubkeyBytes);
+                        encryptedContent = await this.encryptAES(new TextEncoder().encode(content), sharedSecret);
+                        console.log('🔍 PM Debug - Content encrypted with fallback:', { encryptedLength: encryptedContent.length });
+                    }
                     
                     // Get current user's pubkey
                     const currentUserPubkey = this.getCurrentUserPubkey();
@@ -5101,24 +5224,34 @@
                         privateLength: privateKeyBytes.length 
                     });
 
-                    // Derive shared secret using ECDH
-                    console.log('🔍 PM Debug - Deriving shared secret...');
-                    console.log('🔍 PM Debug - Key order for decryption:', { 
-                        privateKey: Array.from(privateKeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(''),
-                        otherPubkey: Array.from(otherPubkeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('')
-                    });
-                    const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, otherPubkeyBytes);
-                    console.log('🔍 PM Debug - Shared secret derived:', !!sharedSecret);
-                    console.log('🔍 PM Debug - Shared secret length:', sharedSecret.length);
-                    console.log('🔍 PM Debug - Shared secret first 8 bytes:', Array.from(sharedSecret.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(''));
+                    // Use nostr-tools NIP-4 decryption if available
+                    let decryptedContent;
+                    if (typeof window.nostrTools !== 'undefined' && window.nostrTools.nip04 && window.nostrTools.nip04.decrypt) {
+                        console.log('🔍 PM Debug - Using nostr-tools NIP-4 decryption');
+                        decryptedContent = window.nostrTools.nip04.decrypt(privateKey, otherPubkey, dmEvent.content);
+                        console.log('🔍 PM Debug - Content decrypted with nostr-tools:', decryptedContent);
+                    } else {
+                        console.log('🔍 PM Debug - Using fallback decryption');
+                        // Fallback to custom implementation
+                        const otherPubkeyBytes = new Uint8Array(otherPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        
+                        // Handle both string and Uint8Array private keys
+                        let privateKeyBytes;
+                        if (typeof privateKey === 'string') {
+                            privateKeyBytes = new Uint8Array(privateKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        } else if (privateKey instanceof Uint8Array) {
+                            privateKeyBytes = privateKey;
+                        } else {
+                            throw new Error('Invalid private key format');
+                        }
+                        
+                        const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, otherPubkeyBytes);
+                        const decryptedBytes = await this.decryptAES(dmEvent.content, sharedSecret);
+                        decryptedContent = new TextDecoder().decode(decryptedBytes);
+                        console.log('🔍 PM Debug - Content decrypted with fallback:', decryptedContent);
+                    }
                     
-                    // Decrypt the content
-                    console.log('🔍 PM Debug - Decrypting content...');
-                    const decryptedBytes = await this.decryptAES(dmEvent.content, sharedSecret);
-                    console.log('🔍 PM Debug - Content decrypted, bytes length:', decryptedBytes.length);
-                    const decryptedContent = new TextDecoder().decode(decryptedBytes);
                     console.log('🔍 PM Debug - Decrypted content:', decryptedContent.substring(0, 50) + '...');
-                    
                     return decryptedContent;
                 } catch (error) {
                     console.error('❌ PM Debug - Error decrypting DM:', error);
@@ -6113,8 +6246,8 @@
             }
 
             getFilteredActivities() {
-                // Filter out profile notes (kind 0) - they shouldn't appear in chat
-                let filtered = this.notes.filter(note => note.kind !== 0);
+                // Filter out profile notes (kind 0) and DM notes (kind 4) - they shouldn't appear in main chat
+                let filtered = this.notes.filter(note => note.kind !== 0 && note.kind !== 4);
                 
                 // Notes filtered
                 
@@ -6310,6 +6443,8 @@
                                     const noteAge = Math.floor((Date.now() / 1000) - eventData.created_at);
                                     const ageHours = Math.floor(noteAge / 3600);
                                     const ageDays = Math.floor(ageHours / 24);
+                                    
+                                    
                                     // Received event
                                     
                                     // Check for geohash tags in events
@@ -6366,6 +6501,11 @@
             isTRipchatNote(event) {
                 // Accept Kind 1 events (text notes)
                 if (event.kind === 1) {
+                    return true;
+                }
+                
+                // Accept Kind 4 events (DMs) for storage but not display in main chat
+                if (event.kind === 4) {
                     return true;
                 }
                 
@@ -6440,6 +6580,10 @@
                     });
                     this.notes.push(note);
                     this.updateUnreadCount(); // Update unread count for DMs
+                    
+                    // Save kind 4 notes to localStorage
+                    this.saveKind4Notes();
+                    
                     console.log('🔍 PM Debug - DM added. Total notes now:', this.notes.length);
                     return;
                 }
@@ -7725,7 +7869,7 @@
                     }
 
                     // Generate a new private key using nostr-tools
-                    const privateKey = window.nostrTools.generatePrivateKey();
+                    const privateKey = window.nostrTools.generateSecretKey();
                     const publicKey = window.nostrTools.getPublicKey(privateKey);
                     
                     // Convert to nsec and npub formats
@@ -7876,7 +8020,7 @@
                         if (this.privateKey.startsWith('nsec')) {
                             privateKeyHex = this.nsecToHex(this.privateKey);
                         }
-                        return window.nostrTools.finishEvent(event, privateKeyHex);
+                        return window.nostrTools.finalizeEvent(event, privateKeyHex);
                     } else {
                         throw new Error('nostr-tools not available');
                     }
@@ -8292,6 +8436,10 @@
                         // Use nip19 for bech32 decoding
                         const decoded = window.nostrTools.nip19.decode(nsecKey);
                         if (decoded.type === 'nsec') {
+                            // Convert Uint8Array to hex string if needed
+                            if (decoded.data instanceof Uint8Array) {
+                                return Array.from(decoded.data).map(b => b.toString(16).padStart(2, '0')).join('');
+                            }
                             return decoded.data;
                         } else {
                             throw new Error('Invalid nsec format');
@@ -8697,7 +8845,7 @@
                         console.log('🏷️ Event tags (main):', event.tags);
                         
                         // Sign the event using nostr-tools
-                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        const signedEvent = window.nostrTools.finalizeEvent(event, this.privateKey);
                         return signedEvent;
                     }
                     
@@ -8878,7 +9026,7 @@
                         }
 
                         // Sign the event using nostr-tools
-                        const signedEvent = window.nostrTools.finishEvent(event, this.privateKey);
+                        const signedEvent = window.nostrTools.finalizeEvent(event, this.privateKey);
                         return signedEvent;
                     }
                     
@@ -9017,7 +9165,7 @@
                             created_at: Math.floor(Date.now() / 1000)
                         };
 
-                        const signedEvent = window.nostrTools.finishEvent(event, privateKeyForSigning);
+                        const signedEvent = window.nostrTools.finalizeEvent(event, privateKeyForSigning);
                         signedEvent.pubkey = publicKeyHex;
                         
                         // Ensure event has an ID (fallback if nostr-tools doesn't add it)
@@ -9631,6 +9779,21 @@
 
         // Initialize the app when the page loads
         window.tripchatVisualizer = new TRipchatVisualizer();
+        
+        // Handle nostr-tools loading events
+        window.addEventListener('nostrToolsLoaded', (event) => {
+            console.log('🎉 nostr-tools loaded successfully in main app');
+            
+            
+            // You can add any initialization that depends on nostr-tools here
+        });
+        
+        window.addEventListener('nostrToolsError', (event) => {
+            console.error('💥 nostr-tools failed to load in main app:', event.detail.error);
+            
+            
+            // You can add fallback behavior here if needed
+        });
         
         // Update last modified time
         function updateLastModified() {

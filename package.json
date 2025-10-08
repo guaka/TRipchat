@@ -1,0 +1,25 @@
+{
+  "name": "tripchat",
+  "version": "1.0.0",
+  "description": "A web-based visualization tool for travel chat on Nostr. Displays location-based messages from the Nostr network in a map interface.",
+  "main": "nostr-tools.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guaka/TRipchat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/guaka/TRipchat/issues"
+  },
+  "homepage": "https://github.com/guaka/TRipchat#readme",
+  "dependencies": {
+    "esbuild": "^0.25.10",
+    "nostr-tools": "^2.17.0"
+  }
+}
