@@ -1,4 +1,4 @@
-# TRipchat
+# TRipch.at
 
 A web-based visualization tool for travel chat on Nostr. Displays location-based messages from the Nostr network in a map interface.
 
