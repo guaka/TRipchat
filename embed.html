@@ -290,6 +290,8 @@
                 this.trustedDomains = [
                     'hitchwiki.org',
                     'trustroots.org',
+                    'nomadwiki.org',
+                    'trashwiki.org',
                 ];
                 
                 this.init();
@@ -667,7 +669,7 @@
                 // Use DOMPurify to sanitize HTML content
                 if (typeof DOMPurify !== 'undefined') {
                     return DOMPurify.sanitize(text, {
-                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br'],
+                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'blockquote', 'code', 'del'],
                         ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'data-hashtag', 'data-circle'],
                         ALLOW_DATA_ATTR: true
                     });
@@ -679,14 +681,66 @@
                 }
             }
 
+            processMarkdown(content) {
+                // Process markdown formatting while preserving existing HTML
+                let processed = content;
+                
+                // Headers (### Header, ## Header, # Header)
+                processed = processed.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                processed = processed.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                processed = processed.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                
+                // Bold text (**bold** or __bold__)
+                processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                processed = processed.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                
+                // Italic text (*italic* or _italic_)
+                processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                processed = processed.replace(/_(.*?)_/g, '<em>$1</em>');
+                
+                // Code spans (`code`)
+                processed = processed.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Strikethrough (~~strikethrough~~)
+                processed = processed.replace(/~~(.*?)~~/g, '<del>$1</del>');
+                
+                // Unordered lists (- item or * item)
+                processed = processed.replace(/^[\s]*[-*] (.*$)/gim, '<li>$1</li>');
+                
+                // Ordered lists (1. item)
+                processed = processed.replace(/^[\s]*\d+\. (.*$)/gim, '<li>$1</li>');
+                
+                // Wrap consecutive list items in <ul> or <ol>
+                processed = processed.replace(/(<li>.*<\/li>)/gs, (match) => {
+                    // Check if it's an ordered list (contains numbers)
+                    const hasNumbers = /^\s*\d+\./.test(match);
+                    const listTag = hasNumbers ? 'ol' : 'ul';
+                    return `<${listTag}>${match}</${listTag}>`;
+                });
+                
+                // Blockquotes (> quote)
+                processed = processed.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+                
+                // Line breaks (double newline = paragraph break)
+                processed = processed.replace(/\n\n/g, '</p><p>');
+                processed = processed.replace(/\n/g, '<br>');
+                
+                // Wrap in paragraph tags if not already wrapped
+                if (!processed.startsWith('<') || !processed.includes('<p>')) {
+                    processed = '<p>' + processed + '</p>';
+                }
+                
+                return processed;
+            }
+
             formatContentWithLinks(text) {
-                // First sanitize HTML to prevent XSS attacks
-                const sanitizedText = this.sanitizeHtml(text);
+                // First process markdown formatting on raw content
+                const markdownProcessed = this.processMarkdown(text);
                 
                 // URL regex pattern that matches http/https URLs
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 
-                return sanitizedText.replace(urlRegex, (url) => {
+                const urlProcessed = markdownProcessed.replace(urlRegex, (url) => {
                     try {
                         const urlObj = new URL(url);
                         const domain = urlObj.hostname.toLowerCase();
@@ -709,6 +763,9 @@
                         return url;
                     }
                 });
+                
+                // Finally sanitize HTML to prevent XSS attacks
+                return this.sanitizeHtml(urlProcessed);
             }
 
             scrollToBottom() {

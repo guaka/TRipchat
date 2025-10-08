@@ -355,7 +355,6 @@
             color: var(--text-primary);
             font-size: 0.85rem;
             word-wrap: break-word;
-            white-space: pre-wrap;
             font-weight: 400;
             margin: 0;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -365,6 +364,60 @@
             -moz-osx-font-smoothing: grayscale;
             font-feature-settings: 'liga' 1, 'calt' 1;
             letter-spacing: 0.01em;
+        }
+
+        /* Markdown styling */
+        .note-content h1, .note-content h2, .note-content h3 {
+            margin: 12px 0 8px 0;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .note-content h1 { font-size: 1.2rem; }
+        .note-content h2 { font-size: 1.1rem; }
+        .note-content h3 { font-size: 1.0rem; }
+
+        .note-content strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .note-content em {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .note-content code {
+            background: #f1f3f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #d63384;
+        }
+
+        .note-content del {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .note-content ul, .note-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .note-content li {
+            margin: 4px 0;
+        }
+
+        .note-content blockquote {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-left: 3px solid var(--accent-color);
+            background: rgba(88, 166, 255, 0.05);
+            font-style: italic;
+            color: var(--text-muted);
         }
 
         .hashtag-link {
@@ -1221,7 +1274,9 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             background: white;
-            min-width: 150px;
+            width: 120px;
+            max-width: 120px;
+            flex-shrink: 0;
         }
 
         .compose-section {
@@ -2472,8 +2527,8 @@
                                 <textarea id="composeContent" placeholder="What's happening? Share your thoughts, travel updates, or location-specific info..." rows="3"></textarea>
                             </div>
                             <div class="compose-section" style="display: flex; align-items: center; gap: 8px;">
-                                <label for="notePersistence" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Note Duration:</label>
-                                <select id="notePersistence" class="persistence-select">
+                                <label for="notePersistence" style="margin: 0; font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0;">Note Duration:</label>
+                                <select id="notePersistence" class="persistence-select" style="flex-shrink: 0;">
                                     <option value="1h" selected>1 Hour</option>
                                     <option value="short">24 Hours</option>
                                     <option value="medium">7 Days</option>
@@ -4093,6 +4148,8 @@
                         const circleSlug = link.dataset.circle;
                         const hashtag = link.dataset.hashtag;
                         
+                        console.log('Hashtag clicked:', hashtag, 'isGeohash:', this.isGeohash(hashtag));
+                        
                         // Check if the hashtag is actually a geohash
                         if (this.isGeohash(hashtag)) {
                             // Update geohash filter
@@ -4114,6 +4171,7 @@
                             
                             // Added geohash to filter
                         } else {
+                            console.log('Setting search filter for hashtag:', hashtag);
                             // Add hashtag to the search filter, replacing any existing hashtag
                             const currentFilter = this.searchFilter || '';
                             const hashtagText = `#${hashtag}`;
@@ -4914,7 +4972,7 @@
                 if (nonExpiredActivities.length === 0) {
                     if (this.searchFilter || this.geohashFilter) {
                         const filterText = this.geohashFilter ? `geohash "${this.geohashFilter}"` : `search "${this.searchFilter}"`;
-                        noteContainer.innerHTML = `<div class="loading">No notes found for ${filterText}. Try a different search term or clear the filter.</div>`;
+                        noteContainer.innerHTML = `<div class="loading">No notes found for ${filterText}. Try a different search term, clear the filter or post something yourself!</div>`;
                     } else {
                         noteContainer.innerHTML = '<div class="loading">No TRipchat note found. Check the browser console for debug information.</div>';
                     }
@@ -5077,14 +5135,17 @@
             }
 
             processContent(content) {
-                // First sanitize HTML to prevent XSS attacks
-                let sanitizedContent = this.sanitizeHtml(content);
+                // First process markdown formatting on raw content
+                let markdownProcessedContent = this.processMarkdown(content);
                 
-                // Then process URLs on sanitized content
-                let urlProcessedContent = this.processUrls(sanitizedContent);
+                // Then process URLs on markdown-processed content
+                let urlProcessedContent = this.processUrls(markdownProcessedContent);
                 
-                // Finally process hashtags
-                return this.processHashtags(urlProcessedContent);
+                // Then process hashtags
+                let hashtagProcessedContent = this.processHashtags(urlProcessedContent);
+                
+                // Finally sanitize HTML to prevent XSS attacks
+                return this.sanitizeHtml(hashtagProcessedContent);
             }
 
             processUrls(content) {
@@ -5104,8 +5165,10 @@
                         // Check if it's a trusted domain
                         const isHitchwiki = domain === 'hitchwiki.org' || domain.endsWith('.hitchwiki.org');
                         const isTrustroots = domain === 'trustroots.org' || domain.endsWith('.trustroots.org');
+                        const isNomadwiki = domain === 'nomadwiki.org' || domain.endsWith('.nomadwiki.org');
+                        const isTrashwiki = domain === 'trashwiki.org' || domain.endsWith('.trashwiki.org');
                         
-                        if (isHitchwiki || isTrustroots) {
+                        if (isHitchwiki || isTrustroots || isNomadwiki || isTrashwiki) {
                             // Decode URL for display while keeping original for href
                             const displayUrl = decodeURIComponent(url);
                             return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="external-link">${displayUrl}</a>`;
@@ -5118,6 +5181,58 @@
                         return url;
                     }
                 });
+            }
+
+            processMarkdown(content) {
+                // Process markdown formatting while preserving existing HTML
+                let processed = content;
+                
+                // Headers (### Header, ## Header, # Header)
+                processed = processed.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                processed = processed.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                processed = processed.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                
+                // Bold text (**bold** or __bold__)
+                processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                processed = processed.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                
+                // Italic text (*italic* or _italic_)
+                processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                processed = processed.replace(/_(.*?)_/g, '<em>$1</em>');
+                
+                // Code spans (`code`)
+                processed = processed.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Strikethrough (~~strikethrough~~)
+                processed = processed.replace(/~~(.*?)~~/g, '<del>$1</del>');
+                
+                // Unordered lists (- item or * item)
+                processed = processed.replace(/^[\s]*[-*] (.*$)/gim, '<li>$1</li>');
+                
+                // Ordered lists (1. item)
+                processed = processed.replace(/^[\s]*\d+\. (.*$)/gim, '<li>$1</li>');
+                
+                // Wrap consecutive list items in <ul> or <ol>
+                processed = processed.replace(/(<li>.*<\/li>)/gs, (match) => {
+                    // Check if it's an ordered list (contains numbers)
+                    const hasNumbers = /^\s*\d+\./.test(match);
+                    const listTag = hasNumbers ? 'ol' : 'ul';
+                    return `<${listTag}>${match}</${listTag}>`;
+                });
+                
+                // Blockquotes (> quote)
+                processed = processed.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+                
+                // Line breaks (double newline = paragraph break)
+                processed = processed.replace(/\n\n/g, '</p><p>');
+                processed = processed.replace(/\n/g, '<br>');
+                
+                // Wrap in paragraph tags if not already wrapped
+                if (!processed.startsWith('<') || !processed.includes('<p>')) {
+                    processed = '<p>' + processed + '</p>';
+                }
+                
+                return processed;
             }
 
             processHashtags(content) {
@@ -5284,7 +5399,21 @@
             }
 
             isGeohash(str) {
-                return /^[0-9b-hj-km-np-z]+$/.test(str) && str.length >= 1 && str.length <= 12;
+                // Geohash uses base32 encoding: 0-9, b-h, j-k, m-n, p-z (excludes a, i, l, o)
+                // But we need to be more restrictive to avoid treating common words as geohashes
+                const hasValidChars = /^[0-9bcdefghjkmnpqrstuvwxyz]+$/.test(str);
+                const hasValidLength = str.length >= 1 && str.length <= 12;
+                
+                // Additional checks to avoid treating common words as geohashes:
+                // 1. Must contain at least one number OR be 6+ characters (typical geohash length)
+                // 2. Must not be a common English word
+                const hasNumber = /[0-9]/.test(str);
+                const isLongEnough = str.length >= 6;
+                const isCommonWord = ['buskers', 'musicians', 'travelers', 'hitchhikers', 'nomads', 'artists', 'writers', 'photographers'].includes(str.toLowerCase());
+                
+                const result = hasValidChars && hasValidLength && (hasNumber || isLongEnough) && !isCommonWord;
+                console.log('isGeohash test:', str, 'hasValidChars:', hasValidChars, 'hasValidLength:', hasValidLength, 'hasNumber:', hasNumber, 'isLongEnough:', isLongEnough, 'isCommonWord:', isCommonWord, 'result:', result);
+                return result;
             }
 
             // Generate single-character geohash codes and their bounds
@@ -7872,7 +8001,7 @@
                 // Use DOMPurify to sanitize HTML content
                 if (typeof DOMPurify !== 'undefined') {
                     return DOMPurify.sanitize(text, {
-                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br'],
+                        ALLOWED_TAGS: ['a', 'strong', 'em', 'u', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'blockquote', 'code', 'del'],
                         ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'data-hashtag', 'data-circle'],
                         ALLOW_DATA_ATTR: true
                     });
