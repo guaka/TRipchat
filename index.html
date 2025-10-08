@@ -1605,6 +1605,23 @@
             transform: scale(1.05);
         }
 
+        .key-delete-btn {
+            background: #e74c3c;
+            color: #ecf0f1;
+            border: 1px solid #c0392b;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+        }
+
+        .key-delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
         .reply-context-display a {
             color: #27ae60 !important;
             text-decoration: none;
@@ -2594,6 +2611,7 @@
                     <div class="key-input-group">
                         <input type="password" id="settingsPrivateKey" placeholder="Enter your nsec private key or generate new" />
                         <button type="button" id="togglePrivateKeyVisibility" class="key-visibility-btn" title="Show/Hide private key">👁️</button>
+                        <button type="button" id="deletePrivateKeyBtn" class="key-delete-btn" title="Delete private key" style="display: none;">🗑️</button>
                     </div>
                     <div id="settingsPrivateKeyHint" class="key-hint"></div>
                 </div>
@@ -2757,23 +2775,6 @@
                     return isValid; // Show if not expired
                 });
                 
-                console.log('Expiration filter:', {
-                    total: notes.length,
-                    valid: validCount,
-                    expired: expiredCount,
-                    permanent: permanentCount,
-                    now: new Date(now * 1000),
-                    sampleExpired: notes.filter(note => {
-                        const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
-                        if (!expirationTag) return false;
-                        const expiresAt = parseInt(expirationTag[1]);
-                        return now >= expiresAt;
-                    }).slice(0, 3).map(note => ({
-                        id: note.id,
-                        expiresAt: new Date(parseInt(note.tags?.find(tag => tag[0] === 'expires_at')?.[1]) * 1000),
-                        createdAt: new Date(note.created_at * 1000)
-                    }))
-                });
                 
                 return filtered;
             }
@@ -2818,7 +2819,7 @@
             // Last updated: 2024-12-19
             getTrustrootsCircles() {
                 return [
-                    { slug: 'hitchhikers' },
+                    { slug: 'hitch' },
                     { slug: 'dumpsterdivers' },
                     { slug: 'families' },
                     { slug: 'musicians' },
@@ -2859,7 +2860,7 @@
                     { slug: 'burners' },
                     { slug: 'beerbrewers' },
                     { slug: 'anarchists' },
-                    { slug: 'gardeners-farmers' },
+                    { slug: 'gardeners' },
                     { slug: 'scubadivers' },
                     { slug: 'ravers' },
                     { slug: 'zero-wasters' },
@@ -3546,6 +3547,7 @@
                         updateNip05Display();
                         this.highlightKeyInputs();
                         this.toggleKeyButtonsVisibility();
+                        this.updateDeleteButtonVisibility();
                     }, 100);
 
                     if (!this.shouldPreserveSettingsMessage) {
@@ -3599,6 +3601,7 @@
                         }
                         this.highlightKeyInputs();
                         this.toggleKeyButtonsVisibility();
+                        this.updateDeleteButtonVisibility();
                     } catch (error) {
                         console.error('Error generating key:', error);
                         alert('Error generating keys. Please try again.');
@@ -3613,6 +3616,14 @@
                         settingsPrivateKey.type = isPassword ? 'text' : 'password';
                         togglePrivateKeyVisibility.textContent = isPassword ? '🙈' : '👁️';
                         togglePrivateKeyVisibility.title = isPassword ? 'Hide private key' : 'Show private key';
+                    });
+                }
+
+                // Delete private key functionality
+                const deletePrivateKeyBtn = document.getElementById('deletePrivateKeyBtn');
+                if (deletePrivateKeyBtn) {
+                    deletePrivateKeyBtn.addEventListener('click', () => {
+                        this.showDeleteKeyWarning();
                     });
                 }
 
@@ -3654,6 +3665,8 @@
                                 settingsPrivateKeyHint.style.color = '#22c55e';
                             }
                             
+                            // Auto-population temporarily disabled
+                            
                             // Hide the generate button since we have a valid key
                             const generateBtn = document.getElementById('settingsGenerateKeyBtn');
                             if (generateBtn) {
@@ -3676,6 +3689,7 @@
                             
                             this.highlightKeyInputs();
                             this.toggleKeyButtonsVisibility();
+                            this.updateDeleteButtonVisibility();
                             
                             console.log('nsec key automatically processed and saved');
                         } catch (error) {
@@ -4367,6 +4381,173 @@
                 return fallbackProfile;
             }
 
+            // Auto-population method temporarily removed
+
+            // Direct profile fetch method temporarily removed
+
+            showDeleteKeyWarning() {
+                const warningMessage = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2rem; margin-bottom: 15px;">⚠️</div>
+                        <h3 style="color: #e74c3c; margin-bottom: 15px;">Delete Private Key?</h3>
+                        <p style="margin-bottom: 20px; line-height: 1.5;">
+                            <strong>Are you sure you want to delete your nsec private key?</strong>
+                        </p>
+                        <p style="margin-bottom: 20px; color: #7f8c8d; font-size: 0.9rem;">
+                            <strong>⚠️ IMPORTANT:</strong> Did you store this nsec key in your password manager?<br/>
+                            Once deleted, you won't be able to recover it unless you have a backup.
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+                            <button id="confirmDeleteKey" style="
+                                background: #e74c3c; 
+                                color: white; 
+                                border: none; 
+                                padding: 10px 20px; 
+                                border-radius: 5px; 
+                                cursor: pointer;
+                                font-weight: bold;
+                            ">Yes, Delete Key</button>
+                            <button id="cancelDeleteKey" style="
+                                background: #95a5a6; 
+                                color: white; 
+                                border: none; 
+                                padding: 10px 20px; 
+                                border-radius: 5px; 
+                                cursor: pointer;
+                            ">Cancel</button>
+                        </div>
+                    </div>
+                `;
+
+                // Create modal overlay
+                const modal = document.createElement('div');
+                modal.id = 'deleteKeyModal';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                `;
+
+                // Create modal content
+                const modalContent = document.createElement('div');
+                modalContent.style.cssText = `
+                    background: white;
+                    border-radius: 10px;
+                    max-width: 500px;
+                    width: 90%;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                `;
+                modalContent.innerHTML = warningMessage;
+
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+
+                // Add event listeners
+                document.getElementById('confirmDeleteKey').addEventListener('click', () => {
+                    this.deletePrivateKey();
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('cancelDeleteKey').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                // Close on overlay click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+
+            deletePrivateKey() {
+                try {
+                    // Clear localStorage
+                    localStorage.removeItem('tripchat_nsec');
+                    localStorage.removeItem('tripchat_npub');
+                    localStorage.removeItem('tripchat_trustroots_username');
+
+                    // Clear class properties
+                    this.privateKey = null;
+
+                    // Clear UI fields
+                    const settingsPrivateKey = document.getElementById('settingsPrivateKey');
+                    const settingsPublicKey = document.getElementById('settingsPublicKey');
+                    const trustrootsUsername = document.getElementById('trustrootsUsername');
+                    const nip05Identifier = document.getElementById('nip05Identifier');
+                    const usernameStatus = document.getElementById('usernameStatus');
+
+                    if (settingsPrivateKey) {
+                        settingsPrivateKey.value = '';
+                        settingsPrivateKey.type = 'text';
+                    }
+                    if (settingsPublicKey) settingsPublicKey.value = '';
+                    if (trustrootsUsername) trustrootsUsername.value = '';
+                    if (nip05Identifier) nip05Identifier.textContent = 'Enter username and generate keys first';
+                    if (usernameStatus) {
+                        usernameStatus.textContent = 'No username saved yet';
+                        usernameStatus.style.color = '#6c757d';
+                    }
+
+                    // Hide delete button
+                    const deletePrivateKeyBtn = document.getElementById('deletePrivateKeyBtn');
+                    if (deletePrivateKeyBtn) {
+                        deletePrivateKeyBtn.style.display = 'none';
+                    }
+
+                    // Show generate button
+                    const generateBtn = document.getElementById('settingsGenerateKeyBtn');
+                    if (generateBtn) {
+                        generateBtn.style.display = 'block';
+                    }
+
+                    // Update toggle button
+                    const toggleBtn = document.getElementById('togglePrivateKeyVisibility');
+                    if (toggleBtn) {
+                        toggleBtn.textContent = '🙈';
+                        toggleBtn.title = 'Hide private key';
+                    }
+
+                    // Clear hint
+                    const settingsPrivateKeyHint = document.getElementById('settingsPrivateKeyHint');
+                    if (settingsPrivateKeyHint) {
+                        settingsPrivateKeyHint.innerHTML = '';
+                        settingsPrivateKeyHint.style.display = 'none';
+                    }
+
+                    // Update button visibility
+                    this.toggleKeyButtonsVisibility();
+
+                    // Show success message
+                    this.setSettingsModalMessage('🗑️ Private key deleted successfully. You can now generate a new key or paste a different one.');
+
+                    console.log('Private key deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting private key:', error);
+                    alert('Error deleting private key. Please try again.');
+                }
+            }
+
+            updateDeleteButtonVisibility() {
+                const deletePrivateKeyBtn = document.getElementById('deletePrivateKeyBtn');
+                const nsecKey = localStorage.getItem('tripchat_nsec');
+                
+                if (deletePrivateKeyBtn) {
+                    if (nsecKey && nsecKey.trim() !== '') {
+                        deletePrivateKeyBtn.style.display = 'block';
+                    } else {
+                        deletePrivateKeyBtn.style.display = 'none';
+                    }
+                }
+            }
+
             // Request queue management methods
             async queueRequest(relayUrl, requestFunction) {
                 return new Promise((resolve, reject) => {
@@ -4408,7 +4589,7 @@
             requestUserProfile(relayUrl, pubkey) {
                 return this.queueRequest(relayUrl, () => {
                     return new Promise((resolve) => {
-                        const subscriptionId = "profile-" + Math.random().toString(36).substr(2, 9);
+                        const subscriptionId = "profile-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
                         const filters = {
                             "kinds": [0], // Metadata events
                             "authors": [pubkey],
@@ -4416,43 +4597,69 @@
                         };
                         
                         const subscription = ["REQ", subscriptionId, filters];
+                        console.log(`🔍 Sending profile request to ${relayUrl}:`, subscription);
+                        console.log(`🔍 Query filters:`, JSON.stringify(filters, null, 2));
+                        console.log(`🔍 Looking for pubkey: ${pubkey}`);
                         
                         const timeout = setTimeout(() => {
+                            console.log(`⏰ Profile request timeout for ${relayUrl}`);
                             // Close the subscription
                             if (this.websockets[relayUrl]) {
                                 this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
                             }
                             resolve(null);
-                        }, 3000); // 3 second timeout
+                        }, 10000); // 10 second timeout
                         
                         const handleMessage = (event) => {
                             try {
                                 const data = JSON.parse(event.data);
+                                console.log(`🔍 Received message from ${relayUrl}:`, data);
                                 if (Array.isArray(data)) {
                                     const [messageType, subId, eventData] = data;
                                     
                                     if (messageType === 'EVENT' && subId === subscriptionId && eventData.kind === 0) {
-                                        clearTimeout(timeout);
-                                        this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                        console.log(`✅ Profile event received from ${relayUrl}:`, eventData);
+                                        console.log(`🔍 Received pubkey: ${eventData.pubkey}`);
+                                        console.log(`🔍 Expected pubkey: ${pubkey}`);
+                                        console.log(`🔍 Pubkeys match: ${eventData.pubkey === pubkey}`);
                                         
-                                        // Close the subscription
-                                        this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
-                                        
-                                        try {
-                                            const metadata = JSON.parse(eventData.content);
-                                            const profile = {
-                                                name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
-                                                pubkey: pubkey,
-                                                picture: metadata.picture,
-                                                about: metadata.about,
-                                                nip05: metadata.nip05 // Add NIP-05 field
-                                            };
-                                            // Profile fetched successfully
-                                            resolve(profile);
-                                        } catch (e) {
-                                            resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
+                                        // Only process if pubkey matches
+                                        if (eventData.pubkey === pubkey) {
+                                            clearTimeout(timeout);
+                                            this.websockets[relayUrl].removeEventListener('message', handleMessage);
+                                            
+                                            // Close the subscription
+                                            this.websockets[relayUrl].send(JSON.stringify(["CLOSE", subscriptionId]));
+                                            
+                                            try {
+                                                const metadata = JSON.parse(eventData.content);
+                                                const profile = {
+                                                    name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
+                                                    pubkey: pubkey,
+                                                    picture: metadata.picture,
+                                                    about: metadata.about,
+                                                    nip05: metadata.nip05, // Add NIP-05 field
+                                                    trustroots_username: metadata.trustroots_username, // Add Trustroots username
+                                                    website: metadata.website,
+                                                    lud16: metadata.lud16,
+                                                    trustroots_profile: metadata.trustroots_profile,
+                                                    travel_preferences: metadata.travel_preferences,
+                                                    created_at: metadata.created_at
+                                                };
+                                                console.log(`✅ Profile processed for correct pubkey: ${pubkey}`);
+                                                // Profile fetched successfully
+                                                resolve(profile);
+                                            } catch (e) {
+                                                console.log(`❌ Error parsing profile for pubkey: ${pubkey}`);
+                                                resolve({ name: pubkey.substring(0, 8) + '...', pubkey: pubkey });
+                                            }
+                                        } else {
+                                            console.log(`⚠️ Ignoring profile for different pubkey: ${eventData.pubkey}`);
+                                            // Don't resolve yet, wait for the correct profile or EOSE
                                         }
                                     } else if (messageType === 'EOSE' && subId === subscriptionId) {
+                                        console.log(`ℹ️ End of stored events from ${relayUrl} - no profile found`);
+                                        console.log(`🔍 Resolving promise with null for ${relayUrl}`);
                                         clearTimeout(timeout);
                                         this.websockets[relayUrl].removeEventListener('message', handleMessage);
                                         
@@ -4970,7 +5177,6 @@
                 }
 
                 // Adding note
-                console.log('Adding new note:', note.id, 'created_at:', new Date(note.created_at * 1000), 'content preview:', note.content?.substring(0, 50));
                 
                 this.notes.push(note);
                 this.notes.sort((a, b) => {
@@ -5043,28 +5249,7 @@
                 });
                 const limitedActivities = sortedActivities.slice(-50); // Take last 50 notes (newest at bottom)
                 
-                console.log('Displaying notes:', {
-                    totalNotes: this.notes.length,
-                    nonExpiredCount: nonExpiredActivities.length,
-                    sortedCount: sortedActivities.length,
-                    limitedCount: limitedActivities.length,
-                    newestNote: limitedActivities[0] ? new Date(limitedActivities[0].created_at * 1000) : 'none',
-                    oldestNote: limitedActivities[limitedActivities.length - 1] ? new Date(limitedActivities[limitedActivities.length - 1].created_at * 1000) : 'none'
-                });
                 
-                // Debug: Show first 5 and last 5 notes with their timestamps
-                console.log('First 5 notes (oldest):', limitedActivities.slice(0, 5).map(note => ({
-                    id: note.id.substring(0, 8),
-                    created_at: note.created_at,
-                    timestamp: new Date(note.created_at * 1000),
-                    content: note.content?.substring(0, 30)
-                })));
-                console.log('Last 5 notes (newest):', limitedActivities.slice(-5).map(note => ({
-                    id: note.id.substring(0, 8),
-                    created_at: note.created_at,
-                    timestamp: new Date(note.created_at * 1000),
-                    content: note.content?.substring(0, 30)
-                })));
                 
                 noteContainer.innerHTML = '';
 
@@ -5495,7 +5680,6 @@
                 ].includes(str.toLowerCase());
                 
                 const result = hasValidChars && hasValidLength && hasNumber && !isCommonWord;
-                console.log('isGeohash test:', str, 'hasValidChars:', hasValidChars, 'hasValidLength:', hasValidLength, 'hasNumber:', hasNumber, 'isCommonWord:', isCommonWord, 'result:', result);
                 return result;
             }
 
