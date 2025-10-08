@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdn.skypack.dev; connect-src 'self' wss: https:;">
     <title>TRipch.at - nostr travel chat</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" href="favicon.ico">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -139,7 +141,16 @@
             border-right: 1px solid var(--border-color);
             box-shadow: 4px 0 20px var(--shadow);
             backdrop-filter: blur(10px);
-            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: flex 0.3s ease, opacity 0.3s ease, height 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+
+        .map-container.hidden {
+            flex: 0;
+            height: 0;
+            opacity: 0;
+            border-right: none;
+            box-shadow: none;
         }
         
         #map {
@@ -257,6 +268,120 @@
             opacity: 0.9;
             background: #2980b9;
             transform: scale(1.02);
+        }
+
+        .note-pm-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 4px;
+        }
+
+        .note-pm-btn:hover {
+            opacity: 0.9;
+            background: #8e44ad;
+            transform: scale(1.02);
+        }
+
+        /* PM Modal uses messages-modal styles, with PM-specific overrides */
+        .pm-modal {
+            display: none;
+        }
+        
+        .pm-modal.show {
+            display: block;
+        }
+        .pm-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: 60vh;
+            background: var(--bg-primary);
+        }
+
+        .pm-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-width: 80%;
+        }
+
+        .pm-message.sent {
+            background: var(--accent-color);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .pm-message.received {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            margin-right: auto;
+        }
+
+        .pm-message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .pm-input-group {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .pm-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .pm-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
+
+        .pm-send-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            align-self: flex-end;
+            min-width: 80px;
+        }
+
+        .pm-send-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .pm-send-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
         }
 
         @keyframes pulse {
@@ -1027,6 +1152,23 @@
             gap: 8px;
         }
 
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .trustroots-logo {
+            height: 32px;
+            width: auto;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .trustroots-logo:hover {
+            opacity: 1;
+        }
+
 
         .tripchat-links {
             display: flex;
@@ -1035,7 +1177,7 @@
 
 
 
-        .settings-btn, .relay-manager-btn {
+        .settings-btn, .relay-manager-btn, .messages-btn {
             background: var(--accent-color);
             color: white;
             border: none;
@@ -1073,10 +1215,190 @@
             left: 100%;
         }
 
-        .settings-btn:hover, .relay-manager-btn:hover {
+        .settings-btn:hover, .relay-manager-btn:hover, .messages-btn:hover {
             background: var(--accent-hover);
             transform: translateY(-3px);
             box-shadow: 0 8px 25px var(--shadow-hover);
+        }
+
+        .messages-btn.has-unread {
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        .messages-btn.has-unread::after {
+            content: "●";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            color: #ff6b6b;
+            font-size: 12px;
+            animation: blink 1s infinite;
+        }
+
+        .map-toggle-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-toggle-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .map-toggle-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* Messages Modal Styles */
+        .messages-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .messages-modal-content {
+            background: var(--bg-primary);
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .messages-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+        }
+
+        .messages-close {
+            color: var(--text-muted);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .messages-close:hover {
+            color: var(--text-primary);
+        }
+
+        .messages-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            max-height: 60vh;
+        }
+
+        .messages-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .conversation-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .conversation-item:last-child {
+            border-bottom: none;
+        }
+
+        .conversation-info {
+            flex: 1;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .conversation-preview {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+
+        .conversation-meta {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .conversation-time {
+            margin-bottom: 4px;
+        }
+
+        .unread-badge {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .no-conversations {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
         }
 
         .compose-btn-bottom {
@@ -1946,6 +2268,14 @@
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
                 background: var(--map-bg);
+                transition: height 0.3s ease, opacity 0.3s ease;
+            }
+
+            .map-container.hidden {
+                height: 0;
+                min-height: 0;
+                opacity: 0;
+                border-bottom: none;
             }
             
             .note-container {
@@ -1969,6 +2299,14 @@
                 flex: 1;
                 min-width: 0;
                 gap: 0;
+            }
+
+            .header-logo-container {
+                gap: 8px;
+            }
+
+            .trustroots-logo {
+                height: 24px;
             }
 
             .tripchat-links {
@@ -2191,6 +2529,13 @@
                 height: 4vh;
                 min-height: 50px;
                 background: var(--map-bg);
+                transition: height 0.3s ease, opacity 0.3s ease;
+            }
+
+            .map-container.hidden {
+                height: 0;
+                min-height: 0;
+                opacity: 0;
             }
 
             .note-container {
@@ -2207,6 +2552,10 @@
 
             .header-title-group p {
                 font-size: 0.55rem !important;
+            }
+
+            .trustroots-logo {
+                height: 20px;
             }
 
             .settings-btn, .relay-manager-btn {
@@ -2322,6 +2671,13 @@
                 height: 3vh;
                 min-height: 40px;
                 background: var(--map-bg);
+                transition: height 0.3s ease, opacity 0.3s ease;
+            }
+
+            .map-container.hidden {
+                height: 0;
+                min-height: 0;
+                opacity: 0;
             }
 
             .note-container {
@@ -2338,6 +2694,10 @@
 
             .header-title-group p {
                 font-size: 0.5rem !important;
+            }
+
+            .trustroots-logo {
+                height: 18px;
             }
 
             .settings-btn, .relay-manager-btn {
@@ -2505,12 +2865,17 @@
             <div class="container">
                 <div class="header-top-row">
                     <div class="header-title-group">
-                        <h1>TRipch.at</h1>
+                        <div class="header-logo-container">
+                            <img src="logos/color.svg" alt="Trustroots" class="trustroots-logo" />
+                            <h1>TRipch.at</h1>
+                        </div>
                         <p style="font-size: 0.7rem; color: var(--text-muted); margin: -18px 0 0 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; text-transform: lowercase;">nostr travel chat - connect with travelers worldwide</p>
                     </div>
                     
                     <!-- TRipchat Links -->
                     <div class="tripchat-links">
+                        <button id="mapToggleBtn" class="map-toggle-btn" title="Toggle Map">🗺️ MAP</button>
+                        <button id="messagesBtn" class="messages-btn" title="Private Messages">✉️ MESSAGES</button>
                         <button id="settingsBtn" class="settings-btn">🔑 KEYS</button>
                         <button id="relayManagerBtn" class="relay-manager-btn">⚙️ RELAYS</button>
                         <button id="darkModeToggle" class="dark-mode-toggle" title="Toggle dark mode">🌙</button>
@@ -2584,6 +2949,36 @@
     <!-- Live indicator -->
     <div id="liveIndicator" class="live-indicator" style="display: none;">
         🔴 LIVE
+    </div>
+
+    <!-- Private Message Modal -->
+    <div id="pmModal" class="messages-modal pm-modal">
+        <div class="messages-modal-content">
+            <div class="messages-header">
+                <h3 id="pmRecipientName">✉️ Private Message</h3>
+                <span class="messages-close" id="pmClose">&times;</span>
+            </div>
+            <div class="pm-messages" id="pmMessages">
+                <!-- Messages will be added here -->
+            </div>
+            <div class="pm-input-group">
+                <textarea id="pmInput" class="pm-input" placeholder="Type your message..." rows="2"></textarea>
+                <button id="pmSendBtn" class="pm-send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages List Modal -->
+    <div id="messagesModal" class="messages-modal">
+        <div class="messages-modal-content">
+            <div class="messages-header">
+                <h3>✉️ Private Messages</h3>
+                <span class="messages-close" id="messagesClose">&times;</span>
+            </div>
+            <div class="messages-list" id="messagesList">
+                <div class="messages-loading">Loading conversations...</div>
+            </div>
+        </div>
     </div>
 
     <!-- Settings/Keys Modal -->
@@ -2720,6 +3115,7 @@
                 this.geohashRectangles = [];
                 this.userProfiles = {}; // Cache for user profiles
                 this.profileCache = new Map(); // In-memory cache for profiles
+                this.pendingProfileRequests = new Map(); // Track pending profile requests
                 this.privateKey = null; // User's private key for posting
                 this.shouldPreserveSettingsMessage = false; // Control modal message resets
                 
@@ -2800,6 +3196,9 @@
                     this.setupFilterHandlers();
                     this.setupComposeHandlers();
                     this.setupSettingsHandlers();
+                    this.setupPMHandlers();
+                    this.setupMessagesHandlers();
+                    this.setupMapToggleHandlers();
                     this.setupRelayManagerHandlers();
                     this.setupScrollHandlers();
                     this.setupDatetimeClickHandlers(); // Set up click handlers early
@@ -3605,6 +4004,9 @@
                         this.highlightKeyInputs();
                         this.toggleKeyButtonsVisibility();
                         this.updateDeleteButtonVisibility();
+                        
+                        // Re-subscribe to DMs with new keys
+                        this.subscribeToDMs();
                     } catch (error) {
                         console.error('Error generating key:', error);
                         alert('Error generating keys. Please try again.');
@@ -3693,6 +4095,9 @@
                             this.highlightKeyInputs();
                             this.toggleKeyButtonsVisibility();
                             this.updateDeleteButtonVisibility();
+                            
+                            // Re-subscribe to DMs with new keys
+                            this.subscribeToDMs();
                             
                             console.log('nsec key automatically processed and saved');
                         } catch (error) {
@@ -4109,6 +4514,159 @@
                 }
             }
 
+            setupPMHandlers() {
+                const pmModal = document.getElementById('pmModal');
+                const pmClose = document.getElementById('pmClose');
+                const pmSendBtn = document.getElementById('pmSendBtn');
+                const pmInput = document.getElementById('pmInput');
+
+                // Close PM modal
+                pmClose.addEventListener('click', () => {
+                    this.closePM();
+                });
+
+                // Close PM modal when clicking outside
+                pmModal.addEventListener('click', (e) => {
+                    if (e.target === pmModal) {
+                        this.closePM();
+                    }
+                });
+
+                // Send PM on button click
+                pmSendBtn.addEventListener('click', () => {
+                    this.sendPM();
+                });
+
+                // Send PM on Enter key (but allow Shift+Enter for new lines)
+                pmInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendPM();
+                    }
+                });
+
+                // Close PM modal on Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && pmModal.classList.contains('show')) {
+                        this.closePM();
+                    }
+                });
+            }
+
+            setupMessagesHandlers() {
+                const messagesBtn = document.getElementById('messagesBtn');
+                const messagesModal = document.getElementById('messagesModal');
+                const messagesClose = document.getElementById('messagesClose');
+
+                // Open messages modal
+                messagesBtn.addEventListener('click', () => {
+                    this.openMessagesModal();
+                });
+
+                // Close messages modal
+                messagesClose.addEventListener('click', () => {
+                    this.closeMessagesModal();
+                });
+
+                // Close messages modal when clicking outside
+                messagesModal.addEventListener('click', (e) => {
+                    if (e.target === messagesModal) {
+                        this.closeMessagesModal();
+                    }
+                });
+
+                // Close messages modal on Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && messagesModal.style.display === 'block') {
+                        this.closeMessagesModal();
+                    }
+                });
+            }
+
+            setupMapToggleHandlers() {
+                const mapToggleBtn = document.getElementById('mapToggleBtn');
+                const mapContainer = document.querySelector('.map-container');
+                const noteContainer = document.getElementById('noteContainer');
+                
+                // Initialize map state from localStorage
+                const mapVisible = localStorage.getItem('tripchat_map_visible') !== 'false';
+                this.updateMapVisibility(mapVisible);
+                
+                mapToggleBtn.addEventListener('click', () => {
+                    const isCurrentlyVisible = !mapContainer.classList.contains('hidden');
+                    const newVisibility = !isCurrentlyVisible;
+                    this.updateMapVisibility(newVisibility);
+                    localStorage.setItem('tripchat_map_visible', newVisibility.toString());
+                });
+            }
+
+            updateMapVisibility(visible) {
+                const mapContainer = document.querySelector('.map-container'); // Get the map-container div directly
+                const mapToggleBtn = document.getElementById('mapToggleBtn');
+                
+                if (visible) {
+                    mapContainer.classList.remove('hidden');
+                    mapToggleBtn.classList.add('active');
+                    mapToggleBtn.textContent = '🗺️ MAP';
+                    
+                    // Reinitialize map if it was hidden
+                    if (this.map) {
+                        setTimeout(() => {
+                            this.map.invalidateSize();
+                        }, 100);
+                    }
+                } else {
+                    mapContainer.classList.add('hidden');
+                    mapToggleBtn.classList.remove('active');
+                    mapToggleBtn.textContent = '🗺️ MAP';
+                }
+            }
+
+            subscribeToDMs() {
+                const currentUserPubkey = this.getCurrentUserPubkey();
+                if (!currentUserPubkey) return;
+                
+                const currentUserHex = this.npubToHex(currentUserPubkey);
+                
+                // Subscribe to DMs on all connected relays
+                for (const [relayUrl, ws] of Object.entries(this.websockets)) {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        const subscriptionId = this.subscriptionIds[relayUrl];
+                        if (!subscriptionId) continue;
+                        
+                        // Subscribe to DMs sent by us
+                        const dmSentFilters = {
+                            "kinds": [4],
+                            "authors": [currentUserHex],
+                            "limit": 100,
+                            "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60)
+                        };
+                        
+                        const dmSentSubscription = [
+                            "REQ",
+                            subscriptionId + "-dms-sent",
+                            dmSentFilters
+                        ];
+                        ws.send(JSON.stringify(dmSentSubscription));
+                        
+                        // Subscribe to DMs received by us
+                        const dmReceivedFilters = {
+                            "kinds": [4],
+                            "#p": [currentUserHex],
+                            "limit": 100,
+                            "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60)
+                        };
+                        
+                        const dmReceivedSubscription = [
+                            "REQ",
+                            subscriptionId + "-dms-received",
+                            dmReceivedFilters
+                        ];
+                        ws.send(JSON.stringify(dmReceivedSubscription));
+                    }
+                }
+            }
+
             setupRelayManagerHandlers() {
                 const relayManagerBtn = document.getElementById('relayManagerBtn');
                 const relayManagerModal = document.getElementById('relayManagerModal');
@@ -4301,8 +4859,8 @@
                     if (cached) {
                         const profile = JSON.parse(cached);
                         const now = Date.now();
-                        // Cache for 1 hour
-                        if (now - profile.cachedAt < 3600000) {
+                        // Cache for 7 days (profiles don't change often)
+                        if (now - profile.cachedAt < 7 * 24 * 60 * 60 * 1000) {
                             return profile.data;
                         } else {
                             localStorage.removeItem(`tripchat_profile_${pubkey}`);
@@ -4328,23 +4886,42 @@
 
             // Preload profiles for visible notes to show green links faster
             async preloadVisibleProfiles() {
-                const visibleNotes = this.notes.slice(0, 20); // Only preload first 20 notes
-                const profilePromises = visibleNotes.map(note => {
-                    if (note.pubkey && !this.userProfiles[note.pubkey]) {
-                        return this.fetchUserProfile(note.pubkey);
-                    }
-                    return Promise.resolve();
-                });
+                // Throttle profile preloading to avoid excessive requests
+                if (this.profilePreloadInProgress) {
+                    return;
+                }
                 
-                await Promise.allSettled(profilePromises);
-                // Re-render to show any newly loaded profiles
-                this.displayActivities(this.notes);
+                this.profilePreloadInProgress = true;
+                
+                try {
+                    const visibleNotes = this.notes.slice(0, 20); // Only preload first 20 notes
+                    const profilePromises = visibleNotes.map(note => {
+                        if (note.pubkey && !this.userProfiles[note.pubkey]) {
+                            return this.fetchUserProfile(note.pubkey);
+                        }
+                        return Promise.resolve();
+                    });
+                    
+                    await Promise.allSettled(profilePromises);
+                    // Re-render to show any newly loaded profiles
+                    this.displayActivities(this.notes);
+                } finally {
+                    // Reset the flag after a delay to allow occasional updates
+                    setTimeout(() => {
+                        this.profilePreloadInProgress = false;
+                    }, 2000);
+                }
             }
 
             async fetchUserProfile(pubkey) {
                 // Check in-memory cache first
                 if (this.userProfiles[pubkey]) {
                     return this.userProfiles[pubkey];
+                }
+
+                // Check if we're already requesting this profile
+                if (this.pendingProfileRequests && this.pendingProfileRequests.has(pubkey)) {
+                    return this.pendingProfileRequests.get(pubkey);
                 }
 
                 // Check localStorage cache
@@ -4355,10 +4932,24 @@
                     return cachedProfile;
                 }
 
+                // Create a promise for this profile request to prevent duplicates
+                const profilePromise = this.fetchProfileFromRelays(pubkey);
+                this.pendingProfileRequests.set(pubkey, profilePromise);
+                
+                try {
+                    const profile = await profilePromise;
+                    return profile;
+                } finally {
+                    // Clean up the pending request
+                    this.pendingProfileRequests.delete(pubkey);
+                }
+            }
+
+            async fetchProfileFromRelays(pubkey) {
                 try {
                     // Try to fetch from the first available relay
-                for (const relayUrl of this.relays) {
-                    if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
+                    for (const relayUrl of this.relays) {
+                        if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
                                 // Cache profile in both memory and localStorage
@@ -4395,6 +4986,648 @@
                 const afterCount = this.notes.length;
                 if (beforeCount !== afterCount) {
                     console.log(`Cleaned up ${beforeCount - afterCount} profile notes from chat`);
+                }
+            }
+
+            // Helper function to get private key from localStorage
+            getPrivateKey() {
+                const nsecKey = localStorage.getItem('tripchat_nsec');
+                if (!nsecKey) {
+                    return null;
+                }
+                
+                try {
+                    // Convert nsec to hex private key using existing function
+                    return this.nsecToHex(nsecKey);
+                } catch (error) {
+                    console.error('Error decoding private key:', error);
+                    return null;
+                }
+            }
+
+            // NIP-4 Encrypted Direct Messages
+            async createEncryptedDM(recipientPubkey, content) {
+                console.log('🔍 PM Debug - createEncryptedDM called:', { recipientPubkey, contentLength: content.length });
+                try {
+                    // Get our private key
+                    const privateKey = await this.getPrivateKey();
+                    console.log('🔍 PM Debug - Private key retrieved:', !!privateKey);
+                    if (!privateKey) {
+                        throw new Error('No private key available');
+                    }
+
+                    // Convert hex keys to Uint8Array
+                    const privateKeyBytes = new Uint8Array(privateKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    const recipientPubkeyBytes = new Uint8Array(recipientPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    console.log('🔍 PM Debug - Keys converted to bytes:', { privateKeyLength: privateKeyBytes.length, recipientLength: recipientPubkeyBytes.length });
+
+                    // Derive shared secret using ECDH
+                    console.log('🔍 PM Debug - Key order for encryption:', { 
+                        privateKey: Array.from(privateKeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(''),
+                        recipientPubkey: Array.from(recipientPubkeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('')
+                    });
+                    const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, recipientPubkeyBytes);
+                    console.log('🔍 PM Debug - Shared secret derived:', !!sharedSecret);
+                    console.log('🔍 PM Debug - Shared secret length:', sharedSecret.length);
+                    console.log('🔍 PM Debug - Shared secret first 8 bytes:', Array.from(sharedSecret.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(''));
+                    
+                    // Encrypt the content
+                    const encryptedContent = await this.encryptAES(new TextEncoder().encode(content), sharedSecret);
+                    console.log('🔍 PM Debug - Content encrypted:', { encryptedLength: encryptedContent.length });
+                    
+                    // Get current user's pubkey
+                    const currentUserPubkey = this.getCurrentUserPubkey();
+                    console.log('🔍 PM Debug - Current user pubkey:', currentUserPubkey);
+                    if (!currentUserPubkey) {
+                        throw new Error('No user pubkey available');
+                    }
+
+                    // Convert to hex for storage
+                    const currentUserHex = this.npubToHex(currentUserPubkey);
+                    const recipientHex = recipientPubkey.startsWith('npub') ? this.npubToHex(recipientPubkey) : recipientPubkey;
+                    console.log('🔍 PM Debug - Using hex pubkeys:', { currentUserHex, recipientHex });
+
+                    // Create the encrypted DM event (kind 4)
+                    const dmEvent = {
+                        kind: 4,
+                        pubkey: currentUserHex,
+                        created_at: Math.floor(Date.now() / 1000),
+                        content: encryptedContent,
+                        tags: [['p', recipientHex]]
+                    };
+                    console.log('🔍 PM Debug - DM event created:', { 
+                        id: dmEvent.id, 
+                        kind: dmEvent.kind, 
+                        tags: dmEvent.tags,
+                        contentType: typeof encryptedContent,
+                        contentLength: encryptedContent.length,
+                        contentPreview: encryptedContent.substring(0, 20) + '...'
+                    });
+                    
+                    return dmEvent;
+                } catch (error) {
+                    console.error('Error creating encrypted DM:', error);
+                    throw error;
+                }
+            }
+
+            async decryptDM(dmEvent) {
+                console.log('🔍 PM Debug - decryptDM called:', { 
+                    id: dmEvent.id, 
+                    pubkey: dmEvent.pubkey, 
+                    contentLength: dmEvent.content?.length,
+                    contentType: typeof dmEvent.content,
+                    contentPreview: dmEvent.content?.substring(0, 20) + '...',
+                    tags: dmEvent.tags 
+                });
+                try {
+                    // Get our private key
+                    const privateKey = await this.getPrivateKey();
+                    console.log('🔍 PM Debug - Private key retrieved for decryption:', !!privateKey);
+                    if (!privateKey) {
+                        throw new Error('No private key available');
+                    }
+
+                    // Get sender's public key
+                    const senderPubkey = dmEvent.pubkey;
+                    console.log('🔍 PM Debug - Sender pubkey:', senderPubkey);
+                    
+                    // Determine if this is a message we sent or received
+                    const currentUserHex = this.npubToHex(this.getCurrentUserPubkey());
+                    const isSentByUs = senderPubkey === currentUserHex;
+                    console.log('🔍 PM Debug - Is sent by us:', isSentByUs);
+                    
+                    let otherPubkey;
+                    if (isSentByUs) {
+                        // Message sent by us - get recipient from tags
+                        const pTag = dmEvent.tags?.find(tag => tag[0] === 'p');
+                        otherPubkey = pTag ? pTag[1] : null;
+                        console.log('🔍 PM Debug - Message sent by us, recipient pubkey:', otherPubkey);
+                    } else {
+                        // Message received by us - sender is the other party
+                        otherPubkey = senderPubkey;
+                        console.log('🔍 PM Debug - Message received by us, sender pubkey:', otherPubkey);
+                    }
+                    
+                    if (!otherPubkey) {
+                        throw new Error('Cannot determine other party for decryption');
+                    }
+                    
+                    const otherPubkeyBytes = new Uint8Array(otherPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    const privateKeyBytes = new Uint8Array(privateKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    console.log('🔍 PM Debug - Key bytes:', { 
+                        otherPubkeyLength: otherPubkeyBytes.length, 
+                        privateLength: privateKeyBytes.length 
+                    });
+
+                    // Derive shared secret using ECDH
+                    console.log('🔍 PM Debug - Deriving shared secret...');
+                    console.log('🔍 PM Debug - Key order for decryption:', { 
+                        privateKey: Array.from(privateKeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(''),
+                        otherPubkey: Array.from(otherPubkeyBytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('')
+                    });
+                    const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, otherPubkeyBytes);
+                    console.log('🔍 PM Debug - Shared secret derived:', !!sharedSecret);
+                    console.log('🔍 PM Debug - Shared secret length:', sharedSecret.length);
+                    console.log('🔍 PM Debug - Shared secret first 8 bytes:', Array.from(sharedSecret.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(''));
+                    
+                    // Decrypt the content
+                    console.log('🔍 PM Debug - Decrypting content...');
+                    const decryptedBytes = await this.decryptAES(dmEvent.content, sharedSecret);
+                    console.log('🔍 PM Debug - Content decrypted, bytes length:', decryptedBytes.length);
+                    const decryptedContent = new TextDecoder().decode(decryptedBytes);
+                    console.log('🔍 PM Debug - Decrypted content:', decryptedContent.substring(0, 50) + '...');
+                    
+                    return decryptedContent;
+                } catch (error) {
+                    console.error('❌ PM Debug - Error decrypting DM:', error);
+                    throw error;
+                }
+            }
+
+            async encryptAES(data, key) {
+                // Use the first 32 bytes of the shared secret as the AES key
+                const aesKey = key.slice(0, 32);
+                
+                const iv = crypto.getRandomValues(new Uint8Array(16));
+                const cryptoKey = await crypto.subtle.importKey(
+                    'raw',
+                    aesKey,
+                    { name: 'AES-GCM' },
+                    false,
+                    ['encrypt']
+                );
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    cryptoKey,
+                    data
+                );
+                const result = new Uint8Array(iv.length + encrypted.byteLength);
+                result.set(iv);
+                result.set(new Uint8Array(encrypted), iv.length);
+                return btoa(String.fromCharCode(...result));
+            }
+
+            async decryptAES(encryptedData, key) {
+                console.log('🔍 PM Debug - decryptAES called:', { 
+                    encryptedDataLength: encryptedData.length, 
+                    keyLength: key.length 
+                });
+                try {
+                    // Use the first 32 bytes of the shared secret as the AES key
+                    const aesKey = key.slice(0, 32);
+                    console.log('🔍 PM Debug - AES key length:', aesKey.length);
+                    
+                    const data = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+                    const iv = data.slice(0, 16);
+                    const encrypted = data.slice(16);
+                    console.log('🔍 PM Debug - Decryption data:', { 
+                        dataLength: data.length, 
+                        ivLength: iv.length, 
+                        encryptedLength: encrypted.length 
+                    });
+                    
+                    const cryptoKey = await crypto.subtle.importKey(
+                        'raw',
+                        aesKey,
+                        { name: 'AES-GCM' },
+                        false,
+                        ['decrypt']
+                    );
+                    console.log('🔍 PM Debug - Crypto key imported successfully');
+                    
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name: 'AES-GCM', iv: iv },
+                        cryptoKey,
+                        encrypted
+                    );
+                    console.log('🔍 PM Debug - AES decryption successful, length:', decrypted.byteLength);
+                    return new Uint8Array(decrypted);
+                } catch (error) {
+                    console.error('❌ PM Debug - AES decryption failed:', error);
+                    throw error;
+                }
+            }
+
+            async deriveSharedSecret(privateKey, publicKey) {
+                console.log('🔍 PM Debug - deriveSharedSecret called:', { 
+                    privateKeyLength: privateKey.length, 
+                    publicKeyLength: publicKey.length,
+                    hasNostrTools: typeof window.nostrTools !== 'undefined',
+                    hasGetSharedSecret: typeof window.nostrTools?.getSharedSecret !== 'undefined'
+                });
+                try {
+                    // Use nostr-tools for proper secp256k1 ECDH
+                    if (typeof window.nostrTools !== 'undefined' && window.nostrTools.getSharedSecret) {
+                        console.log('🔍 PM Debug - Using nostr-tools getSharedSecret');
+                        const sharedSecret = window.nostrTools.getSharedSecret(privateKey, publicKey);
+                        console.log('🔍 PM Debug - Shared secret from nostr-tools:', sharedSecret.length, 'bytes');
+                        return new Uint8Array(sharedSecret);
+                    } else {
+                        console.log('🔍 PM Debug - Using fallback hash-based approach');
+                        // Fallback: hash-based approach that's consistent
+                        // Convert Uint8Arrays to hex strings for consistent hashing
+                        const privateKeyHex = Array.from(privateKey).map(b => b.toString(16).padStart(2, '0')).join('');
+                        const publicKeyHex = Array.from(publicKey).map(b => b.toString(16).padStart(2, '0')).join('');
+                        
+                        // Sort keys to ensure consistent ordering
+                        const keys = [privateKeyHex, publicKeyHex].sort();
+                        const combined = keys.join('');
+                        
+                        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(combined));
+                        console.log('🔍 PM Debug - Hash-based shared secret:', hash.byteLength, 'bytes');
+                        return new Uint8Array(hash);
+                    }
+                } catch (error) {
+                    console.error('❌ PM Debug - Error deriving shared secret:', error);
+                    // Fallback: hash-based approach that's consistent
+                    const privateKeyHex = Array.from(privateKey).map(b => b.toString(16).padStart(2, '0')).join('');
+                    const publicKeyHex = Array.from(publicKey).map(b => b.toString(16).padStart(2, '0')).join('');
+                    const keys = [privateKeyHex, publicKeyHex].sort();
+                    const combined = keys.join('');
+                    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(combined));
+                    return new Uint8Array(hash);
+                }
+            }
+
+            // PM Modal and Message Management
+            openPM(recipientPubkey) {
+                console.log('🔍 PM Debug - openPM called:', { recipientPubkey });
+                const nsecKey = localStorage.getItem('tripchat_nsec');
+                const npubKey = localStorage.getItem('tripchat_npub');
+                
+                console.log('🔍 PM Debug - Keys check:', { hasNsec: !!nsecKey, hasNpub: !!npubKey });
+                
+                if (!nsecKey || !npubKey) {
+                    alert('Please set up your keys first to send private messages.');
+                    return;
+                }
+
+                this.currentPMRecipient = recipientPubkey;
+                const recipientName = this.userProfiles[recipientPubkey]?.name || recipientPubkey.substring(0, 8) + '...';
+                
+                console.log('🔍 PM Debug - Setting up PM modal:', { recipientName, currentPMRecipient: this.currentPMRecipient });
+                
+                document.getElementById('pmRecipientName').textContent = `Private Message with ${recipientName}`;
+                document.getElementById('pmModal').classList.add('show');
+                document.getElementById('pmInput').focus();
+                
+                console.log('🔍 PM Debug - PM modal should be visible now');
+                
+                // Load existing messages
+                this.loadPMMessages(recipientPubkey);
+            }
+
+            closePM() {
+                document.getElementById('pmModal').classList.remove('show');
+                this.currentPMRecipient = null;
+                document.getElementById('pmMessages').innerHTML = '';
+                document.getElementById('pmInput').value = '';
+            }
+
+            async loadPMMessages(recipientPubkey) {
+                console.log('🔍 PM Debug - loadPMMessages called:', { recipientPubkey });
+                const messagesContainer = document.getElementById('pmMessages');
+                messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Loading messages...</div>';
+
+                try {
+                    // Get current user's pubkey
+                    const currentUserPubkey = this.getCurrentUserPubkey();
+                    console.log('🔍 PM Debug - Current user pubkey:', currentUserPubkey);
+                    if (!currentUserPubkey) {
+                        messagesContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">Unable to load messages - no user key found</div>';
+                        return;
+                    }
+
+                    // Convert npub to hex for comparison
+                    const currentUserHex = this.npubToHex(currentUserPubkey);
+                    console.log('🔍 PM Debug - Current user hex pubkey:', currentUserHex);
+                    
+                    // Convert recipient pubkey to hex if it's in npub format
+                    const recipientHex = recipientPubkey.startsWith('npub') ? this.npubToHex(recipientPubkey) : recipientPubkey;
+                    console.log('🔍 PM Debug - Recipient hex pubkey:', recipientHex);
+
+                    console.log('🔍 PM Debug - Total notes in array:', this.notes.length);
+                    console.log('🔍 PM Debug - Kind 4 notes:', this.notes.filter(note => note.kind === 4).length);
+
+                    // Get all kind 4 events (DMs) between us and the recipient
+                    const dmEvents = this.notes.filter(note => {
+                        if (note.kind !== 4) return false;
+                        
+                        // Message sent by us to recipient
+                        if (note.pubkey === currentUserHex) {
+                            return note.tags?.some(tag => tag[0] === 'p' && tag[1] === recipientHex);
+                        }
+                        
+                        // Message sent by recipient to us
+                        if (note.pubkey === recipientHex) {
+                            return note.tags?.some(tag => tag[0] === 'p' && tag[1] === currentUserHex);
+                        }
+                        
+                        return false;
+                    });
+
+                    console.log('🔍 PM Debug - Found DM events:', dmEvents.length);
+
+                    // Sort by timestamp
+                    dmEvents.sort((a, b) => a.created_at - b.created_at);
+
+                    if (dmEvents.length === 0) {
+                        console.log('🔍 PM Debug - No DM events found, showing empty state');
+                        messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">No messages yet. Start the conversation!</div>';
+                        return;
+                    }
+
+                    // Decrypt and display messages
+                    let messagesHtml = '';
+                    for (const event of dmEvents) {
+                        try {
+                            const decryptedContent = await this.decryptDM(event);
+                            
+                            const isSent = event.pubkey === currentUserHex;
+                            const senderName = isSent ? 'You' : (this.userProfiles[event.pubkey]?.name || event.pubkey.substring(0, 8) + '...');
+                            const messageDate = new Date(event.created_at * 1000);
+                            const timeString = messageDate.toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            
+                            messagesHtml += `
+                                <div class="pm-message ${isSent ? 'sent' : 'received'}">
+                                    <div>${this.escapeHtml(decryptedContent)}</div>
+                                    <div class="pm-message-time">${senderName} • ${timeString}</div>
+                                </div>
+                            `;
+                        } catch (error) {
+                            console.warn('❌ PM Debug - Failed to decrypt message:', error);
+                            const errorDate = new Date(event.created_at * 1000);
+                            const errorTimeString = errorDate.toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            messagesHtml += `
+                                <div class="pm-message received">
+                                    <div style="color: var(--text-muted); font-style: italic;">Failed to decrypt message</div>
+                                    <div class="pm-message-time">${errorTimeString}</div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    messagesContainer.innerHTML = messagesHtml;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } catch (error) {
+                    console.error('Error loading PM messages:', error);
+                    messagesContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">Error loading messages</div>';
+                }
+            }
+
+            async sendPM() {
+                const input = document.getElementById('pmInput');
+                const content = input.value.trim();
+                
+                console.log('🔍 PM Debug - sendPM called:', { content, recipient: this.currentPMRecipient });
+                
+                if (!content) return;
+                if (!this.currentPMRecipient) return;
+
+                const sendBtn = document.getElementById('pmSendBtn');
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending...';
+
+                try {
+                    console.log('🔍 PM Debug - Creating encrypted DM...');
+                    // Create encrypted DM
+                    const dmEvent = await this.createEncryptedDM(this.currentPMRecipient, content);
+                    console.log('🔍 PM Debug - DM event created:', { id: dmEvent.id, kind: dmEvent.kind, contentLength: dmEvent.content?.length });
+                    
+                    console.log('🔍 PM Debug - Signing event...');
+                    // Sign the event
+                    const signedEvent = await this.signEvent(dmEvent);
+                    console.log('🔍 PM Debug - Event signed:', { id: signedEvent.id, sig: signedEvent.sig?.substring(0, 16) + '...' });
+                    
+                    console.log('🔍 PM Debug - Publishing to relays...');
+                    // Send to relays
+                    await this.publishEvent(signedEvent);
+                    console.log('🔍 PM Debug - Event published successfully');
+                    
+                    console.log('🔍 PM Debug - Adding to notes array...');
+                    // Add the sent message to our notes array so it appears immediately
+                    this.notes.push(signedEvent);
+                    console.log('🔍 PM Debug - Added to notes array. Total notes:', this.notes.length);
+                    
+                    // Clear input
+                    input.value = '';
+                    
+                    console.log('🔍 PM Debug - Reloading PM messages...');
+                    // Reload messages to show the new one
+                    await this.loadPMMessages(this.currentPMRecipient);
+                    console.log('🔍 PM Debug - PM messages reloaded');
+                } catch (error) {
+                    console.error('❌ PM Debug - Error sending PM:', error);
+                    alert('Failed to send message: ' + error.message);
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send';
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Messages Modal Methods
+            openMessagesModal() {
+                const messagesModal = document.getElementById('messagesModal');
+                messagesModal.style.display = 'block';
+                this.loadConversations();
+            }
+
+            closeMessagesModal() {
+                const messagesModal = document.getElementById('messagesModal');
+                messagesModal.style.display = 'none';
+            }
+
+            openPMFromMessages(recipientPubkey) {
+                // Close messages modal and open PM modal
+                this.closeMessagesModal();
+                this.openPM(recipientPubkey);
+            }
+
+            async loadConversations() {
+                console.log('🔍 PM Debug - loadConversations called');
+                const messagesList = document.getElementById('messagesList');
+                messagesList.innerHTML = '<div class="messages-loading">Loading conversations...</div>';
+
+                try {
+                    const currentUserPubkey = this.getCurrentUserPubkey();
+                    console.log('🔍 PM Debug - Current user pubkey for conversations:', currentUserPubkey);
+                    if (!currentUserPubkey) {
+                        messagesList.innerHTML = '<div class="no-conversations">Please set up your keys first to view messages</div>';
+                        return;
+                    }
+
+                    // Convert to hex for comparison
+                    const currentUserHex = this.npubToHex(currentUserPubkey);
+                    console.log('🔍 PM Debug - Current user hex for conversations:', currentUserHex);
+
+                    console.log('🔍 PM Debug - Total notes for conversations:', this.notes.length);
+                    console.log('🔍 PM Debug - Kind 4 notes for conversations:', this.notes.filter(note => note.kind === 4).length);
+                    console.log('🔍 PM Debug - All kind 4 notes:', this.notes.filter(note => note.kind === 4).map(n => ({ 
+                        id: n.id, 
+                        pubkey: n.pubkey, 
+                        tags: n.tags 
+                    })));
+
+                    // Get all DMs involving the current user
+                    const dmEvents = this.notes.filter(note => 
+                        note.kind === 4 && 
+                        (note.pubkey === currentUserHex || 
+                         note.tags?.some(tag => tag[0] === 'p' && tag[1] === currentUserHex))
+                    );
+                    console.log('🔍 PM Debug - Found DM events for conversations:', dmEvents.length);
+
+                    // Group DMs by conversation partner
+                    const conversations = new Map();
+                    console.log('🔍 PM Debug - Starting conversation grouping...');
+                    
+                    for (const event of dmEvents) {
+                        console.log('🔍 PM Debug - Processing DM event:', { 
+                            id: event.id, 
+                            pubkey: event.pubkey, 
+                            tags: event.tags,
+                            isSent: event.pubkey === currentUserHex 
+                        });
+                        
+                        let partnerPubkey;
+                        if (event.pubkey === currentUserHex) {
+                            // Message sent by us - get recipient from tags
+                            const pTag = event.tags?.find(tag => tag[0] === 'p');
+                            partnerPubkey = pTag ? pTag[1] : null;
+                            console.log('🔍 PM Debug - Sent message, partner from tag:', partnerPubkey);
+                        } else {
+                            // Message received by us - sender is the partner
+                            partnerPubkey = event.pubkey;
+                            console.log('🔍 PM Debug - Received message, partner is sender:', partnerPubkey);
+                        }
+
+                        if (!partnerPubkey) {
+                            console.log('🔍 PM Debug - No partner pubkey found, skipping');
+                            continue;
+                        }
+
+                        if (!conversations.has(partnerPubkey)) {
+                            console.log('🔍 PM Debug - Creating new conversation for:', partnerPubkey);
+                            conversations.set(partnerPubkey, {
+                                partnerPubkey,
+                                lastMessage: event,
+                                unreadCount: 0,
+                                messages: []
+                            });
+                        }
+
+                        const conversation = conversations.get(partnerPubkey);
+                        conversation.messages.push(event);
+                        console.log('🔍 PM Debug - Added message to conversation, total messages:', conversation.messages.length);
+                        
+                        // Update last message if this is newer
+                        if (event.created_at > conversation.lastMessage.created_at) {
+                            conversation.lastMessage = event;
+                            console.log('🔍 PM Debug - Updated last message');
+                        }
+
+                        // Count unread messages (received messages we haven't seen)
+                        if (event.pubkey !== currentUserHex) {
+                            conversation.unreadCount++;
+                            console.log('🔍 PM Debug - Incremented unread count:', conversation.unreadCount);
+                        }
+                    }
+                    
+                    console.log('🔍 PM Debug - Conversation grouping complete, total conversations:', conversations.size);
+
+                    // Convert to array and sort by last message time
+                    const conversationList = Array.from(conversations.values())
+                        .sort((a, b) => b.lastMessage.created_at - a.lastMessage.created_at);
+
+                    if (conversationList.length === 0) {
+                        messagesList.innerHTML = '<div class="no-conversations">No conversations yet. Start a conversation by clicking the PM button on any note!</div>';
+                        return;
+                    }
+
+                    // Render conversations
+                    let conversationsHtml = '';
+                    for (const conversation of conversationList) {
+                        const partnerName = this.userProfiles[conversation.partnerPubkey]?.name || 
+                                          conversation.partnerPubkey.substring(0, 8) + '...';
+                        
+                        // Try to decrypt the last message for preview
+                        let preview = 'Encrypted message';
+                        try {
+                            const decryptedContent = await this.decryptDM(conversation.lastMessage);
+                            preview = decryptedContent.length > 50 ? 
+                                     decryptedContent.substring(0, 50) + '...' : 
+                                     decryptedContent;
+                        } catch (error) {
+                            // Keep default preview if decryption fails
+                        }
+
+                        const timeString = new Date(conversation.lastMessage.created_at * 1000).toLocaleTimeString();
+                        const unreadBadge = conversation.unreadCount > 0 ? 
+                            `<div class="unread-badge">${conversation.unreadCount}</div>` : '';
+
+                        conversationsHtml += `
+                            <div class="conversation-item" onclick="window.tripchatVisualizer.openPMFromMessages('${conversation.partnerPubkey}')">
+                                <div class="conversation-info">
+                                    <div class="conversation-name">${this.escapeHtml(partnerName)}</div>
+                                    <div class="conversation-preview">${this.escapeHtml(preview)}</div>
+                                </div>
+                                <div class="conversation-meta">
+                                    <div class="conversation-time">${timeString}</div>
+                                    ${unreadBadge}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    messagesList.innerHTML = conversationsHtml;
+                    
+                } catch (error) {
+                    console.error('Error loading conversations:', error);
+                    messagesList.innerHTML = '<div class="no-conversations">Error loading conversations</div>';
+                }
+            }
+
+            updateUnreadCount() {
+                const messagesBtn = document.getElementById('messagesBtn');
+                const currentUserPubkey = this.getCurrentUserPubkey();
+                
+                if (!currentUserPubkey) {
+                    messagesBtn.classList.remove('has-unread');
+                    return;
+                }
+
+                // Convert to hex for comparison
+                const currentUserHex = this.npubToHex(currentUserPubkey);
+
+                // Count unread DMs (received messages)
+                const unreadCount = this.notes.filter(note => 
+                    note.kind === 4 && 
+                    note.pubkey !== currentUserHex &&
+                    note.tags?.some(tag => tag[0] === 'p' && tag[1] === currentUserHex)
+                ).length;
+
+                if (unreadCount > 0) {
+                    messagesBtn.classList.add('has-unread');
+                } else {
+                    messagesBtn.classList.remove('has-unread');
                 }
             }
 
@@ -4610,9 +5843,7 @@
                         };
                         
                         const subscription = ["REQ", subscriptionId, filters];
-                        console.log(`🔍 Sending profile request to ${relayUrl}:`, subscription);
-                        console.log(`🔍 Query filters:`, JSON.stringify(filters, null, 2));
-                        console.log(`🔍 Looking for pubkey: ${pubkey}`);
+                        // Profile request sent to relay
                         
                         const timeout = setTimeout(() => {
                             console.log(`⏰ Profile request timeout for ${relayUrl}`);
@@ -4626,15 +5857,12 @@
                         const handleMessage = (event) => {
                             try {
                                 const data = JSON.parse(event.data);
-                                console.log(`🔍 Received message from ${relayUrl}:`, data);
+                                // Message received from relay
                                 if (Array.isArray(data)) {
                                     const [messageType, subId, eventData] = data;
                                     
                                     if (messageType === 'EVENT' && subId === subscriptionId && eventData.kind === 0) {
-                                        console.log(`✅ Profile event received from ${relayUrl}:`, eventData);
-                                        console.log(`🔍 Received pubkey: ${eventData.pubkey}`);
-                                        console.log(`🔍 Expected pubkey: ${pubkey}`);
-                                        console.log(`🔍 Pubkeys match: ${eventData.pubkey === pubkey}`);
+                                        // Profile event received
                                         
                                         // Only process if pubkey matches
                                         if (eventData.pubkey === pubkey) {
@@ -4659,7 +5887,7 @@
                                                     travel_preferences: metadata.travel_preferences,
                                                     created_at: metadata.created_at
                                                 };
-                                                console.log(`✅ Profile processed for correct pubkey: ${pubkey}`);
+                                                // Profile processed successfully
                                                 // Profile fetched successfully
                                                 resolve(profile);
                                             } catch (e) {
@@ -4847,6 +6075,7 @@
                 
                 // Update display after loading filters
                 this.displayActivities();
+                this.updateUnreadCount(); // Update unread count for any new DMs
                 
                 // If there's an event ID to highlight, do it after a short delay
                 if (this.highlightEventId) {
@@ -4906,13 +6135,7 @@
                 // Filter out profile notes (kind 0) - they shouldn't appear in chat
                 let filtered = this.notes.filter(note => note.kind !== 0);
                 
-                console.log('Filtering notes:', {
-                    totalNotes: this.notes.length,
-                    filteredNotes: filtered.length,
-                    searchFilter: this.searchFilter,
-                    geohashFilter: this.geohashFilter,
-                    nip05Filter: this.nip05Filter
-                });
+                // Notes filtered
                 
                 // Apply geohash filter (only when geohash filter is active)
                 if (this.geohashFilter) {
@@ -4980,7 +6203,7 @@
                     console.log('NIP-05 filter applied:', beforeCount, '->', filtered.length);
                 }
                 
-                console.log('Final filtered count:', filtered.length);
+                // Filtering complete
                 return filtered;
             }
 
@@ -5020,7 +6243,7 @@
                 // If we have notes, display them
                 if (this.notes.length > 0) {
                     this.displayActivities(this.notes);
-                    // Preload profiles for faster green link display
+                    // Preload profiles for faster green link display (throttled)
                     this.preloadVisibleProfiles();
                 }
             }
@@ -5039,19 +6262,55 @@
                         this.updateRelayStatus(relayUrl, 'connected');
                         
                         // Subscribe to TRipchat-specific event kinds
-                        const filters = {
+                        const currentUserPubkey = this.getCurrentUserPubkey();
+                        const currentUserHex = currentUserPubkey ? this.npubToHex(currentUserPubkey) : null;
+                        
+                        // Basic filters for public content
+                        const publicFilters = {
                             "kinds": [1, 0], // Text notes + profiles
-                            "limit": 100, // Increased from 50 to 100
-                            "since": Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60) // Last 7 days instead of 30
+                            "limit": 100,
+                            "since": Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60) // Last 7 days
                         };
                         
-                        const subscription = [
+                        // Send public content subscription
+                        const publicSubscription = [
                             "REQ",
-                            subscriptionId,
-                            filters
+                            subscriptionId + "-public",
+                            publicFilters
                         ];
+                        ws.send(JSON.stringify(publicSubscription));
                         
-                        ws.send(JSON.stringify(subscription));
+                        // Send DM subscription if user has keys
+                        if (currentUserHex) {
+                            const dmFilters = {
+                                "kinds": [4], // DMs only
+                                "authors": [currentUserHex], // Messages sent by us
+                                "limit": 100,
+                                "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60) // Last 30 days for DMs
+                            };
+                            
+                            const dmSubscription = [
+                                "REQ",
+                                subscriptionId + "-dms-sent",
+                                dmFilters
+                            ];
+                            ws.send(JSON.stringify(dmSubscription));
+                            
+                            // Also request DMs where we are the recipient (using p tag)
+                            const dmReceivedFilters = {
+                                "kinds": [4], // DMs only
+                                "#p": [currentUserHex], // Messages where we are in the p tag (recipient)
+                                "limit": 100,
+                                "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60) // Last 30 days for DMs
+                            };
+                            
+                            const dmReceivedSubscription = [
+                                "REQ",
+                                subscriptionId + "-dms-received",
+                                dmReceivedFilters
+                            ];
+                            ws.send(JSON.stringify(dmReceivedSubscription));
+                        }
                         
                         // Update connection status
                         this.updateConnectionStatus();
@@ -5065,7 +6324,7 @@
                             if (Array.isArray(data)) {
                                 const [messageType, subId, eventData] = data;
                                 
-                                if (messageType === 'EVENT' && eventData && (subId === subscriptionId || subId.startsWith('tripchat-live-'))) {
+                                if (messageType === 'EVENT' && eventData && (subId === subscriptionId || subId.startsWith('tripchat-live-') || subId.includes('-public') || subId.includes('-dms-sent') || subId.includes('-dms-received'))) {
                                     this.totalEventsReceived++;
                                     const noteAge = Math.floor((Date.now() / 1000) - eventData.created_at);
                                     const ageHours = Math.floor(noteAge / 3600);
@@ -5190,6 +6449,20 @@
                     return;
                 }
 
+                // Store DMs (kind 4) but don't display them in main chat
+                if (note.kind === 4) {
+                    console.log('🔍 PM Debug - Adding DM to notes array:', { 
+                        id: note.id, 
+                        pubkey: note.pubkey, 
+                        tags: note.tags,
+                        contentLength: note.content?.length 
+                    });
+                    this.notes.push(note);
+                    this.updateUnreadCount(); // Update unread count for DMs
+                    console.log('🔍 PM Debug - DM added. Total notes now:', this.notes.length);
+                    return;
+                }
+
                 // Ensure created_at is a number
                 if (typeof note.created_at !== 'number') {
                     console.warn(`Note ${note.id} has invalid created_at:`, note.created_at);
@@ -5211,10 +6484,7 @@
                     this.notes = this.notes.slice(-200); // Keep newest 200 notes (last 200)
                 }
 
-                // Fetch user profile if we don't have it (only for recent notes to avoid spam)
-                if (note.pubkey && !this.userProfiles[note.pubkey] && this.notes.length <= 20) {
-                    this.fetchUserProfile(note.pubkey);
-                }
+                // Profile will be fetched by preloadVisibleProfiles when needed
 
                 // Show live indicator
                 const liveIndicator = document.getElementById('liveIndicator');
@@ -5392,6 +6662,9 @@
                 
                 // Add reply button for all notes
                 const replyButton = `<button class="note-reply-btn" data-note-id="${note.id}" data-npub="${note.pubkey}" onclick="window.tripchatVisualizer.replyToNote('${note.id}', '${note.pubkey}')" title="Reply to this note">💬 Reply</button>`;
+                
+                // Add PM button for all notes (except our own)
+                const pmButton = !isCurrentUser ? `<button class="note-pm-btn" data-note-id="${note.id}" data-npub="${note.pubkey}" onclick="window.tripchatVisualizer.openPM('${note.pubkey}')" title="Send private message">✉️ PM</button>` : '';
 
                 return `
                     <div class="note-header">
@@ -5408,6 +6681,7 @@
                         </div>
                         <div style="display: flex; gap: 8px;">
                             ${replyButton}
+                            ${pmButton}
                             ${deleteButton}
                         </div>
                     </div>
@@ -7933,9 +9207,7 @@
             }
 
             async publishEvent(event) {
-                console.log('📡 Starting event publication...');
                 const postingRelays = this.relays.filter(relay => this.postingRelays[relay]);
-                console.log('🌐 Available posting relays:', postingRelays);
                 
                 if (postingRelays.length === 0) {
                     console.error('❌ No posting relays available');
@@ -7944,8 +9216,6 @@
 
                 const publishPromises = postingRelays.map(relayUrl => {
                     return new Promise((resolve, reject) => {
-                        console.log(`🔗 Attempting to publish to ${relayUrl}...`);
-                        
                         if (!this.websockets[relayUrl] || this.websockets[relayUrl].readyState !== WebSocket.OPEN) {
                             console.error(`❌ Relay ${relayUrl} is not connected (state: ${this.websockets[relayUrl]?.readyState})`);
                             reject(new Error(`Relay ${relayUrl} is not connected`));
@@ -7953,15 +9223,9 @@
                         }
 
                         const message = ["EVENT", event];
-                        console.log(`📤 Sending event to ${relayUrl}:`, {
-                            eventId: event.id,
-                            kind: event.kind,
-                            contentLength: event.content?.length || 0
-                        });
                         
                         try {
                             this.websockets[relayUrl].send(JSON.stringify(message));
-                            console.log(`✅ Successfully published event to ${relayUrl}`);
                             resolve();
                         } catch (error) {
                             console.error(`❌ Failed to publish to ${relayUrl}:`, error);
@@ -7970,16 +9234,13 @@
                     });
                 });
 
-                console.log('⏳ Waiting for all relay responses...');
                 const results = await Promise.allSettled(publishPromises);
                 
                 const successful = results.filter(r => r.status === 'fulfilled').length;
                 const failed = results.filter(r => r.status === 'rejected').length;
                 
-                console.log(`📊 Publication results: ${successful} successful, ${failed} failed`);
-                
                 if (failed > 0) {
-                    console.warn('⚠️ Some relays failed to publish the event');
+                    console.warn(`⚠️ ${failed} relay(s) failed to publish event`);
                     results.forEach((result, index) => {
                         if (result.status === 'rejected') {
                             console.error(`❌ ${postingRelays[index]}: ${result.reason}`);
