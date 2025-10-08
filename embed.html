@@ -447,10 +447,14 @@
                 }
 
                 this.notes.push(note);
-                this.notes.sort((a, b) => b.created_at - a.created_at);
+                this.notes.sort((a, b) => {
+                    const aTime = typeof a.created_at === 'number' ? a.created_at : parseInt(a.created_at);
+                    const bTime = typeof b.created_at === 'number' ? b.created_at : parseInt(b.created_at);
+                    return aTime - bTime; // Sort oldest first (newest at bottom)
+                });
                 
                 if (this.notes.length > 50) {
-                    this.notes = this.notes.slice(0, 50);
+                    this.notes = this.notes.slice(-50); // Keep newest 50 notes (last 50)
                 }
 
                 // Fetch profile for this user if we don't have it
@@ -479,8 +483,8 @@
                     return;
                 }
 
-                const limitedNotes = filteredNotes.slice(0, 15);
-                notesList.innerHTML = limitedNotes.reverse().map(note => this.renderNote(note)).join('');
+                const limitedNotes = filteredNotes.slice(-15); // Take last 15 notes (newest at bottom)
+                notesList.innerHTML = limitedNotes.map(note => this.renderNote(note)).join('');
                 
                 // Auto-scroll to bottom after rendering
                 setTimeout(() => {

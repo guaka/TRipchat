@@ -2728,17 +2728,54 @@
 
             // Add expiration filtering
             filterExpiredNotes(notes) {
-                return notes.filter(note => {
-                    if (note.kind === 20000) return true; // Ephemeral notes handled by relay
+                const now = Math.floor(Date.now() / 1000);
+                let expiredCount = 0;
+                let permanentCount = 0;
+                let validCount = 0;
+                
+                const filtered = notes.filter(note => {
+                    if (note.kind === 20000) {
+                        validCount++;
+                        return true; // Ephemeral notes handled by relay
+                    }
                     
                     const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
-                    if (!expirationTag) return true; // No expiration = permanent
+                    if (!expirationTag) {
+                        permanentCount++;
+                        return true; // No expiration = permanent
+                    }
                     
                     const expiresAt = parseInt(expirationTag[1]);
-                    const now = Math.floor(Date.now() / 1000);
+                    const isValid = now < expiresAt;
                     
-                    return now < expiresAt; // Show if not expired
+                    if (isValid) {
+                        validCount++;
+                    } else {
+                        expiredCount++;
+                    }
+                    
+                    return isValid; // Show if not expired
                 });
+                
+                console.log('Expiration filter:', {
+                    total: notes.length,
+                    valid: validCount,
+                    expired: expiredCount,
+                    permanent: permanentCount,
+                    now: new Date(now * 1000),
+                    sampleExpired: notes.filter(note => {
+                        const expirationTag = note.tags?.find(tag => tag[0] === 'expires_at');
+                        if (!expirationTag) return false;
+                        const expiresAt = parseInt(expirationTag[1]);
+                        return now >= expiresAt;
+                    }).slice(0, 3).map(note => ({
+                        id: note.id,
+                        expiresAt: new Date(parseInt(note.tags?.find(tag => tag[0] === 'expires_at')?.[1]) * 1000),
+                        createdAt: new Date(note.created_at * 1000)
+                    }))
+                });
+                
+                return filtered;
             }
 
             // Add expiration check
@@ -4648,6 +4685,13 @@
             getFilteredActivities() {
                 let filtered = this.notes;
                 
+                console.log('Filtering notes:', {
+                    totalNotes: this.notes.length,
+                    searchFilter: this.searchFilter,
+                    geohashFilter: this.geohashFilter,
+                    nip05Filter: this.nip05Filter
+                });
+                
                 // Apply geohash filter (only when geohash filter is active)
                 if (this.geohashFilter) {
                     const beforeCount = filtered.length;
@@ -4711,8 +4755,10 @@
                             tag[1].endsWith('@trustroots.org')
                         );
                     });
-                    // NIP-05 filter applied
+                    console.log('NIP-05 filter applied:', beforeCount, '->', filtered.length);
                 }
+                
+                console.log('Final filtered count:', filtered.length);
                 return filtered;
             }
 
@@ -4773,8 +4819,8 @@
                         // Subscribe to TRipchat-specific event kinds
                         const filters = {
                             "kinds": [1, 0], // Text notes + profiles
-                            "limit": 50,
-                            "since": Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60) // Last 30 days
+                            "limit": 100, // Increased from 50 to 100
+                            "since": Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60) // Last 7 days instead of 30
                         };
                         
                         const subscription = [
@@ -4924,14 +4970,19 @@
                 }
 
                 // Adding note
+                console.log('Adding new note:', note.id, 'created_at:', new Date(note.created_at * 1000), 'content preview:', note.content?.substring(0, 50));
                 
                 this.notes.push(note);
-                this.notes.sort((a, b) => a.created_at - b.created_at);
+                this.notes.sort((a, b) => {
+                    const aTime = typeof a.created_at === 'number' ? a.created_at : parseInt(a.created_at);
+                    const bTime = typeof b.created_at === 'number' ? b.created_at : parseInt(b.created_at);
+                    return aTime - bTime; // Sort oldest first (newest at bottom)
+                });
                 
                 // Note added to collection
                 
                 if (this.notes.length > 200) {
-                    this.notes = this.notes.slice(0, 200);
+                    this.notes = this.notes.slice(-200); // Keep newest 200 notes (last 200)
                 }
 
                 // Fetch user profile if we don't have it (only for recent notes to avoid spam)
@@ -4984,8 +5035,37 @@
                     loadingDiv.remove();
                 }
 
-                const sortedActivities = [...nonExpiredActivities].sort((a, b) => a.created_at - b.created_at);
-                const limitedActivities = sortedActivities.slice(0, 50); // Limit to 50 notes (oldest first)
+                // Ensure created_at is a number before sorting
+                const sortedActivities = [...nonExpiredActivities].sort((a, b) => {
+                    const aTime = typeof a.created_at === 'number' ? a.created_at : parseInt(a.created_at);
+                    const bTime = typeof b.created_at === 'number' ? b.created_at : parseInt(b.created_at);
+                    return aTime - bTime; // Oldest first (newest at bottom)
+                });
+                const limitedActivities = sortedActivities.slice(-50); // Take last 50 notes (newest at bottom)
+                
+                console.log('Displaying notes:', {
+                    totalNotes: this.notes.length,
+                    nonExpiredCount: nonExpiredActivities.length,
+                    sortedCount: sortedActivities.length,
+                    limitedCount: limitedActivities.length,
+                    newestNote: limitedActivities[0] ? new Date(limitedActivities[0].created_at * 1000) : 'none',
+                    oldestNote: limitedActivities[limitedActivities.length - 1] ? new Date(limitedActivities[limitedActivities.length - 1].created_at * 1000) : 'none'
+                });
+                
+                // Debug: Show first 5 and last 5 notes with their timestamps
+                console.log('First 5 notes (oldest):', limitedActivities.slice(0, 5).map(note => ({
+                    id: note.id.substring(0, 8),
+                    created_at: note.created_at,
+                    timestamp: new Date(note.created_at * 1000),
+                    content: note.content?.substring(0, 30)
+                })));
+                console.log('Last 5 notes (newest):', limitedActivities.slice(-5).map(note => ({
+                    id: note.id.substring(0, 8),
+                    created_at: note.created_at,
+                    timestamp: new Date(note.created_at * 1000),
+                    content: note.content?.substring(0, 30)
+                })));
+                
                 noteContainer.innerHTML = '';
 
                 limitedActivities.forEach(note => {
