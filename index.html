@@ -2806,6 +2806,9 @@
                     this.loadFilterFromHash();
                     await this.connectToRelays();
                     
+                    // Clean up any profile notes that might have been loaded
+                    this.cleanupProfileNotes();
+                    
                     // Load saved keys from localStorage
                     this.loadKeysFromStorage();
                 } catch (error) {
@@ -4385,6 +4388,16 @@
 
             // Direct profile fetch method temporarily removed
 
+            // Clean up any existing kind 0 notes from the notes array
+            cleanupProfileNotes() {
+                const beforeCount = this.notes.length;
+                this.notes = this.notes.filter(note => note.kind !== 0);
+                const afterCount = this.notes.length;
+                if (beforeCount !== afterCount) {
+                    console.log(`Cleaned up ${beforeCount - afterCount} profile notes from chat`);
+                }
+            }
+
             showDeleteKeyWarning() {
                 const warningMessage = `
                     <div style="text-align: center; padding: 20px;">
@@ -4890,10 +4903,12 @@
             }
 
             getFilteredActivities() {
-                let filtered = this.notes;
+                // Filter out profile notes (kind 0) - they shouldn't appear in chat
+                let filtered = this.notes.filter(note => note.kind !== 0);
                 
                 console.log('Filtering notes:', {
                     totalNotes: this.notes.length,
+                    filteredNotes: filtered.length,
                     searchFilter: this.searchFilter,
                     geohashFilter: this.geohashFilter,
                     nip05Filter: this.nip05Filter
@@ -5164,6 +5179,11 @@
             }
 
             addNewNote(note) {
+                // Skip profile notes (kind 0) - they shouldn't appear in chat
+                if (note.kind === 0) {
+                    return;
+                }
+
                 // Check if note already exists
                 if (this.notes.find(a => a.id === note.id)) {
                     // Note already exists, skipping
