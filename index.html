@@ -257,6 +257,35 @@
             font-feature-settings: 'liga' 1, 'calt' 1;
             transition: color 0.3s ease;
         }
+
+        a[href="#ting"] {
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            margin: 0;
+            letter-spacing: 0.05em;
+            text-transform: none;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-feature-settings: 'liga' 1, 'calt' 1;
+            transition: color 0.3s ease;
+            text-decoration: none;
+        }
+
+        a[href="#ting"]:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        h1 a {
+            color: var(--accent-color) !important;
+            text-decoration: none;
+        }
+
+        h1 a:hover {
+            color: var(--accent-color) !important;
+            text-decoration: underline;
+        }
         
         .note-item {
             background: var(--bg-secondary);
@@ -847,10 +876,6 @@
             text-decoration: underline;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
         
         .note-new {
             animation: slideInFromTop 0.5s ease-out;
@@ -2368,6 +2393,12 @@
                 line-height: 1.1;
             }
 
+            a[href="#ting"] {
+                font-size: 0.9rem;
+                margin: 0;
+                line-height: 1.1;
+            }
+
             .header-title-group p {
                 font-size: 0.6rem !important;
                 color: #6c757d !important;
@@ -2595,6 +2626,10 @@
                 font-size: 0.8rem;
             }
 
+            a[href="#ting"] {
+                font-size: 0.8rem;
+            }
+
             .header-top-row {
                 padding: 3px 8px;
             }
@@ -2734,6 +2769,10 @@
             }
 
             h1 {
+                font-size: 0.75rem;
+            }
+
+            a[href="#ting"] {
                 font-size: 0.75rem;
             }
 
@@ -2915,8 +2954,8 @@
                 <div class="header-top-row">
                     <div class="header-title-group">
                         <div class="header-logo-container">
-                            <img src="logos/color.svg" alt="Trustroots" class="trustroots-logo" />
-                            <h1>TRipch.at</h1>
+                            <a href="#trustroots"><img src="logos/color.svg" alt="Trustroots" class="trustroots-logo" /></a>
+                            <h1><a href="#testing">TRipch.at</a></h1><a href="#ting">/#ting</a>
                         </div>
                         <p style="font-size: 0.7rem; color: var(--text-muted); margin: -18px 0 0 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; text-transform: lowercase;">nostr travel chat - connect with travelers worldwide</p>
                     </div>
@@ -3177,7 +3216,83 @@
                 this.userHasScrolled = false; // Track if user has manually scrolled
                 this.datetimeClickHandlerSetup = false; // Flag to prevent duplicate click handlers
                 this.highlightEventId = null; // Event ID to highlight and scroll to
+                
+                // Debouncing for performance
+                this.displayActivitiesDebounced = this.debounce(this.displayActivities.bind(this), 100);
+                this.plotActivitiesOnMapDebounced = this.debounce(this.plotActivitiesOnMap.bind(this), 200);
+                
+                // DM saving optimization
+                this.lastSavedDMsHash = null; // Track last saved DM state
+                
+                // LRU cache for profiles (max 100 items)
+                this.profileLRUCache = new Map();
+                this.maxProfileCacheSize = 100;
+                
                 this.init();
+            }
+
+            // Debounce utility function
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Binary search insertion for maintaining sorted order
+            insertNoteSorted(note) {
+                const noteTime = typeof note.created_at === 'number' ? note.created_at : parseInt(note.created_at);
+                let left = 0;
+                let right = this.notes.length;
+                
+                // Binary search for insertion point
+                while (left < right) {
+                    const mid = Math.floor((left + right) / 2);
+                    const midTime = typeof this.notes[mid].created_at === 'number' ? 
+                        this.notes[mid].created_at : parseInt(this.notes[mid].created_at);
+                    
+                    if (midTime < noteTime) {
+                        left = mid + 1;
+                    } else {
+                        right = mid;
+                    }
+                }
+                
+                // Insert at the found position
+                this.notes.splice(left, 0, note);
+            }
+
+            // LRU cache methods for profiles
+            setProfileCache(pubkey, profile) {
+                // Remove if already exists to update position
+                if (this.profileLRUCache.has(pubkey)) {
+                    this.profileLRUCache.delete(pubkey);
+                }
+                
+                // Add to end (most recently used)
+                this.profileLRUCache.set(pubkey, profile);
+                
+                // Remove oldest if over limit
+                if (this.profileLRUCache.size > this.maxProfileCacheSize) {
+                    const firstKey = this.profileLRUCache.keys().next().value;
+                    this.profileLRUCache.delete(firstKey);
+                }
+            }
+
+            getProfileCache(pubkey) {
+                if (this.profileLRUCache.has(pubkey)) {
+                    // Move to end (most recently used)
+                    const profile = this.profileLRUCache.get(pubkey);
+                    this.profileLRUCache.delete(pubkey);
+                    this.profileLRUCache.set(pubkey, profile);
+                    return profile;
+                }
+                return null;
             }
 
             // Persistence preference methods
@@ -3189,12 +3304,21 @@
                 return localStorage.getItem('tripchat_note_persistence') || '1h';
             }
 
-            // Save kind 4 notes to localStorage
+            // Save kind 4 notes to localStorage (only when changed)
             saveKind4Notes() {
                 try {
                     const kind4Notes = this.notes.filter(note => note.kind === 4);
-                    localStorage.setItem('tripchat_kind4_notes', JSON.stringify(kind4Notes));
-                    console.log('💾 Saved kind 4 notes to localStorage:', kind4Notes.length);
+                    
+                    // Create a simple hash of the DMs to detect changes
+                    const currentHash = kind4Notes.length + '_' + 
+                        kind4Notes.map(note => note.id).sort().join(',');
+                    
+                    // Only save if there are changes
+                    if (this.lastSavedDMsHash !== currentHash) {
+                        localStorage.setItem('tripchat_kind4_notes', JSON.stringify(kind4Notes));
+                        this.lastSavedDMsHash = currentHash;
+                        console.log('💾 Saved kind 4 notes to localStorage:', kind4Notes.length);
+                    }
                 } catch (error) {
                     console.warn('Error saving kind 4 notes:', error);
                 }
@@ -3298,6 +3422,12 @@
                     
                     // Subscribe to DMs after connecting to relays (in case keys were loaded)
                     this.subscribeToDMs();
+                    
+                    // Set up listener for when nostr-tools loads
+                    window.addEventListener('nostrToolsLoaded', () => {
+                        console.log('nostr-tools loaded, retrying DM subscription');
+                        this.subscribeToDMs();
+                    });
                     
                     // Clean up any profile notes that might have been loaded
                     this.cleanupProfileNotes();
@@ -3684,8 +3814,7 @@
                         color: #dc3545;
                     }
                     .tripchat-marker {
-                        transition: all 0.3s ease;
-                        animation: pulse 2s infinite;
+                        transition: box-shadow 0.3s ease, transform 0.3s ease;
                         z-index: 1000;
                     }
                     .tripchat-marker:hover {
@@ -3693,24 +3822,12 @@
                         box-shadow: 0 2px 8px var(--shadow-hover);
                         animation: none;
                     }
-                    @keyframes pulse {
-                        0% {
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                        }
-                        50% {
-                            box-shadow: 0 2px 8px var(--shadow-hover);
-                        }
-                        100% {
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                        }
-                    }
                     .geohash-rectangle {
-                        transition: all 0.3s ease;
+                        transition: opacity 0.3s ease, fill-opacity 0.3s ease;
                         z-index: 100;
                     }
                     .geohash-highlight {
-                        transition: all 0.3s ease;
-                        animation: pulse 2s infinite;
+                        transition: opacity 0.3s ease, fill-opacity 0.3s ease;
                     }
                     .geohash-grid-cell {
                         transition: all 0.3s ease;
@@ -3727,10 +3844,34 @@
                         transform: scale(1.05);
                         box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
                     }
-                    @keyframes pulse {
-                        0% { opacity: 0.8; }
-                        50% { opacity: 0.4; }
-                        100% { opacity: 0.8; }
+                    .geohash-label-content {
+                        color: white;
+                        font-weight: bold;
+                        text-align: center;
+                        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+                        cursor: pointer;
+                        user-select: none;
+                    }
+                    .geohash-label-content.large {
+                        font-size: 20px;
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        min-width: 32px;
+                    }
+                    .geohash-label-content.small {
+                        font-size: 14px;
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        min-width: 24px;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                    }
+                    .geohash-label-content.dark {
+                        background: rgba(88, 166, 255, 0.4);
+                        border: 2px solid rgba(88, 166, 255, 0.5);
+                    }
+                    .geohash-label-content.light {
+                        background: rgba(52, 152, 219, 0.4);
+                        border: 2px solid rgba(52, 152, 219, 0.5);
                     }
                 `;
                 document.head.appendChild(style);
@@ -4279,7 +4420,6 @@
                         console.log('🌐 Fetching verification URL:', verificationUrl);
                         
                         const response = await fetch(verificationUrl);
-                        console.log('📥 Received response status:', response.status);
                         const data = await response.json();
                         console.log('📄 Parsed verification data:', data);
 
@@ -4719,6 +4859,12 @@
             }
 
             subscribeToDMs() {
+                // Check if nostr-tools is available before trying to get pubkey
+                if (!window.nostrTools) {
+                    console.log('nostr-tools not loaded yet, skipping DM subscription');
+                    return;
+                }
+                
                 const currentUserPubkey = this.getCurrentUserPubkey();
                 if (!currentUserPubkey) {
                     return;
@@ -5002,7 +5148,7 @@
                     
                     await Promise.allSettled(profilePromises);
                     // Re-render to show any newly loaded profiles
-                    this.displayActivities(this.notes);
+                    this.displayActivitiesDebounced(this.notes);
                 } finally {
                     // Reset the flag after a delay to allow occasional updates
                     setTimeout(() => {
@@ -5012,9 +5158,10 @@
             }
 
             async fetchUserProfile(pubkey) {
-                // Check in-memory cache first
-                if (this.userProfiles[pubkey]) {
-                    return this.userProfiles[pubkey];
+                // Check LRU cache first
+                const lruProfile = this.getProfileCache(pubkey);
+                if (lruProfile) {
+                    return lruProfile;
                 }
 
                 // Check if we're already requesting this profile
@@ -5025,8 +5172,7 @@
                 // Check localStorage cache
                 const cachedProfile = this.getCachedProfile(pubkey);
                 if (cachedProfile) {
-                    this.userProfiles[pubkey] = cachedProfile;
-                    this.profileCache.set(pubkey, cachedProfile);
+                    this.setProfileCache(pubkey, cachedProfile);
                     return cachedProfile;
                 }
 
@@ -5050,12 +5196,11 @@
                         if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
-                                // Cache profile in both memory and localStorage
-                                this.userProfiles[pubkey] = profile;
-                                this.profileCache.set(pubkey, profile);
+                                // Cache profile in LRU cache and localStorage
+                                this.setProfileCache(pubkey, profile);
                                 this.setCachedProfile(pubkey, profile);
                                 // Re-render notes to show the new username
-                                this.displayActivities(this.notes);
+                                this.displayActivitiesDebounced(this.notes);
                                 return profile;
                             }
                         }
@@ -5142,7 +5287,6 @@
                     
                     // Get current user's pubkey
                     const currentUserPubkey = this.getCurrentUserPubkey();
-                    console.log('🔍 PM Debug - Current user pubkey:', currentUserPubkey);
                     if (!currentUserPubkey) {
                         throw new Error('No user pubkey available');
                     }
@@ -5381,13 +5525,11 @@
                 this.currentPMRecipient = recipientPubkey;
                 const recipientName = this.userProfiles[recipientPubkey]?.name || recipientPubkey.substring(0, 8) + '...';
                 
-                console.log('🔍 PM Debug - Setting up PM modal:', { recipientName, currentPMRecipient: this.currentPMRecipient });
                 
                 document.getElementById('pmRecipientName').textContent = `Private Message with ${recipientName}`;
                 document.getElementById('pmModal').classList.add('show');
                 document.getElementById('pmInput').focus();
                 
-                console.log('🔍 PM Debug - PM modal should be visible now');
                 
                 // Load existing messages
                 this.loadPMMessages(recipientPubkey);
@@ -5408,7 +5550,6 @@
                 try {
                     // Get current user's pubkey
                     const currentUserPubkey = this.getCurrentUserPubkey();
-                    console.log('🔍 PM Debug - Current user pubkey:', currentUserPubkey);
                     if (!currentUserPubkey) {
                         messagesContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">Unable to load messages - no user key found</div>';
                         return;
@@ -5416,14 +5557,10 @@
 
                     // Convert npub to hex for comparison
                     const currentUserHex = this.npubToHex(currentUserPubkey);
-                    console.log('🔍 PM Debug - Current user hex pubkey:', currentUserHex);
                     
                     // Convert recipient pubkey to hex if it's in npub format
                     const recipientHex = recipientPubkey.startsWith('npub') ? this.npubToHex(recipientPubkey) : recipientPubkey;
-                    console.log('🔍 PM Debug - Recipient hex pubkey:', recipientHex);
 
-                    console.log('🔍 PM Debug - Total notes in array:', this.notes.length);
-                    console.log('🔍 PM Debug - Kind 4 notes:', this.notes.filter(note => note.kind === 4).length);
 
                     // Get all kind 4 events (DMs) between us and the recipient
                     const dmEvents = this.notes.filter(note => {
@@ -5507,7 +5644,6 @@
                 const input = document.getElementById('pmInput');
                 const content = input.value.trim();
                 
-                console.log('🔍 PM Debug - sendPM called:', { content, recipient: this.currentPMRecipient });
                 
                 if (!content) return;
                 if (!this.currentPMRecipient) return;
@@ -5525,25 +5661,18 @@
                     console.log('🔍 PM Debug - Signing event...');
                     // Sign the event
                     const signedEvent = await this.signEvent(dmEvent);
-                    console.log('🔍 PM Debug - Event signed:', { id: signedEvent.id, sig: signedEvent.sig?.substring(0, 16) + '...' });
                     
-                    console.log('🔍 PM Debug - Publishing to relays...');
                     // Send to relays
                     await this.publishEvent(signedEvent);
-                    console.log('🔍 PM Debug - Event published successfully');
                     
-                    console.log('🔍 PM Debug - Adding to notes array...');
                     // Add the sent message to our notes array so it appears immediately
                     this.notes.push(signedEvent);
-                    console.log('🔍 PM Debug - Added to notes array. Total notes:', this.notes.length);
                     
                     // Clear input
                     input.value = '';
                     
-                    console.log('🔍 PM Debug - Reloading PM messages...');
                     // Reload messages to show the new one
                     await this.loadPMMessages(this.currentPMRecipient);
-                    console.log('🔍 PM Debug - PM messages reloaded');
                 } catch (error) {
                     console.error('❌ PM Debug - Error sending PM:', error);
                     alert('Failed to send message: ' + error.message);
@@ -5578,13 +5707,11 @@
             }
 
             async loadConversations() {
-                console.log('🔍 PM Debug - loadConversations called');
                 const messagesList = document.getElementById('messagesList');
                 messagesList.innerHTML = '<div class="messages-loading">Loading conversations...</div>';
 
                 try {
                     const currentUserPubkey = this.getCurrentUserPubkey();
-                    console.log('🔍 PM Debug - Current user pubkey for conversations:', currentUserPubkey);
                     if (!currentUserPubkey) {
                         messagesList.innerHTML = '<div class="no-conversations">Please set up your keys first to view messages</div>';
                         return;
@@ -5592,15 +5719,7 @@
 
                     // Convert to hex for comparison
                     const currentUserHex = this.npubToHex(currentUserPubkey);
-                    console.log('🔍 PM Debug - Current user hex for conversations:', currentUserHex);
 
-                    console.log('🔍 PM Debug - Total notes for conversations:', this.notes.length);
-                    console.log('🔍 PM Debug - Kind 4 notes for conversations:', this.notes.filter(note => note.kind === 4).length);
-                    console.log('🔍 PM Debug - All kind 4 notes:', this.notes.filter(note => note.kind === 4).map(n => ({ 
-                        id: n.id, 
-                        pubkey: n.pubkey, 
-                        tags: n.tags 
-                    })));
 
                     // Get all DMs involving the current user
                     const dmEvents = this.notes.filter(note => 
@@ -5631,7 +5750,6 @@
                         } else {
                             // Message received by us - sender is the partner
                             partnerPubkey = event.pubkey;
-                            console.log('🔍 PM Debug - Received message, partner is sender:', partnerPubkey);
                         }
 
                         if (!partnerPubkey) {
@@ -5662,11 +5780,9 @@
                         // Count unread messages (received messages we haven't seen)
                         if (event.pubkey !== currentUserHex) {
                             conversation.unreadCount++;
-                            console.log('🔍 PM Debug - Incremented unread count:', conversation.unreadCount);
                         }
                     }
                     
-                    console.log('🔍 PM Debug - Conversation grouping complete, total conversations:', conversations.size);
 
                     // Convert to array and sort by last message time
                     const conversationList = Array.from(conversations.values())
@@ -6573,19 +6689,12 @@
 
                 // Store DMs (kind 4) but don't display them in main chat
                 if (note.kind === 4) {
-                    console.log('🔍 PM Debug - Adding DM to notes array:', { 
-                        id: note.id, 
-                        pubkey: note.pubkey, 
-                        tags: note.tags,
-                        contentLength: note.content?.length 
-                    });
                     this.notes.push(note);
                     this.updateUnreadCount(); // Update unread count for DMs
                     
                     // Save kind 4 notes to localStorage
                     this.saveKind4Notes();
                     
-                    console.log('🔍 PM Debug - DM added. Total notes now:', this.notes.length);
                     return;
                 }
 
@@ -6595,14 +6704,8 @@
                     note.created_at = Math.floor(Date.now() / 1000);
                 }
 
-                // Adding note
-                
-                this.notes.push(note);
-                this.notes.sort((a, b) => {
-                    const aTime = typeof a.created_at === 'number' ? a.created_at : parseInt(a.created_at);
-                    const bTime = typeof b.created_at === 'number' ? b.created_at : parseInt(b.created_at);
-                    return aTime - bTime; // Sort oldest first (newest at bottom)
-                });
+                // Adding note with binary search insertion for performance
+                this.insertNoteSorted(note);
                 
                 // Note added to collection
                 
@@ -6621,8 +6724,8 @@
                     }, 3000);
                 }
 
-                this.displayActivities(this.notes);
-                this.plotActivitiesOnMap(this.notes);
+                this.displayActivitiesDebounced(this.notes);
+                this.plotActivitiesOnMapDebounced(this.notes);
                 
                 // Add visual effect to the new note
                 setTimeout(() => {
@@ -6665,39 +6768,8 @@
                 });
                 const limitedActivities = sortedActivities.slice(-50); // Take last 50 notes (newest at bottom)
                 
-                
-                
-                noteContainer.innerHTML = '';
-
-                limitedActivities.forEach(note => {
-                    const noteDiv = document.createElement('div');
-                    
-                    // Add persistence classes
-                    const isExpiring = this.isExpiringSoon(note);
-                    noteDiv.className = `note-item persistent ${isExpiring ? 'expiring' : ''}`;
-                    noteDiv.setAttribute('data-note-id', note.id);
-                    
-                    try {
-                        const timestamp = new Date(note.created_at * 1000);
-                        const timeString = this.formatTime(timestamp);
-                        const relativeTime = this.getRelativeTime(timestamp);
-                        
-                        const renderedHtml = this.renderNote(note, timeString, relativeTime);
-                        
-                        if (renderedHtml && typeof renderedHtml === 'string' && renderedHtml.trim().length > 0) {
-                            noteDiv.innerHTML = renderedHtml;
-                        } else {
-                            noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
-                        }
-                        
-                        // Expiration info is now combined with timestamp in renderNote
-                    } catch (error) {
-                        console.error('Error rendering note:', error, note);
-                        noteDiv.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
-                    }
-                    
-                    noteContainer.appendChild(noteDiv);
-                });
+                // Incremental DOM update - only update what changed
+                this.updateNotesIncremental(noteContainer, limitedActivities);
                 
                 // Set up click handlers for geohash tags
                 this.setupGeohashTagClickHandlers();
@@ -6710,6 +6782,62 @@
                 // Set up click handlers for hashtag links
                 this.setupHashtagClickHandlers();
                 
+            }
+
+            // New incremental update method
+            updateNotesIncremental(container, newNotes) {
+                // Get existing note IDs in DOM
+                const existingNoteIds = new Set();
+                const existingElements = container.querySelectorAll('[data-note-id]');
+                existingElements.forEach(el => existingNoteIds.add(el.getAttribute('data-note-id')));
+                
+                // Get new note IDs
+                const newNoteIds = new Set(newNotes.map(note => note.id));
+                
+                // Remove notes that are no longer in the filtered list
+                existingElements.forEach(el => {
+                    const noteId = el.getAttribute('data-note-id');
+                    if (!newNoteIds.has(noteId)) {
+                        el.remove();
+                    }
+                });
+                
+                // Add or update notes
+                newNotes.forEach(note => {
+                    let noteElement = container.querySelector(`[data-note-id="${note.id}"]`);
+                    
+                    if (!noteElement) {
+                        // Create new element
+                        noteElement = document.createElement('div');
+                        noteElement.setAttribute('data-note-id', note.id);
+                        container.appendChild(noteElement);
+                    }
+                    
+                    // Update classes
+                    const isExpiring = this.isExpiringSoon(note);
+                    noteElement.className = `note-item persistent ${isExpiring ? 'expiring' : ''}`;
+                    
+                    // Update content
+                    try {
+                        const timestamp = new Date(note.created_at * 1000);
+                        const timeString = this.formatTime(timestamp);
+                        const relativeTime = this.getRelativeTime(timestamp);
+                        
+                        const renderedHtml = this.renderNote(note, timeString, relativeTime);
+                        
+                        if (renderedHtml && typeof renderedHtml === 'string' && renderedHtml.trim().length > 0) {
+                            noteElement.innerHTML = renderedHtml;
+                        } else {
+                            noteElement.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
+                        }
+                    } catch (error) {
+                        console.error('Error rendering note:', error, note);
+                        const timestamp = new Date(note.created_at * 1000);
+                        const timeString = this.formatTime(timestamp);
+                        const relativeTime = this.getRelativeTime(timestamp);
+                        noteElement.innerHTML = this.renderFallbackNote(note, timeString, relativeTime);
+                    }
+                });
             }
 
             renderNote(note, timeString, relativeTime) {
@@ -7161,20 +7289,7 @@
                     const label = L.marker([centerLat, centerLng], {
                         icon: L.divIcon({
                             className: 'geohash-grid-label',
-                            html: `<div style="
-                                background: ${isDark ? 'rgba(88, 166, 255, 0.4)' : 'rgba(52, 152, 219, 0.4)'};
-                                color: white;
-                                font-weight: bold;
-                                font-size: 20px;
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                text-align: center;
-                                min-width: 32px;
-                                box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-                                cursor: pointer;
-                                user-select: none;
-                                border: 2px solid ${isDark ? 'rgba(88, 166, 255, 0.5)' : 'rgba(52, 152, 219, 0.5)'};
-                            ">${code.toLowerCase()}</div>`,
+                            html: `<div class="geohash-label-content large ${isDark ? 'dark' : 'light'}">${code.toLowerCase()}</div>`,
                             iconSize: [44, 32],
                             iconAnchor: [22, 16]
                         })
@@ -7342,20 +7457,7 @@
                     const label = L.marker([centerLat, centerLng], {
                         icon: L.divIcon({
                             className: 'geohash-grid-label',
-                            html: `<div style="
-                                background: ${isDark ? 'rgba(88, 166, 255, 0.4)' : 'rgba(52, 152, 219, 0.4)'};
-                                color: white;
-                                font-weight: bold;
-                                font-size: ${style.fontSize};
-                                padding: ${style.padding};
-                                border-radius: 6px;
-                                text-align: center;
-                                min-width: ${style.minWidth};
-                                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-                                cursor: pointer;
-                                user-select: none;
-                                border: 1px solid ${isDark ? 'rgba(88, 166, 255, 0.5)' : 'rgba(52, 152, 219, 0.5)'};
-                            ">${displayText}</div>`,
+                            html: `<div class="geohash-label-content small ${isDark ? 'dark' : 'light'}">${displayText}</div>`,
                             iconSize: style.iconSize,
                             iconAnchor: style.iconAnchor
                         })
@@ -7479,15 +7581,8 @@
             }
 
             plotActivitiesOnMap(notes) {
-                this.mapMarkers.forEach(marker => this.map.removeLayer(marker));
-                this.mapMarkers = [];
-                
-                // Clear existing geohash rectangles
-                this.geohashRectangles.forEach(rect => this.map.removeLayer(rect));
-                this.geohashRectangles = [];
-                
-                const geoActivities = [];
                 const filteredActivities = this.getFilteredActivities();
+                const geoActivities = [];
                 
                 // Collect unique geohashes from filtered notes
                 const uniqueGeohashes = new Set();
@@ -7496,7 +7591,6 @@
                     const geo = this.extractGeoLocation(note);
                     if (geo) {
                         geoActivities.push({ note, geo });
-                        // Found geo note
                         
                         // Extract geohash from tags
                         if (note.tags) {
@@ -7509,59 +7603,138 @@
                     }
                 });
                 
-                // Processed geo-location data
-                
-                // Plot geohash rectangles
-                this.plotGeohashRectangles(Array.from(uniqueGeohashes));
+                // Update geohash rectangles (only if changed)
+                this.updateGeohashRectangles(Array.from(uniqueGeohashes));
                 
                 if (geoActivities.length === 0) {
+                    // Remove all markers if no geo activities
+                    this.mapMarkers.forEach(marker => this.map.removeLayer(marker));
+                    this.mapMarkers = [];
                     return;
                 }
                 
-                geoActivities.forEach(({ note, geo }, index) => {
-                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                    const marker = L.circleMarker([geo.lat, geo.lng], {
-                        radius: 8,
-                        fillColor: isDark ? '#58a6ff' : '#27ae60',
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8,
-                        className: 'tripchat-marker'
-                    });
+                // Update markers incrementally
+                this.updateMapMarkers(geoActivities);
+            }
+
+            // New method for incremental marker updates
+            updateMapMarkers(geoActivities) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const newMarkerIds = new Set(geoActivities.map(({ note }) => note.id));
+                
+                // Remove markers that are no longer needed
+                this.mapMarkers = this.mapMarkers.filter(marker => {
+                    const noteId = marker.options.noteId;
+                    if (!newMarkerIds.has(noteId)) {
+                        this.map.removeLayer(marker);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Add or update markers
+                geoActivities.forEach(({ note, geo }) => {
+                    // Check if marker already exists
+                    const existingMarker = this.mapMarkers.find(m => m.options.noteId === note.id);
                     
-                    const noteType = this.getNoteType(note);
-                    const profile = this.userProfiles[note.pubkey];
-                    const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
-                    
-                    // Extract geohash from note tags for clickable link
-                    let geohashLink = '';
-                    if (note.tags) {
-                        const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1] && this.isGeohash(tag[1]));
-                        if (geohashTag) {
-                            geohashLink = `<div class="popup-location" style="cursor: pointer; color: #8B5CF6; font-weight: 600;" onclick="window.tripchatVisualizer.filterByGeohash('${geohashTag[1]}')">📍 #${geohashTag[1]}</div>`;
+                    if (!existingMarker) {
+                        // Create new marker
+                        const marker = L.circleMarker([geo.lat, geo.lng], {
+                            radius: 8,
+                            fillColor: isDark ? '#58a6ff' : '#27ae60',
+                            color: '#ffffff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                            className: 'tripchat-marker',
+                            noteId: note.id
+                        });
+                        
+                        const noteType = this.getNoteType(note);
+                        const profile = this.userProfiles[note.pubkey];
+                        const username = this.formatUsernameWithDiscriminator(profile, note.pubkey);
+                        
+                        // Extract geohash from note tags for clickable link
+                        let geohashLink = '';
+                        if (note.tags) {
+                            const geohashTag = note.tags.find(tag => tag[0] === 'g' && tag[1] && this.isGeohash(tag[1]));
+                            if (geohashTag) {
+                                geohashLink = `<div class="popup-location" style="cursor: pointer; color: #8B5CF6; font-weight: 600;" onclick="window.tripchatVisualizer.filterByGeohash('${geohashTag[1]}')">📍 #${geohashTag[1]}</div>`;
+                            }
                         }
+                        
+                        if (!geohashLink) {
+                            geohashLink = `<div class="popup-location">📍 ${geo.location}</div>`;
+                        }
+                        
+                        const popupContent = `
+                            <div class="map-popup">
+                                <div class="note-title">${username}</div>
+                                <div class="popup-content">${this.processContent(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
+                                <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
+                                ${geohashLink}
+                            </div>
+                        `;
+                        
+                        marker.bindPopup(popupContent);
+                        marker.addTo(this.map);
+                        this.mapMarkers.push(marker);
                     }
-                    
-                    if (!geohashLink) {
-                        geohashLink = `<div class="popup-location">📍 ${geo.location}</div>`;
-                    }
-                    
-                    const popupContent = `
-                        <div class="map-popup">
-                            <div class="note-title">${username}</div>
-                            <div class="popup-content">${this.processContent(this.escapeHtml(note.content?.substring(0, 100) || 'No content'))}${note.content?.length > 100 ? '...' : ''}</div>
-                            <div class="popup-time">${this.getRelativeTime(new Date(note.created_at * 1000))}</div>
-                            ${geohashLink}
-                        </div>
-                    `;
-                    
-                    marker.bindPopup(popupContent);
-                    marker.addTo(this.map);
-                    this.mapMarkers.push(marker);
                 });
                 
                 // Plotted geo-located notes on map
+            }
+
+            // New method for updating geohash rectangles
+            updateGeohashRectangles(geohashes) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const newGeohashIds = new Set(geohashes);
+                
+                // Remove rectangles that are no longer needed
+                this.geohashRectangles = this.geohashRectangles.filter(rect => {
+                    const geohashId = rect.options.geohashId;
+                    if (!newGeohashIds.has(geohashId)) {
+                        this.map.removeLayer(rect);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Add new rectangles
+                geohashes.forEach(geohash => {
+                    const existingRect = this.geohashRectangles.find(r => r.options.geohashId === geohash);
+                    if (!existingRect) {
+                        const bounds = this.geohashToBounds(geohash);
+                        if (bounds) {
+                            const rectangle = L.rectangle([
+                                [bounds.south, bounds.west],
+                                [bounds.north, bounds.east]
+                            ], {
+                                color: isDark ? '#58a6ff' : '#27ae60',
+                                fillColor: isDark ? '#58a6ff' : '#27ae60',
+                                fillOpacity: 0.1,
+                                weight: 2,
+                                opacity: 0.6,
+                                className: 'geohash-rectangle',
+                                geohashId: geohash
+                            });
+                            
+                            const popupContent = `
+                                <div class="map-popup">
+                                    <div class="note-title">Geohash Area</div>
+                                    <div class="popup-content"><strong>${geohash}</strong></div>
+                                    <div class="popup-location">
+                                        Bounds: ${bounds.south.toFixed(4)}, ${bounds.west.toFixed(4)} to ${bounds.north.toFixed(4)}, ${bounds.east.toFixed(4)}
+                                    </div>
+                                </div>
+                            `;
+                            
+                            rectangle.bindPopup(popupContent);
+                            rectangle.addTo(this.map);
+                            this.geohashRectangles.push(rectangle);
+                        }
+                    }
+                });
             }
 
             plotGeohashRectangles(geohashes) {
@@ -8394,6 +8567,11 @@
             // Convert nsec format back to hex
             nsecToHex(nsecKey) {
                 try {
+                    // Check if nostr-tools is available
+                    if (!window.nostrTools || !window.nostrTools.nip19) {
+                        throw new Error('nostr-tools library not loaded');
+                    }
+                    
                     const decoded = window.nostrTools.nip19.decode(nsecKey);
                     if (decoded.type === 'nsec') {
                         // Convert Uint8Array to hex string if needed
@@ -9202,7 +9380,6 @@
                     const handleMessage = (event) => {
                         try {
                             const data = JSON.parse(event.data);
-                            console.log(`📥 Received response from ${relayUrl}:`, data);
                             
                             if (Array.isArray(data) && data.length >= 2) {
                                 const [messageType, eventId, success, message] = data;
