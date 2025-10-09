@@ -407,6 +407,14 @@
             font-size: 0.9rem;
             line-height: 1.4;
             max-width: 80%;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .pm-message-content {
+            flex: 1;
         }
 
         .pm-message.sent {
@@ -426,6 +434,38 @@
             font-size: 0.7rem;
             opacity: 0.7;
             margin-top: 4px;
+        }
+
+        .pm-message-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .pm-message-delete-btn:hover {
+            opacity: 1;
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .pm-message-delete-btn:disabled {
+            opacity: 0.3;
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pm-message-delete-btn.deleted {
+            background: #22c55e;
+            color: #000;
+            animation: none;
         }
 
         .pm-input-group {
@@ -1412,8 +1452,16 @@
         .conversation-item {
             padding: 15px 20px;
             border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
             transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .conversation-content {
+            flex: 1;
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1467,6 +1515,38 @@
             justify-content: center;
             font-size: 0.7rem;
             font-weight: bold;
+        }
+
+        .conversation-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 10px;
+            opacity: 0.7;
+        }
+
+        .conversation-delete-btn:hover {
+            opacity: 1;
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .conversation-delete-btn:disabled {
+            opacity: 0.3;
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .conversation-delete-btn.deleted {
+            background: #22c55e;
+            color: #000;
+            animation: none;
         }
 
         .no-conversations {
@@ -4120,7 +4200,7 @@
                 // Update NIP-05 identifier display
                 const updateNip05Display = () => {
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
-                    const npub = localStorage.getItem('tripchat_npub');
+                    const npub = this.getCurrentUserPubkey();
                     
                     if (savedUsername && npub) {
                         const identifier = `${savedUsername}@trustroots.org`;
@@ -4402,10 +4482,17 @@
                 // Verify NIP-05 identifier
                 const verifyNip05 = async () => {
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
-                    const npub = localStorage.getItem('tripchat_npub');
                     
-                    if (!savedUsername || !npub) {
-                        verificationStatus.textContent = 'Please enter username and generate keys first';
+                    if (!savedUsername) {
+                        verificationStatus.textContent = 'Please enter username first';
+                        verificationStatus.style.color = '#dc3545';
+                        return;
+                    }
+                    
+                    // Get current user's actual npub instead of relying on localStorage
+                    const npub = this.getCurrentUserPubkey();
+                    if (!npub) {
+                        verificationStatus.textContent = 'Please generate keys first';
                         verificationStatus.style.color = '#dc3545';
                         return;
                     }
@@ -4440,6 +4527,13 @@
                                 console.error('Error converting hex to npub:', conversionError);
                                 expectedNpub = null;
                             }
+                            
+                            console.log('🔍 NIP-05 comparison:', { 
+                                expectedNpub, 
+                                currentNpub: npub, 
+                                match: expectedNpub === npub,
+                                hexPubkey 
+                            });
                             
                             if (expectedNpub && expectedNpub === npub) {
                                 console.log('🎉 NIP-05 verification matched npub');
@@ -4508,7 +4602,7 @@
 
                 retryProfilePostBtn.addEventListener('click', async () => {
                     const savedUsername = localStorage.getItem('tripchat_trustroots_username');
-                    const npub = localStorage.getItem('tripchat_npub');
+                    const npub = this.getCurrentUserPubkey();
                     if (!savedUsername || !npub) {
                         alert('Please ensure you have generated keys and saved your Trustroots username first.');
                         return;
@@ -5139,8 +5233,12 @@
                 
                 try {
                     const visibleNotes = this.notes.slice(0, 20); // Only preload first 20 notes
+                    const notesNeedingProfiles = visibleNotes.filter(note => note.pubkey && !this.userProfiles[note.pubkey]);
+                    console.log('🔍 Preloading profiles for', notesNeedingProfiles.length, 'notes');
+                    
                     const profilePromises = visibleNotes.map(note => {
                         if (note.pubkey && !this.userProfiles[note.pubkey]) {
+                            console.log('🔍 Fetching profile for:', note.pubkey.substring(0, 8) + '...');
                             return this.fetchUserProfile(note.pubkey);
                         }
                         return Promise.resolve();
@@ -5158,9 +5256,12 @@
             }
 
             async fetchUserProfile(pubkey) {
+                console.log('🔍 fetchUserProfile called for:', pubkey.substring(0, 8) + '...');
+                
                 // Check LRU cache first
                 const lruProfile = this.getProfileCache(pubkey);
                 if (lruProfile) {
+                    console.log('🔍 Profile found in LRU cache for:', pubkey.substring(0, 8) + '...');
                     return lruProfile;
                 }
 
@@ -5182,6 +5283,7 @@
                 
                 try {
                     const profile = await profilePromise;
+                    console.log('🔍 Profile fetch completed for:', pubkey.substring(0, 8) + '...', profile ? 'SUCCESS' : 'FAILED');
                     return profile;
                 } finally {
                     // Clean up the pending request
@@ -5190,12 +5292,24 @@
             }
 
             async fetchProfileFromRelays(pubkey) {
+                console.log('🔍 fetchProfileFromRelays called for:', pubkey.substring(0, 8) + '...');
                 try {
                     // Try to fetch from the first available relay
                     for (const relayUrl of this.relays) {
+                        console.log('🔍 Trying relay:', relayUrl, 'WebSocket state:', this.websockets[relayUrl]?.readyState);
                         if (this.websockets[relayUrl] && this.websockets[relayUrl].readyState === WebSocket.OPEN) {
+                            console.log('🔍 Requesting profile from relay:', relayUrl);
                             const profile = await this.requestUserProfile(relayUrl, pubkey);
                             if (profile) {
+                                console.log('🔍 Profile fetched from relay, storing:', { 
+                                    pubkey: pubkey.substring(0, 8) + '...', 
+                                    fullPubkey: pubkey,
+                                    nip05: profile.nip05, 
+                                    name: profile.name 
+                                });
+                                // Store in userProfiles for immediate access
+                                this.userProfiles[pubkey] = profile;
+                                console.log('🔍 Profile stored in userProfiles. Total profiles:', Object.keys(this.userProfiles).length);
                                 // Cache profile in LRU cache and localStorage
                                 this.setProfileCache(pubkey, profile);
                                 this.setCachedProfile(pubkey, profile);
@@ -5210,6 +5324,7 @@
                 }
 
                 // Fallback: create a basic profile with shortened pubkey
+                console.log('🔍 No profile found, creating fallback for:', pubkey.substring(0, 8) + '...');
                 const shortPubkey = pubkey.substring(0, 8) + '...';
                 const fallbackProfile = { name: shortPubkey, pubkey: pubkey };
                 this.userProfiles[pubkey] = fallbackProfile;
@@ -5607,10 +5722,15 @@
                                 hour12: true
                             });
                             
+                            const deleteButton = isSent ? `<button class="pm-message-delete-btn" data-event-id="${event.id}" onclick="window.tripchatVisualizer.deletePMMessage('${event.id}')" title="Delete this message">🗑️</button>` : '';
+                            
                             messagesHtml += `
                                 <div class="pm-message ${isSent ? 'sent' : 'received'}">
-                                    <div>${this.escapeHtml(decryptedContent)}</div>
-                                    <div class="pm-message-time">${senderName} • ${timeString}</div>
+                                    <div class="pm-message-content">
+                                        <div>${this.escapeHtml(decryptedContent)}</div>
+                                        <div class="pm-message-time">${senderName} • ${timeString}</div>
+                                    </div>
+                                    ${deleteButton}
                                 </div>
                             `;
                         } catch (error) {
@@ -5815,15 +5935,18 @@
                             `<div class="unread-badge">${conversation.unreadCount}</div>` : '';
 
                         conversationsHtml += `
-                            <div class="conversation-item" onclick="window.tripchatVisualizer.openPMFromMessages('${conversation.partnerPubkey}')">
-                                <div class="conversation-info">
-                                    <div class="conversation-name">${this.escapeHtml(partnerName)}</div>
-                                    <div class="conversation-preview">${this.escapeHtml(preview)}</div>
+                            <div class="conversation-item">
+                                <div class="conversation-content" onclick="window.tripchatVisualizer.openPMFromMessages('${conversation.partnerPubkey}')">
+                                    <div class="conversation-info">
+                                        <div class="conversation-name">${this.escapeHtml(partnerName)}</div>
+                                        <div class="conversation-preview">${this.escapeHtml(preview)}</div>
+                                    </div>
+                                    <div class="conversation-meta">
+                                        <div class="conversation-time">${timeString}</div>
+                                        ${unreadBadge}
+                                    </div>
                                 </div>
-                                <div class="conversation-meta">
-                                    <div class="conversation-time">${timeString}</div>
-                                    ${unreadBadge}
-                                </div>
+                                <button class="conversation-delete-btn" data-partner-pubkey="${conversation.partnerPubkey}" onclick="event.stopPropagation(); window.tripchatVisualizer.deleteConversation('${conversation.partnerPubkey}')" title="Delete conversation">🗑️</button>
                             </div>
                         `;
                     }
@@ -6564,10 +6687,14 @@
                                     
                                     // Received event
                                     
+                                    // Process profile events (kind 0) to extract NIP-05 information
+                                    if (eventData.kind === 0) {
+                                        this.processProfileEvent(eventData);
+                                    }
                                     // Check for geohash tags in events
                                     
                                     // Check if this is TRipchat note
-                                    if (this.isTRipchatNote(eventData)) {
+                                    else if (this.isTRipchatNote(eventData)) {
                                         this.addNewNote(eventData);
                                         this.updateRelayStatus(relayUrl, 'connected', this.notes.length);
                                         this.updateConnectionStatus();
@@ -6634,6 +6761,46 @@
                 }
                 
                 return false;
+            }
+
+            // Process profile events to extract NIP-05 information
+            processProfileEvent(event) {
+                try {
+                    const metadata = JSON.parse(event.content);
+                    const pubkey = event.pubkey;
+                    
+                    // Create or update profile with NIP-05 information
+                    const profile = {
+                        name: metadata.name || metadata.display_name || pubkey.substring(0, 8) + '...',
+                        pubkey: pubkey,
+                        picture: metadata.picture,
+                        about: metadata.about,
+                        nip05: metadata.nip05, // Extract NIP-05 field
+                        trustroots_username: metadata.trustroots_username,
+                        website: metadata.website,
+                        lud16: metadata.lud16,
+                        trustroots_profile: metadata.trustroots_profile,
+                        travel_preferences: metadata.travel_preferences,
+                        created_at: metadata.created_at
+                    };
+                    
+                    // Store in user profiles cache
+                    this.userProfiles[pubkey] = profile;
+                    this.setProfileCache(pubkey, profile);
+                    
+                    console.log('📋 Profile processed and stored:', { 
+                        pubkey: pubkey.substring(0, 8) + '...', 
+                        fullPubkey: pubkey,
+                        nip05: metadata.nip05,
+                        name: metadata.name,
+                        totalProfiles: Object.keys(this.userProfiles).length
+                    });
+                    
+                    // Re-render notes to show updated usernames
+                    this.displayActivitiesDebounced(this.notes);
+                } catch (error) {
+                    console.warn('Error processing profile event:', error);
+                }
             }
 
             startLiveSubscription(relayUrl) {
@@ -6713,7 +6880,8 @@
                     this.notes = this.notes.slice(-200); // Keep newest 200 notes (last 200)
                 }
 
-                // Profile will be fetched by preloadVisibleProfiles when needed
+                // Trigger profile preloading for new notes
+                this.preloadVisibleProfiles();
 
                 // Show live indicator
                 const liveIndicator = document.getElementById('liveIndicator');
@@ -8295,6 +8463,221 @@
                 }
             }
 
+            async deleteConversation(partnerPubkey) {
+                if (!this.privateKey) {
+                    alert('No private key available. Please set up your keys first.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+                    return;
+                }
+
+                // Find and update the delete button to show loading state
+                const deleteButton = document.querySelector(`[data-partner-pubkey="${partnerPubkey}"].conversation-delete-btn`);
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.textContent = '⏳';
+                    deleteButton.title = 'Deleting conversation...';
+                }
+
+                try {
+                    // Get all PM events with this partner
+                    const currentUserPubkey = this.getCurrentUserPubkey();
+                    const currentUserHex = this.npubToHex(currentUserPubkey);
+                    const partnerHex = this.npubToHex(partnerPubkey);
+                    
+                    // Find all PM events between current user and partner
+                    const pmEvents = this.notes.filter(note => 
+                        note.kind === 4 && 
+                        ((note.pubkey === currentUserHex && note.tags.some(tag => tag[0] === 'p' && tag[1] === partnerHex)) ||
+                         (note.pubkey === partnerHex && note.tags.some(tag => tag[0] === 'p' && tag[1] === currentUserHex)))
+                    );
+
+                    if (pmEvents.length === 0) {
+                        console.log('No PM events found for this conversation');
+                        return;
+                    }
+
+                    // Create deletion events for each PM
+                    const deletionEvents = pmEvents.map(event => ({
+                        kind: 5,
+                        content: 'Deleted by user',
+                        tags: [['e', event.id]],
+                        created_at: Math.floor(Date.now() / 1000)
+                    }));
+
+                    // Sign all deletion events
+                    const signedEvents = [];
+                    for (const deletionEvent of deletionEvents) {
+                        const signedEvent = await this.signEvent(deletionEvent);
+                        if (signedEvent) {
+                            signedEvents.push(signedEvent);
+                        }
+                    }
+
+                    if (signedEvents.length === 0) {
+                        throw new Error('Failed to sign any deletion events');
+                    }
+
+                    // Send to all enabled relays
+                    const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                    console.log('Sending conversation deletions to relays:', postingRelays);
+                    
+                    // Update button to show progress
+                    if (deleteButton) {
+                        deleteButton.textContent = `⏳ ${signedEvents.length}`;
+                    }
+                    
+                    const relayPromises = postingRelays.map(async (relayUrl) => {
+                        try {
+                            console.log(`Sending conversation deletions to ${relayUrl}`);
+                            
+                            const results = await Promise.all(
+                                signedEvents.map(event => this.postEventToRelay(relayUrl, event))
+                            );
+                            console.log(`Conversation deletions sent successfully to ${relayUrl}`);
+                            return true;
+                        } catch (error) {
+                            console.log(`Conversation deletion failed for ${relayUrl}:`, error.message);
+                            return false;
+                        }
+                    });
+
+                    const results = await Promise.allSettled(relayPromises);
+                    const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+                    
+                    console.log('Conversation deletion results:', results);
+                    console.log('Success count:', successCount);
+
+                    // Update button to show completion
+                    if (deleteButton) {
+                        deleteButton.textContent = '✅';
+                        deleteButton.classList.add('deleted');
+                    }
+                    
+                    // Brief delay to show success state
+                    setTimeout(() => {
+                        // Remove PM events from local notes array
+                        this.notes = this.notes.filter(note => !pmEvents.some(pm => pm.id === note.id));
+                        
+                        // Re-render the display
+                        this.displayActivities(this.notes);
+                        this.plotActivitiesOnMap(this.notes);
+                        
+                        // Reload conversations to update the list
+                        this.loadConversations();
+                        
+                        // Show success message
+                        this.showDeletionSuccess(postingRelays.length);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Error deleting conversation:', error);
+                    
+                    // Reset button state on error
+                    if (deleteButton) {
+                        deleteButton.disabled = false;
+                        deleteButton.textContent = '🗑️';
+                        deleteButton.title = 'Delete conversation';
+                        deleteButton.classList.remove('deleted');
+                    }
+                    
+                    alert('Failed to delete conversation: ' + error.message);
+                }
+            }
+
+            async deletePMMessage(eventId) {
+                if (!this.privateKey) {
+                    alert('No private key available. Please set up your keys first.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+                    return;
+                }
+
+                // Find and update the delete button to show loading state
+                const deleteButton = document.querySelector(`[data-event-id="${eventId}"].pm-message-delete-btn`);
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.textContent = '⏳';
+                    deleteButton.title = 'Deleting message...';
+                }
+
+                try {
+                    // Create a kind 5 deletion event
+                    const deletionEvent = {
+                        kind: 5,
+                        content: 'Deleted by user',
+                        tags: [['e', eventId]],
+                        created_at: Math.floor(Date.now() / 1000)
+                    };
+
+                    // Sign the event
+                    const signedEvent = await this.signEvent(deletionEvent);
+                    
+                    if (!signedEvent) {
+                        throw new Error('Failed to sign deletion event');
+                    }
+
+                    // Send to all enabled relays
+                    const postingRelays = Object.keys(this.postingRelays).filter(url => this.postingRelays[url]);
+                    console.log('Sending PM deletion to relays:', postingRelays);
+                    
+                    const relayPromises = postingRelays.map(async (relayUrl) => {
+                        try {
+                            console.log(`Sending PM deletion to ${relayUrl}`);
+                            
+                            const result = await this.postEventToRelay(relayUrl, signedEvent);
+                            console.log(`PM deletion sent successfully to ${relayUrl}`);
+                            return result;
+                        } catch (error) {
+                            console.log(`PM deletion failed for ${relayUrl}:`, error.message);
+                            // For deletion events, we'll consider it successful if we sent it
+                            return true;
+                        }
+                    });
+
+                    const results = await Promise.allSettled(relayPromises);
+                    const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+                    
+                    console.log('PM deletion results:', results);
+                    console.log('Success count:', successCount);
+
+                    // Update button to show completion
+                    if (deleteButton) {
+                        deleteButton.textContent = '✅';
+                        deleteButton.classList.add('deleted');
+                    }
+                    
+                    // Brief delay to show success state
+                    setTimeout(async () => {
+                        // Remove from local notes array
+                        this.notes = this.notes.filter(note => note.id !== eventId);
+                        
+                        // Re-render the PM messages
+                        await this.loadPMMessages(this.currentPMRecipient);
+                        
+                        // Show success message
+                        this.showDeletionSuccess(postingRelays.length);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Error deleting PM message:', error);
+                    
+                    // Reset button state on error
+                    if (deleteButton) {
+                        deleteButton.disabled = false;
+                        deleteButton.textContent = '🗑️';
+                        deleteButton.title = 'Delete this message';
+                        deleteButton.classList.remove('deleted');
+                    }
+                    
+                    alert('Failed to delete message: ' + error.message);
+                }
+            }
+
             replyToNote(noteId, npub) {
                 // Check if user has keys set up
                 if (!this.privateKey) {
@@ -8657,6 +9040,27 @@
             formatUsernameWithDiscriminator(profile, pubkey) {
                 let username;
                 
+                // Debug logging for all users
+                console.log('🔍 Formatting username for:', { 
+                    pubkey: pubkey.substring(0, 8) + '...', 
+                    fullPubkey: pubkey,
+                    pubkeyLength: pubkey.length,
+                    hasProfile: !!profile,
+                    profileName: profile?.name,
+                    profileNip05: profile?.nip05,
+                    userProfilesKeys: Object.keys(this.userProfiles).length,
+                    userProfilesKeysList: Object.keys(this.userProfiles).map(k => k.substring(0, 8) + '...')
+                });
+                
+                // Debug logging for hitchwiki users
+                if (profile && profile.nip05 && profile.nip05.includes('hitchwiki')) {
+                    console.log('🔍 Hitchwiki profile found:', { 
+                        pubkey: pubkey.substring(0, 8) + '...', 
+                        nip05: profile.nip05, 
+                        name: profile.name 
+                    });
+                }
+                
                 // Priority 1: Use NIP-05 name if available (most trustworthy)
                 if (profile && profile.nip05) {
                     const isTrustrootsVerified = profile.nip05.endsWith('@trustroots.org');
@@ -8692,6 +9096,15 @@
                 }
                 // Priority 3: Fallback to npub
                 else {
+                    // Debug logging for users falling back to npub
+                    console.log('🔍 User falling back to npub:', { 
+                        pubkey: pubkey.substring(0, 8) + '...', 
+                        hasProfile: !!profile,
+                        profileName: profile?.name,
+                        profileNip05: profile?.nip05,
+                        profileKeys: profile ? Object.keys(profile) : []
+                    });
+                    
                     // Show first 10 characters of npub without @
                     username = pubkey ? this.hexToNpub(pubkey).substring(0, 10) : 'Unknown';
                 }
