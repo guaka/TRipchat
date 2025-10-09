@@ -86,7 +86,7 @@
         * {
             box-sizing: border-box;
         }
-
+        
         /* Global button styling for consistency */
         button {
             text-transform: uppercase;
@@ -115,6 +115,7 @@
         }
         
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
         
         :root {
             /* Light theme colors */
@@ -7985,32 +7986,14 @@
 
             npubToHex(npub) {
                 try {
-                    if (typeof window.nostrTools !== 'undefined') {
-                        const decoded = window.nostrTools.nip19.decode(npub);
-                        return decoded.data;
-                    } else {
-                        // Fallback: try to extract hex from npub format
-                        console.warn('nostr-tools not available, using fallback npub decoding');
-                        return this.simpleNpubDecode(npub);
-                    }
+                    const decoded = window.nostrTools.nip19.decode(npub);
+                    return decoded.data;
                 } catch (error) {
                     console.error('Error converting npub to hex:', error);
                     return null;
                 }
             }
 
-            simpleNpubDecode(npub) {
-                // This is a very basic fallback - in production, use a proper base58 decoder
-                try {
-                    // For now, we'll use a simple approach that might work for testing
-                    // In practice, you'd need a proper base58 decoder library
-                    console.warn('Using fallback npub decoding - may not work correctly');
-                    return null; // Return null to indicate we can't decode it properly
-                } catch (error) {
-                    console.error('Error in simple npub decode:', error);
-                    return null;
-                }
-            }
 
             async signEvent(event) {
                 try {
@@ -8400,60 +8383,24 @@
 
             // Convert hex private key to nsec format
             hexToNsec(hexKey) {
-                // Remove '0x' prefix if present
-                const cleanHex = hexKey.replace(/^0x/, '');
-                
-                // Convert hex to bytes
-                const bytes = new Uint8Array(cleanHex.length / 2);
-                for (let i = 0; i < cleanHex.length; i += 2) {
-                    bytes[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+                try {
+                    return window.nostrTools.nip19.nsecEncode(hexKey);
+                } catch (error) {
+                    console.error('Error converting hex to nsec:', error);
+                    return null;
                 }
-                
-                // Use a simple base32-like encoding for now
-                // This is not proper bech32 but will work for display purposes
-                const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567';
-                let result = 'nsec1';
-                
-                for (let i = 0; i < bytes.length; i += 5) {
-                    let value = 0;
-                    for (let j = 0; j < 5 && i + j < bytes.length; j++) {
-                        value = (value << 8) | bytes[i + j];
-                    }
-                    
-                    for (let k = 0; k < 8; k++) {
-                        result += base32Chars[(value >> (35 - k * 5)) & 31];
-                    }
-                }
-                
-                return result;
             }
 
             // Convert nsec format back to hex
             nsecToHex(nsecKey) {
                 try {
-                    // Use nostr-tools if available
-                    if (typeof window.nostrTools !== 'undefined') {
-                        // Use nip19 for bech32 decoding
-                        const decoded = window.nostrTools.nip19.decode(nsecKey);
-                        if (decoded.type === 'nsec') {
-                            // Convert Uint8Array to hex string if needed
-                            if (decoded.data instanceof Uint8Array) {
-                                return Array.from(decoded.data).map(b => b.toString(16).padStart(2, '0')).join('');
-                            }
-                            return decoded.data;
-                        } else {
-                            throw new Error('Invalid nsec format');
+                    const decoded = window.nostrTools.nip19.decode(nsecKey);
+                    if (decoded.type === 'nsec') {
+                        // Convert Uint8Array to hex string if needed
+                        if (decoded.data instanceof Uint8Array) {
+                            return Array.from(decoded.data).map(b => b.toString(16).padStart(2, '0')).join('');
                         }
-                    }
-                    
-                    // Fallback method
-                    if (nsecKey.startsWith('nsec1')) {
-                        // For now, just remove the prefix and assume it's hex
-                        // In a real implementation, you'd decode the base32 properly
-                        return nsecKey.substring(5);
-                    } else if (nsecKey.length === 64) {
-                        // If it's 64 characters, assume it's already hex
-                        return nsecKey;
+                        return decoded.data;
                     } else {
                         throw new Error('Invalid nsec format');
                     }
@@ -8577,49 +8524,10 @@
             // Convert hex public key to npub format
             hexToNpub(hexKey) {
                 try {
-                    // Use nostr-tools if available
-                    if (typeof window.nostrTools !== 'undefined' && window.nostrTools.nip19 && window.nostrTools.nip19.npubEncode) {
-                        return window.nostrTools.nip19.npubEncode(hexKey);
-                    }
-                    
-                    // Fallback: create a proper-looking npub format
-                    const cleanHex = hexKey.replace(/^0x/, '');
-                    
-                    // Create a more realistic npub format
-                    // This is not cryptographically correct but looks like a real npub
-                    const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567';
-                    let result = 'npub1';
-                    
-                    // Convert hex to bytes
-                    const bytes = [];
-                    for (let i = 0; i < cleanHex.length; i += 2) {
-                        bytes.push(parseInt(cleanHex.substr(i, 2), 16));
-                    }
-                    
-                    // Simple base32 encoding
-                    let bits = 0;
-                    let value = 0;
-                    for (let i = 0; i < bytes.length; i++) {
-                        value = (value << 8) | bytes[i];
-                        bits += 8;
-                        
-                        while (bits >= 5) {
-                            result += base32Chars[(value >> (bits - 5)) & 31];
-                            bits -= 5;
-                        }
-                    }
-                    
-                    if (bits > 0) {
-                        result += base32Chars[(value << (5 - bits)) & 31];
-                    }
-                    
-                    return result;
-                    
+                    return window.nostrTools.nip19.npubEncode(hexKey);
                 } catch (error) {
                     console.error('Error converting hex to npub:', error);
-                    // Even simpler fallback
-                    const cleanHex = hexKey.replace(/^0x/, '');
-                    return `npub1${cleanHex.substring(0, 8)}...${cleanHex.substring(cleanHex.length - 8)}`;
+                    return null;
                 }
             }
 
