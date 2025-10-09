@@ -3268,6 +3268,8 @@
                     PERMANENT: 'permanent'
                 };
                 this.notes = [];
+                this.failedDecryptions = new Set(); // Track event IDs that failed to decrypt
+                this.readMessages = new Set(); // Track event IDs that have been read
                 this.map = null;
                 this.mapMarkers = [];
                 this.relayStatus = {};
@@ -3428,6 +3430,32 @@
                 return [];
             }
 
+            // Save read messages to localStorage
+            saveReadMessages() {
+                try {
+                    const readMessagesArray = Array.from(this.readMessages);
+                    localStorage.setItem('tripchat_read_messages', JSON.stringify(readMessagesArray));
+                    console.log('💾 Saved read messages to localStorage:', readMessagesArray.length);
+                } catch (error) {
+                    console.error('Failed to save read messages:', error);
+                }
+            }
+
+            // Load read messages from localStorage
+            loadReadMessages() {
+                try {
+                    const saved = localStorage.getItem('tripchat_read_messages');
+                    if (saved) {
+                        const readMessagesArray = JSON.parse(saved);
+                        this.readMessages = new Set(readMessagesArray);
+                        console.log('📂 Loading read messages from localStorage:', readMessagesArray.length);
+                    }
+                } catch (error) {
+                    console.error('Failed to load read messages:', error);
+                    this.readMessages = new Set();
+                }
+            }
+
             // Add expiration filtering
             filterExpiredNotes(notes) {
                 const now = Math.floor(Date.now() / 1000);
@@ -3497,6 +3525,9 @@
                     
                     // Load kind 4 notes from localStorage
                     this.loadKind4Notes();
+                    
+                    // Load read messages from localStorage
+                    this.loadReadMessages();
                     
                     await this.connectToRelays();
                     
@@ -5705,6 +5736,18 @@
                         return;
                     }
 
+                    // Mark all messages in this conversation as read
+                    for (const event of dmEvents) {
+                        this.readMessages.add(event.id);
+                    }
+                    console.log('🔍 PM Debug - Marked', dmEvents.length, 'messages as read');
+                    
+                    // Save read messages to localStorage
+                    this.saveReadMessages();
+                    
+                    // Update unread count after marking messages as read
+                    this.updateUnreadCount();
+
                     // Decrypt and display messages
                     let messagesHtml = '';
                     for (const event of dmEvents) {
@@ -5735,6 +5778,9 @@
                             `;
                         } catch (error) {
                             console.warn('❌ PM Debug - Failed to decrypt message:', error);
+                            // Track this event as failed decryption
+                            this.failedDecryptions.add(event.id);
+                            
                             const errorDate = new Date(event.created_at * 1000);
                             const errorTimeString = errorDate.toLocaleString('en-US', {
                                 month: 'short',
@@ -5898,8 +5944,21 @@
                         }
 
                         // Count unread messages (received messages we haven't seen)
+                        // Only count if message can be decrypted successfully and hasn't been read
                         if (event.pubkey !== currentUserHex) {
-                            conversation.unreadCount++;
+                            try {
+                                // Try to decrypt the message to verify it's readable
+                                await this.decryptDM(event);
+                                // Only count as unread if it hasn't been read yet
+                                if (!this.readMessages.has(event.id)) {
+                                    conversation.unreadCount++;
+                                }
+                            } catch (error) {
+                                console.warn('❌ PM Debug - Not counting failed decryption as unread:', error);
+                                // Track this event as failed decryption
+                                this.failedDecryptions.add(event.id);
+                                // Don't increment unread count for failed decryption
+                            }
                         }
                     }
                     
@@ -5971,11 +6030,13 @@
                 // Convert to hex for comparison
                 const currentUserHex = this.npubToHex(currentUserPubkey);
 
-                // Count unread DMs (received messages)
+                // Count unread DMs (received messages that can be decrypted and haven't been read)
                 const unreadCount = this.notes.filter(note => 
                     note.kind === 4 && 
                     note.pubkey !== currentUserHex &&
-                    note.tags?.some(tag => tag[0] === 'p' && tag[1] === currentUserHex)
+                    note.tags?.some(tag => tag[0] === 'p' && tag[1] === currentUserHex) &&
+                    !this.failedDecryptions.has(note.id) && // Exclude failed decryptions
+                    !this.readMessages.has(note.id) // Exclude read messages
                 ).length;
 
                 if (unreadCount > 0) {
