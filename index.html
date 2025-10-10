@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TRipch.at - Decentralized travel chat on Nostr. Share location-based messages with travelers worldwide on an interactive map.">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdn.skypack.dev; connect-src 'self' wss: https:;">
     <title>TRipch.at - nostr travel chat</title>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -4172,7 +4173,7 @@
                 const darkModeToggle = document.getElementById('darkModeToggle');
                 if (darkModeToggle) {
                     // Load saved theme
-                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    const savedTheme = localStorage.getItem('theme') || 'dark';
                     this.setTheme(savedTheme);
                     
                     darkModeToggle.addEventListener('click', () => {
