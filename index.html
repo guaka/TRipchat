@@ -391,7 +391,7 @@
         }
         
         .pm-modal.show {
-            display: block;
+            display: block !important;
         }
         .pm-messages {
             flex: 1;
@@ -3182,7 +3182,7 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <img src="logos/color.svg" alt="Trustroots" style="height: 24px; vertical-align: middle; margin-right: 8px;">
-                    TRipch.at 🔑 Key Management
+                    TRipch.at Key Management
                 </h3>
                 <button class="modal-close" onclick="document.getElementById('settingsModal').style.display='none'">&times;</button>
             </div>
@@ -5449,7 +5449,10 @@
                     let encryptedContent;
                     if (typeof window.nostrTools !== 'undefined' && window.nostrTools.nip04 && window.nostrTools.nip04.encrypt) {
                         console.log('🔍 PM Debug - Using nostr-tools NIP-4 encryption');
-                        encryptedContent = window.nostrTools.nip04.encrypt(privateKey, recipientPubkey, content);
+                        // Convert npub to hex if needed
+                        const recipientHex = recipientPubkey.startsWith('npub') ? this.npubToHex(recipientPubkey) : recipientPubkey;
+                        console.log('🔍 PM Debug - Recipient pubkey converted:', { original: recipientPubkey, hex: recipientHex });
+                        encryptedContent = window.nostrTools.nip04.encrypt(privateKey, recipientHex, content);
                         console.log('🔍 PM Debug - Content encrypted with nostr-tools:', { encryptedLength: encryptedContent.length });
                     } else {
                         console.log('🔍 PM Debug - Using fallback encryption');
@@ -5465,7 +5468,9 @@
                             throw new Error('Invalid private key format');
                         }
                         
-                        const recipientPubkeyBytes = new Uint8Array(recipientPubkey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        // Convert npub to hex if needed for fallback encryption
+                        const recipientHex = recipientPubkey.startsWith('npub') ? this.npubToHex(recipientPubkey) : recipientPubkey;
+                        const recipientPubkeyBytes = new Uint8Array(recipientHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
                         const sharedSecret = await this.deriveSharedSecret(privateKeyBytes, recipientPubkeyBytes);
                         encryptedContent = await this.encryptAES(new TextEncoder().encode(content), sharedSecret);
                         console.log('🔍 PM Debug - Content encrypted with fallback:', { encryptedLength: encryptedContent.length });
@@ -5732,7 +5737,13 @@
                 }
                 
                 document.getElementById('pmRecipientName').textContent = `Private Message with ${recipientName}`;
-                document.getElementById('pmModal').classList.add('show');
+                const pmModal = document.getElementById('pmModal');
+                pmModal.classList.add('show');
+                console.log('🔍 PM Debug - PM modal classes after adding show:', pmModal.className);
+                console.log('🔍 PM Debug - PM modal display style:', pmModal.style.display);
+                console.log('🔍 PM Debug - PM modal computed display:', window.getComputedStyle(pmModal).display);
+                console.log('🔍 PM Debug - PM modal visibility:', window.getComputedStyle(pmModal).visibility);
+                console.log('🔍 PM Debug - PM modal z-index:', window.getComputedStyle(pmModal).zIndex);
                 document.getElementById('pmInput').focus();
                 
                 // Update URL hash
@@ -5807,6 +5818,7 @@
                     if (dmEvents.length === 0) {
                         console.log('🔍 PM Debug - No DM events found, showing empty state');
                         messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">No messages yet. Start the conversation!</div>';
+                        console.log('🔍 PM Debug - Empty state HTML set:', messagesContainer.innerHTML);
                         return;
                     }
 
@@ -5969,14 +5981,19 @@
 
             startNewMessage() {
                 const npub = prompt('Enter the npub (public key) to start a new conversation:');
+                console.log('startNewMessage: User entered:', npub);
                 if (npub && npub.trim()) {
                     const trimmedNpub = npub.trim();
+                    console.log('startNewMessage: Trimmed npub:', trimmedNpub);
                     // Basic validation - check if it starts with npub1
                     if (trimmedNpub.startsWith('npub1')) {
+                        console.log('startNewMessage: Calling openPM with:', trimmedNpub);
                         this.openPM(trimmedNpub);
                     } else {
                         alert('Please enter a valid npub (should start with npub1)');
                     }
+                } else {
+                    console.log('startNewMessage: No npub entered or empty');
                 }
             }
 
@@ -9254,17 +9271,6 @@
             formatUsernameWithDiscriminator(profile, pubkey) {
                 let username;
                 
-                // Debug logging for all users
-                console.log('🔍 Formatting username for:', { 
-                    pubkey: pubkey.substring(0, 8) + '...', 
-                    fullPubkey: pubkey,
-                    pubkeyLength: pubkey.length,
-                    hasProfile: !!profile,
-                    profileName: profile?.name,
-                    profileNip05: profile?.nip05,
-                    userProfilesKeys: Object.keys(this.userProfiles).length,
-                    userProfilesKeysList: Object.keys(this.userProfiles).map(k => k.substring(0, 8) + '...')
-                });
                 
                 // Debug logging for hitchwiki users
                 if (profile && profile.nip05 && profile.nip05.includes('hitchwiki')) {
