@@ -1419,6 +1419,29 @@
             border-radius: 12px 12px 0 0;
         }
 
+        .messages-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .new-message-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .new-message-btn:hover {
+            background: #27ae60;
+            transform: scale(1.02);
+        }
+
         .messages-header h3 {
             margin: 0;
             color: var(--text-primary);
@@ -3142,7 +3165,10 @@
         <div class="messages-modal-content">
             <div class="messages-header">
                 <h3>✉️ Private Messages</h3>
-                <span class="messages-close" id="messagesClose">&times;</span>
+                <div class="messages-header-actions">
+                    <button id="newMessageBtn" class="new-message-btn" title="Start new conversation">+ New Message</button>
+                    <span class="messages-close" id="messagesClose">&times;</span>
+                </div>
             </div>
             <div class="messages-list" id="messagesList">
                 <div class="messages-loading">Loading conversations...</div>
@@ -3154,7 +3180,10 @@
     <div id="settingsModal" class="modal-overlay" style="display: none;">
         <div class="modal-content settings-modal">
             <div class="modal-header">
-                <h3 class="modal-title">🔑 Key Management</h3>
+                <h3 class="modal-title">
+                    <img src="logos/color.svg" alt="Trustroots" style="height: 24px; vertical-align: middle; margin-right: 8px;">
+                    TRipch.at 🔑 Key Management
+                </h3>
                 <button class="modal-close" onclick="document.getElementById('settingsModal').style.display='none'">&times;</button>
             </div>
             <div class="modal-body">
@@ -3519,10 +3548,10 @@
                     this.setupRelayManagerHandlers();
                     this.setupScrollHandlers();
                     this.setupDatetimeClickHandlers(); // Set up click handlers early
-                    this.loadFilterFromHash();
                     
                     // Load saved keys from localStorage first
-                    this.loadKeysFromStorage();
+                    const keysLoaded = this.loadKeysFromStorage();
+                    console.log('Keys loaded from storage:', keysLoaded);
                     
                     // Load kind 4 notes from localStorage
                     this.loadKind4Notes();
@@ -3534,6 +3563,10 @@
                     
                     // Subscribe to DMs after connecting to relays (in case keys were loaded)
                     this.subscribeToDMs();
+                    
+                    // Process hash after data is loaded
+                    console.log('Processing hash after data load, privateKey available:', !!this.privateKey);
+                    this.loadFilterFromHash();
                     
                     // Set up listener for when nostr-tools loads
                     window.addEventListener('nostrToolsLoaded', () => {
@@ -4919,6 +4952,7 @@
                 const messagesBtn = document.getElementById('messagesBtn');
                 const messagesModal = document.getElementById('messagesModal');
                 const messagesClose = document.getElementById('messagesClose');
+                const newMessageBtn = document.getElementById('newMessageBtn');
 
                 // Open messages modal
                 messagesBtn.addEventListener('click', () => {
@@ -4928,6 +4962,11 @@
                 // Close messages modal
                 messagesClose.addEventListener('click', () => {
                     this.closeMessagesModal();
+                });
+
+                // New message button
+                newMessageBtn.addEventListener('click', () => {
+                    this.startNewMessage();
                 });
 
                 // Close messages modal when clicking outside
@@ -5663,20 +5702,45 @@
                 const npubKey = localStorage.getItem('tripchat_npub');
                 
                 console.log('🔍 PM Debug - Keys check:', { hasNsec: !!nsecKey, hasNpub: !!npubKey });
+                console.log('🔍 PM Debug - this.privateKey available:', !!this.privateKey);
                 
                 if (!nsecKey || !npubKey) {
-                    alert('Please set up your keys first to send private messages.');
+                    // Open keys modal with message instead of alert
+                    this.openKeysDialog('Please set up your keys first to send private messages.');
+                    return;
+                }
+                
+                // If this.privateKey is not set yet, wait a bit and retry
+                if (!this.privateKey) {
+                    console.log('🔍 PM Debug - privateKey not ready, retrying in 200ms');
+                    setTimeout(() => {
+                        this.openPM(recipientPubkey);
+                    }, 200);
                     return;
                 }
 
                 this.currentPMRecipient = recipientPubkey;
-                const recipientName = this.userProfiles[recipientPubkey]?.name || recipientPubkey.substring(0, 8) + '...';
                 
+                // Get recipient name with NIP-05 support
+                let recipientName;
+                if (this.userProfiles[recipientPubkey]?.nip05) {
+                    recipientName = `@${this.userProfiles[recipientPubkey].nip05}`;
+                } else if (this.userProfiles[recipientPubkey]?.name) {
+                    recipientName = this.userProfiles[recipientPubkey].name;
+                } else {
+                    recipientName = recipientPubkey.substring(0, 8) + '...';
+                }
                 
                 document.getElementById('pmRecipientName').textContent = `Private Message with ${recipientName}`;
                 document.getElementById('pmModal').classList.add('show');
                 document.getElementById('pmInput').focus();
                 
+                // Update URL hash
+                this.updatingHash = true;
+                const url = new URL(window.location);
+                url.hash = `#dm:${recipientPubkey}`;
+                window.history.replaceState(null, '', url);
+                this.updatingHash = false;
                 
                 // Load existing messages
                 this.loadPMMessages(recipientPubkey);
@@ -5687,6 +5751,15 @@
                 this.currentPMRecipient = null;
                 document.getElementById('pmMessages').innerHTML = '';
                 document.getElementById('pmInput').value = '';
+                
+                // Clear DM hash from URL
+                this.updatingHash = true;
+                const url = new URL(window.location);
+                if (url.hash.startsWith('#dm:')) {
+                    url.hash = '';
+                    window.history.replaceState(null, '', url);
+                }
+                this.updatingHash = false;
             }
 
             async loadPMMessages(recipientPubkey) {
@@ -5698,7 +5771,7 @@
                     // Get current user's pubkey
                     const currentUserPubkey = this.getCurrentUserPubkey();
                     if (!currentUserPubkey) {
-                        messagesContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">Unable to load messages - no user key found</div>';
+                        messagesContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">Unable to load messages - <a href="#" onclick="window.tripchatVisualizer.closePM(); window.tripchatVisualizer.openKeysDialog();" style="color: var(--accent-color); text-decoration: underline;">set up your keys first</a></div>';
                         return;
                     }
 
@@ -5856,21 +5929,72 @@
             }
 
             // Messages Modal Methods
-            openMessagesModal() {
+            async openMessagesModal() {
                 const messagesModal = document.getElementById('messagesModal');
                 messagesModal.style.display = 'block';
-                this.loadConversations();
+                
+                // Update URL hash
+                this.updatingHash = true;
+                const url = new URL(window.location);
+                url.hash = '#dm';
+                window.history.replaceState(null, '', url);
+                this.updatingHash = false;
+                
+                // If this.privateKey is not set yet, wait a bit and retry
+                if (!this.privateKey) {
+                    console.log('🔍 Messages Debug - privateKey not ready, retrying in 200ms');
+                    setTimeout(() => {
+                        this.openMessagesModal();
+                    }, 200);
+                    return;
+                }
+                
+                // Load conversations (this will show loading state)
+                await this.loadConversations();
             }
 
             closeMessagesModal() {
                 const messagesModal = document.getElementById('messagesModal');
                 messagesModal.style.display = 'none';
+                
+                // Clear DM hash from URL
+                this.updatingHash = true;
+                const url = new URL(window.location);
+                if (url.hash === '#dm') {
+                    url.hash = '';
+                    window.history.replaceState(null, '', url);
+                }
+                this.updatingHash = false;
+            }
+
+            startNewMessage() {
+                const npub = prompt('Enter the npub (public key) to start a new conversation:');
+                if (npub && npub.trim()) {
+                    const trimmedNpub = npub.trim();
+                    // Basic validation - check if it starts with npub1
+                    if (trimmedNpub.startsWith('npub1')) {
+                        this.openPM(trimmedNpub);
+                    } else {
+                        alert('Please enter a valid npub (should start with npub1)');
+                    }
+                }
             }
 
             openPMFromMessages(recipientPubkey) {
                 // Close messages modal and open PM modal
                 this.closeMessagesModal();
-                this.openPM(recipientPubkey);
+                
+                // Convert hex pubkey to npub format for URL
+                let npubRecipient = recipientPubkey;
+                if (recipientPubkey && !recipientPubkey.startsWith('npub')) {
+                    npubRecipient = this.hexToNpub(recipientPubkey);
+                    if (!npubRecipient) {
+                        console.error('Failed to convert hex to npub:', recipientPubkey);
+                        npubRecipient = recipientPubkey; // Fallback to original
+                    }
+                }
+                
+                this.openPM(npubRecipient);
             }
 
             async loadConversations() {
@@ -5878,9 +6002,11 @@
                 messagesList.innerHTML = '<div class="messages-loading">Loading conversations...</div>';
 
                 try {
+                    console.log('loadConversations: privateKey available:', !!this.privateKey);
                     const currentUserPubkey = this.getCurrentUserPubkey();
+                    console.log('loadConversations: currentUserPubkey:', currentUserPubkey);
                     if (!currentUserPubkey) {
-                        messagesList.innerHTML = '<div class="no-conversations">Please set up your keys first to view messages</div>';
+                        messagesList.innerHTML = '<div class="no-conversations">Please <a href="#" onclick="window.tripchatVisualizer.closeMessagesModal(); window.tripchatVisualizer.openKeysDialog();" style="color: var(--accent-color); text-decoration: underline;">set up your keys first</a> to view messages</div>';
                         return;
                     }
 
@@ -6387,6 +6513,26 @@
                     const firstPart = parts[0];
                     
                     if (!firstPart.includes('=')) {
+                        // Check for DM patterns first
+                        if (firstPart === 'dm') {
+                            // Open messages modal
+                            console.log('Opening messages modal from hash');
+                            // Add a small delay to ensure data is loaded
+                            setTimeout(() => {
+                                this.openMessagesModal();
+                            }, 500);
+                            return;
+                        } else if (firstPart.startsWith('dm:')) {
+                            // Open specific DM conversation
+                            const npub = firstPart.substring(3); // Remove 'dm:' prefix
+                            console.log('Opening DM conversation from hash:', npub);
+                            // Add a small delay to ensure data is loaded
+                            setTimeout(() => {
+                                this.openPM(npub);
+                            }, 500);
+                            return;
+                        }
+                        
                         // Direct hashtag format: testing or testing&geohash=u1&nip05=true&eventid=abc123
                         const hashtag = firstPart; // testing
                         
@@ -8155,6 +8301,12 @@
                     const npubKey = localStorage.getItem('tripchat_npub');
                     const privateKeyHex = localStorage.getItem('tripchat_private_key');
                     
+                    console.log('loadKeysFromStorage: Found keys:', {
+                        nsecKey: nsecKey ? nsecKey.substring(0, 10) + '...' : null,
+                        npubKey: npubKey ? npubKey.substring(0, 10) + '...' : null,
+                        privateKeyHex: privateKeyHex ? privateKeyHex.substring(0, 10) + '...' : null
+                    });
+                    
                     // Check if we have nsec/npub keys (preferred)
                     if (nsecKey && npubKey) {
                         // Load keys into settings modal if elements exist
@@ -8170,24 +8322,24 @@
                         
                         // Use nsec key directly for signing
                         this.privateKey = nsecKey;
-                        console.log('Keys loaded from localStorage (nsec/npub format)');
+                        console.log('Keys loaded from localStorage (nsec/npub format), privateKey set:', !!this.privateKey);
                         return true;
                     }
                     // Fallback to hex format
-                    else if (nsecKey && npubKey && privateKeyHex) {
+                    else if (privateKeyHex) {
                         // Load keys into settings modal if elements exist
                         const settingsPrivateKey = document.getElementById('settingsPrivateKey');
                         const settingsPublicKey = document.getElementById('settingsPublicKey');
                         
                         if (settingsPrivateKey) {
-                            settingsPrivateKey.value = nsecKey;
+                            settingsPrivateKey.value = nsecKey || '';
                         }
                         if (settingsPublicKey) {
-                            settingsPublicKey.value = npubKey;
+                            settingsPublicKey.value = npubKey || '';
                         }
                         
                         this.privateKey = privateKeyHex;
-                        console.log('Keys loaded from localStorage (hex format)');
+                        console.log('Keys loaded from localStorage (hex format), privateKey set:', !!this.privateKey);
                         return true;
                     }
                 } catch (error) {
