@@ -3,7 +3,7 @@
 **Status:** Draft  
 **Kind:** 30004 (Parameterized Replaceable Event)  
 **Created:** 2025-10-17  
-**Author:** TRipchat Project
+**Author:** TRipchatter guaka
 
 ## Summary
 
